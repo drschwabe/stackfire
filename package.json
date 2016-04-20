@@ -4,5 +4,9 @@
   "description": "simple router for managing control flow / application state",
   "main": "async-router.js",
   "author": "Derrick Schwabe <admin@nerdbusiness.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.0.0-rc.3",
+    "underscore": "^1.8.3"
+  }
 }

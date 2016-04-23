@@ -1,11 +1,10 @@
-#async-router
-[VR helmet / Google AR looking logo thing]
+# async-router
 
 AR is a simple router intended for internal routing of application state (and not for http requests or browser pushState). 
 
 The idea is to enforce a route driven, synchronous control flow to your application to maintain integrity of state.  
 
-Asynchronous functions are accommodated with standard callback pattern and modularity encouraged via simple middleware implementation. 
+Asynchronous functions are accommodated with standard callback pattern and modularity encouraged via middleware. 
 
 ## Usage
 ```
@@ -41,9 +40,11 @@ ar.listen('/action', function(state, next) {
 
 ###  Modularity
 
-Now that you have a super simple control flow to your application you can focus on building actual functionality via modules that stack together as middleware. 
+The current hypothesis is that now you have a super simple control flow to your application you can focus on building actual functionality via modules that stack together as middleware. 
 
 
-
+### TODOs
+- Implement Express style path parsing. 
+- Make an actual middleware implementation that doesn't require a specific route. 
 
 

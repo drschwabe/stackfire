@@ -1,6 +1,5 @@
 var async = require('async'), 
     _ = require('underscore')
-    //pathToRegexp = require('path-to-regexp')
 
 var ar = { routes : [] }
 
@@ -34,15 +33,18 @@ ar.listen = function(param1, callback) {
 }
 
 ar.fire = function(route, state, callback) {
-  console.log('fire this new route...')
   console.log(route)
+  //Add the current route/route params to state: 
+  state.route = 
+
   var matchingRoute = _.findWhere(this.routes, { path: route })
+  //TODO: implement more robust Express regex style route matching.
   if(matchingRoute) {
     //Give the waterfall a seed function with current state: 
     matchingRoute.middleware.unshift(function(next) { next(null, state) })
     async.waterfall(matchingRoute.middleware, function(err, state) {
       if(err) return console.log(err)
-      callback(state)
+      callback(null, state)
     })
   } else {
     console.log('no matching routes found.')

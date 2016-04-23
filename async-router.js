@@ -33,9 +33,6 @@ ar.listen = function(param1, callback) {
 }
 
 ar.fire = function(route, state, callback) {
-  console.log(route)
-  //Add the current route/route params to state: 
-  state.route = 
 
   var matchingRoute = _.findWhere(this.routes, { path: route })
   //TODO: implement more robust Express regex style route matching.

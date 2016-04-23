@@ -1,22 +1,20 @@
 {
   "name": "async-router",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "simple router for managing control flow / application state",
   "main": "async-router.js",
   "author": "Derrick Schwabe <admin@nerdbusiness.com>",
-  "homepage": "https://github.com/drschwabe/async-router",        
+  "homepage": "https://github.com/drschwabe/async-router",
   "repository": {
     "type": "git",
     "url": "https://github.com/drschwabe/async-router"
   },
   "keywords": [
-    "screen", 
-    "loader",
-    "browserify",
-    "frontend", 
-    "url parsing", 
-    "modularize"
-  ],   
+    "router",
+    "async",
+    "control flow",
+    "state"
+  ],
   "license": "MIT",
   "dependencies": {
     "async": "^2.0.0-rc.3",

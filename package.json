@@ -1,6 +1,6 @@
 {
   "name": "async-router",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "simple router for managing control flow / application state",
   "main": "async-router.js",
   "author": "Derrick Schwabe <admin@nerdbusiness.com>",
@@ -18,6 +18,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "^2.0.0-rc.3",
+    "route-parser": "0.0.5",
     "underscore": "^1.8.3"
   }
 }

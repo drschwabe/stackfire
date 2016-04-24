@@ -6,8 +6,15 @@ The idea is to enforce a route driven, synchronous control flow to your applicat
 
 Asynchronous functions are accommodated with standard callback pattern and modularity encouraged via middleware. 
 
+## Instal
+```
+npm install --save async-router
+```
+
 ## Usage
 ```
+var ar = require('async-router')
+
 ar.listen('/', function(state, next) {
    //functionality here
    next(null, state)

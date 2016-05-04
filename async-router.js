@@ -8,28 +8,29 @@ ar.listen = function(param1, callback) {
   //param1: a string or an array of strings.
 
   var that = this
-  var registerRoute = function(route, callback) {
-  
-    var route = routeParser(route)
+  var registerRoute = function(path, callback) {
+
+    var route = routeParser(path)
+    var existingRoute = _.find(that.routes, function(existingRoute) {
+      return existingRoute.route.spec == route.spec
+    })
 
     //Determine if the route already exists:
-    if(!_.findWhere(that.routes, { route: route })) {
-
-      //Make an entry for it; add to known routes and define middleware array...
+    if(!existingRoute) {
+      //Make an entry for it; add to known routes and define middleware array/stack:
       that.routes.push({ route: route, middleware: [callback]})  
-
     } else {
       //If the route already exists, just push this module's callback 
-      //into the  middleware array; stack: 
-      _.findWhere(that.routes, { route: route }).middleware.push(callback)
+      //into the middleware array/stack: 
+      existingRoute.middleware.push(callback)
     }      
   }
 
   //Parse first paramater: 
   //(is either a single route or array of routes)
   if(_.isArray(param1)) {
-    param1.forEach(function(route) {
-      registerRoute(route, callback)
+    param1.forEach(function(path) {
+      registerRoute(path, callback)
     })
   } else {
     registerRoute(param1, callback)
@@ -48,7 +49,7 @@ ar.fire = function(path, state, callback) {
   if(matchingRoute) {
     //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
     matchingRoute.middleware.unshift(function(next) { next(null, req, state) })
-    async.waterfall(matchingRoute.middleware, function(err, state) {
+    async.waterfall(matchingRoute.middleware, function(err, req, state) {
       if(err) return console.log(err)
       callback(null, state)
     })

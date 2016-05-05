@@ -55,6 +55,7 @@ ar.fire = function(path, state, callback) {
     })
   } else {
     console.log('no matching routes found.')
+    callback(null, state)
   }
 }
 

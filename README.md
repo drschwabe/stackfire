@@ -2,7 +2,7 @@
 
 AR is a simple router intended for internal routing of application state (and not for http requests or browser pushState). 
 
-The idea is to enforce a familiar route driven, synchronous control flow to your application to maintain integrity of state.  
+The idea is to enforce a familiar route driven, synchronous control flow to your application to ensure consistent handling of state.  
 
 Asynchronous functions are accommodated with standard callback pattern and modularity encouraged via middleware. 
 
@@ -40,7 +40,7 @@ Because of the guaranteed synchronous execution of the middleware stack you can 
 ```
 ar.listen('/action', function(req, state, next) {
     //Branch off and fire another stack: 
-    ar.fire('/another-action', function(state) { 
+    ar.fire('/another-action', function(err, state) { 
         next(null, req, state) //< Return the modified state to original stack.
     })
 })
@@ -55,5 +55,5 @@ The current hypothesis is that now you have a super simple control flow to your 
 ### TODOs
 - Make an actual middleware implementation that doesn't require a specific route. 
 - Consider making the call for next() more intuitive by not requiring the req object; instead automagically include the req object on the state object itself (perhaps along with a history of previous requests)
-- Write test to ensure multiple listeners are fired from a single route
+- Write test to ensure multiple listeners are fired from a single fire event
 

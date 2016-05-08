@@ -46,16 +46,21 @@ ar.fire = function(path, state, callback) {
     return req
   })
 
+  console.log(matchingRoute)
+
   if(matchingRoute) {
     //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
-    matchingRoute.middleware.unshift(function(next) { next(null, req, state) })
+    if(!matchingRoute.seeded) { //but only if we haven't already done it: 
+      matchingRoute.middleware.unshift(function(next) { next(null, req, state) })      
+      matchingRoute.seeded = true      
+    }
     async.waterfall(matchingRoute.middleware, function(err, req, state) {
       if(err) return console.log(err)
-      callback(null, state)
+      if(_.isFunction(callback)) callback(null, state)
     })
   } else {
     console.log('no matching routes found.')
-    callback(null, state)
+    if(_.isFunction(callback)) callback(null, state)
   }
 }
 

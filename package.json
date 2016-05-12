@@ -1,6 +1,6 @@
 {
   "name": "async-router",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "simple router for managing control flow / application state",
   "main": "async-router.js",
   "author": "Derrick Schwabe <admin@nerdbusiness.com>",

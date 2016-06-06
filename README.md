@@ -53,7 +53,6 @@ The current hypothesis is that now you have a super simple control flow to your 
 
 
 ### TODOs
-- Make an actual middleware implementation that doesn't require a specific route. 
 - Consider making the call for next() more intuitive by not requiring the req object; instead automagically include the req object on the state object itself (perhaps along with a history of previous requests)
 - Write test to ensure multiple listeners are fired from a single fire event
 

@@ -42,9 +42,20 @@ ar.fire = function(path, state, callback) {
   var matchingRoute, req
   matchingRoute = _.find(this.routes, function(route) {
     req = route.route.match(path) 
+    req.path = path
     //^ Parses the route; organizing params into a tidy object.
     return req
   })
+
+  //Fire any middleware (route agnostic): 
+  if(this.middleware) { //Seed it with the req and state:   
+    this.middleware[0] = function(next) { next(null, req, state) }
+    //Run the middleware stack: 
+    async.waterfall(this.middleware, function(err, req, state) {
+      if(err) return console.log(err)
+      console.log('ran middleware')
+    })
+  }
 
   var seedFunction = function(next) { next(null, req, state) }
   if(matchingRoute) {
@@ -56,6 +67,7 @@ ar.fire = function(path, state, callback) {
       //(because req and state may have changed): 
       matchingRoute.middleware[0] = seedFunction
     }
+
     async.waterfall(matchingRoute.middleware, function(err, req, state) {
       if(err) return console.log(err)
       if(_.isFunction(callback)) callback(null, state)
@@ -64,6 +76,16 @@ ar.fire = function(path, state, callback) {
     console.log('no matching routes found.')
     if(_.isFunction(callback)) callback(null, state)
   }
+}
+
+ar.use = function(callback) {
+  //Apply the function to a separate middleware property which 
+  //will be called on every fire.
+  if(!this.middleware) this.middleware = [null]
+  //Set a null placeholder into the [0] position of the array, 
+  //this is replaced by a seed function when ar.fire is called.
+  this.middleware.push(callback)
+  //^ push the callback to the stack.
 }
 
 module.exports = ar

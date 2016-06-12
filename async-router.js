@@ -41,41 +41,54 @@ ar.fire = function(path, state, callback) {
 
   var matchingRoute, req
   matchingRoute = _.find(this.routes, function(route) {
-    req = route.route.match(path) 
+    var result = route.route.match(path)
+    if(result) {
+      req = result
+    } else {
+      req = {} //<If there was no matching route, create an obj anyway.       
+    }
     req.path = path
     //^ Parses the route; organizing params into a tidy object.
-    return req
+    return result
   })
 
-  //Fire any middleware (route agnostic): 
-  if(this.middleware) { //Seed it with the req and state:   
-    this.middleware[0] = function(next) { next(null, req, state) }
-    //Run the middleware stack: 
-    async.waterfall(this.middleware, function(err, req, state) {
-      if(err) return console.log(err)
-      console.log('ran middleware')
-    })
-  }
+  var that = this
+  async.series([
+    function(seriesCallback) {
+      //Fire any middleware (route agnostic)...
+      if(that.middleware) { //Seed it with the req and state:   
+        that.middleware[0] = function(next) { next(null, req, state) }
+        //Run the middleware stack: 
+        async.waterfall(that.middleware, function(err, req, state) {
+          if(err) return console.log(err)
+          seriesCallback(null)
+        })
+      } else {
+        seriesCallback(null)
+      }
+    }, 
+    function(seriesCallback) {
+      var seedFunction = function(next) { next(null, req, state) }
+      if(matchingRoute) {
+        //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
+        if(!matchingRoute.seeded) { //but only if we haven't already done it: 
+          matchingRoute.middleware.unshift(seedFunction)      
+          matchingRoute.seeded = true      
+        } else { //If already seeded, we overwrite the original seed function
+          //(because req and state may have changed): 
+          matchingRoute.middleware[0] = seedFunction
+        }
 
-  var seedFunction = function(next) { next(null, req, state) }
-  if(matchingRoute) {
-    //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
-    if(!matchingRoute.seeded) { //but only if we haven't already done it: 
-      matchingRoute.middleware.unshift(seedFunction)      
-      matchingRoute.seeded = true      
-    } else { //If already seeded, we overwrite the original seed function
-      //(because req and state may have changed): 
-      matchingRoute.middleware[0] = seedFunction
+        async.waterfall(matchingRoute.middleware, function(err, req, state) {
+          if(err) return console.log(err)
+          if(_.isFunction(callback)) callback(null, state)
+        })
+      } else {
+        //console.log('no matching routes found.')
+        if(_.isFunction(callback)) callback(null, state)
+      }
     }
-
-    async.waterfall(matchingRoute.middleware, function(err, req, state) {
-      if(err) return console.log(err)
-      if(_.isFunction(callback)) callback(null, state)
-    })
-  } else {
-    console.log('no matching routes found.')
-    if(_.isFunction(callback)) callback(null, state)
-  }
+  ])
 }
 
 ar.use = function(callback) {

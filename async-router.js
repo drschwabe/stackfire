@@ -53,13 +53,17 @@ ar.fire = function(path, state, callback) {
   })
 
   var that = this
+
+  //Apply req as a property of state. 
+  state.req = req
+
   async.series([
     function(seriesCallback) {
       //Fire any middleware (route agnostic)...
       if(that.middleware) { //Seed it with the req and state:   
-        that.middleware[0] = function(next) { next(null, req, state) }
+        that.middleware[0] = function(next) { next(null, state) }
         //Run the middleware stack: 
-        async.waterfall(that.middleware, function(err, req, state) {
+        async.waterfall(that.middleware, function(err, state) {
           if(err) return console.log(err)
           seriesCallback(null)
         })
@@ -68,7 +72,7 @@ ar.fire = function(path, state, callback) {
       }
     }, 
     function(seriesCallback) {
-      var seedFunction = function(next) { next(null, req, state) }
+      var seedFunction = function(next) { next(null, state) }
       if(matchingRoute) {
         //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
         if(!matchingRoute.seeded) { //but only if we haven't already done it: 
@@ -79,12 +83,12 @@ ar.fire = function(path, state, callback) {
           matchingRoute.middleware[0] = seedFunction
         }
 
-        async.waterfall(matchingRoute.middleware, function(err, req, state) {
+        async.waterfall(matchingRoute.middleware, function(err, state) {
           if(err) return console.log(err)
           if(_.isFunction(callback)) callback(null, state)
         })
       } else {
-        //console.log('no matching routes found.')
+        //(no matching routes found)
         if(_.isFunction(callback)) callback(null, state)
       }
     }

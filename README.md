@@ -15,9 +15,9 @@ npm install --save async-router
 ```
 var ar = require('async-router')
 
-ar.listen('/', function(req, state, next) {
+ar.listen('/', function(state, next) {
    //functionality here
-   next(null, req, state)
+   next(null, state)
 })
 ```
 
@@ -26,7 +26,7 @@ The route definition above itself is middleware, we simply listen for the desire
 And when you are ready to invoke the route: 
 
 ```
-ar.fire('/', function(state) {
+ar.fire('/', state, function(err, newState) {
   //any function listening for the given route will do it's thing...
   //each listener function is fired in the order it was defined.
   //the callback from fire receives the final result after all listener functions have completed
@@ -38,13 +38,15 @@ ar.fire('/', function(state) {
 Because of the guaranteed synchronous execution of the middleware stack you can nest commands that 'go horizontal' from within this stack; without breaking or complicating the overall control flow of the application. Ex: 
 
 ```
-ar.listen('/action', function(req, state, next) {
+ar.listen('/action', function(state, next) {
     //Branch off and fire another stack: 
-    ar.fire('/another-action', function(err, state) { 
-        next(null, req, state) //< Return the modified state to original stack.
+    ar.fire('/another-action', state, function(err, newState) { 
+        next(null, newState) //< Return the modified state to original stack.
     })
 })
 ```
+
+Each fire the state object is modified to include a req property with the corresponding route and parameters.  Ex: state.req
 
 
 ###  Modularity
@@ -53,6 +55,6 @@ The current hypothesis is that now you have a super simple control flow to your 
 
 
 ### TODOs
-- Consider making the call for next() more intuitive by not requiring the req object; instead automagically include the req object on the state object itself (perhaps along with a history of previous requests)
-- Write test to ensure multiple listeners are fired from a single fire event
+- Document more clearly the state.req object
+- Write test to ensure all listeners are fired from a single fire
 

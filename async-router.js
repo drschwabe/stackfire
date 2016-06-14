@@ -33,11 +33,34 @@ ar.listen = function(param1, callback) {
       registerRoute(path, callback)
     })
   } else {
+    //Check for signature: 
+    if(param1.charAt(0) == '@') {
+      //Register it with two padding functions that set and clear the signature
+      //on the state object.  
+      registerRoute(trimSigFromPath(param1), function(state, next) {
+        state.sig = snipSignature(param1) //< Stamps signature.
+        next(null, state)
+      })
+      //The actual function: 
+      registerRoute(trimSigFromPath(param1), callback)
+      //Clear the signature: 
+      registerRoute(trimSigFromPath(param1), function(state, next) {
+        delete state.sig
+        next(null, state)        
+      })
+      return
+    }
     registerRoute(param1, callback)
   }
 }
 
 ar.fire = function(path, state, callback) {
+
+  //Check for signature: 
+  if(path.charAt(0) == '@') {
+    state.sig = snipSignature(path) //< Apply to state obj.
+    path = trimSigFromPath(path) //Trim from actual command path.
+  }
 
   var matchingRoute, req
   matchingRoute = _.find(this.routes, function(route) {
@@ -104,5 +127,16 @@ ar.use = function(callback) {
   this.middleware.push(callback)
   //^ push the callback to the stack.
 }
+
+//Helper functions: 
+var snipSignature = function(path) {
+  //Expected pattern is: @name-of-module/actual/route
+  return path.split('/')[0]
+}
+
+var trimSigFromPath = function(path) {
+  return '/' + _.without(path.split('/'), path.split('/')[0]).join('/')
+}
+
 
 module.exports = ar

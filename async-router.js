@@ -85,7 +85,7 @@ ar.fire = function(path, state, callback) {
   //Apply req as a property of state. 
   state.req = req
 
-  async.series([
+  async.waterfall([
     function(seriesCallback) {
       //Fire any middleware (route agnostic)...
       if(that.middleware) { 
@@ -94,13 +94,13 @@ ar.fire = function(path, state, callback) {
         //Run the middleware stack: 
         async.waterfall(that.middleware, function(err, state) {
           if(err) return console.log(err)
-          seriesCallback(null)
+          seriesCallback(null, state)
         })
       } else {
-        seriesCallback(null)
+        seriesCallback(null, state)
       }
     }, 
-    function(seriesCallback) {
+    function(state, seriesCallback) {
       var seedFunction = function(next) { next(null, state) }
       if(matchingRoute) {      
         //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
@@ -109,7 +109,7 @@ ar.fire = function(path, state, callback) {
           matchingRoute.seeded = true      
         } else { //If already seeded, we overwrite the original seed function
           //(because req and state may have changed): 
-          matchingRoute.middleware.func = seedFunction
+          matchingRoute.middleware[0].func = seedFunction
         }
 
         //Create a copy of the middleware stack we are about to run

@@ -13,6 +13,7 @@ ar.listen = function(param1, callback) {
 
     var route = routeParser(trimSigFromPath(path))
     var existingRoute = _.find(that.routes, function(existingRoute) {
+      //Return true if we find an exact match: 
       return existingRoute.route.spec == route.spec
     })
 
@@ -22,14 +23,14 @@ ar.listen = function(param1, callback) {
 
     //Determine if the route already exists:
     if(!existingRoute) {
-      var route = { route: route, middleware: [newMiddleware] }
+      route = { route: route, middleware: [newMiddleware] }
       //Make an entry for it; add to known routes and define middleware array/stack:
-      that.routes.push(route)  
+      that.routes.push(route)
     } else {
       //If the route already exists, just push the new middleware into the 
       //existing stack: 
       existingRoute.middleware.push(newMiddleware)
-    }      
+    }
   }
 
   //If an array was not supplied, create an array anyway: 
@@ -111,7 +112,6 @@ ar.fire = function(path, state, callback) {
           //(because req and state may have changed): 
           matchingRoute.middleware[0].func = seedFunction
         }
-
         //Create a copy of the middleware stack we are about to run
         //containing only the functions
         //(preparing the data structure for what async.waterfall will expect): 
@@ -120,15 +120,29 @@ ar.fire = function(path, state, callback) {
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return console.log(err)
           if(_.isFunction(callback)) callback(null, state)
+          seriesCallback(null, state)
         })
       } else {
         //(no matching routes found)
         if(_.isFunction(callback)) callback(null, state)
+        seriesCallback(null, state)
       }
-    }
+    }, 
+    function(state, seriesCallback) {
+      //Fire any "last" middleware: 
+      if(that.lastMiddleware) { 
+        that.lastMiddleware[0] = function(next) { next(null, state) }
+        async.waterfall(that.lastMiddleware, function(err, state) {
+          if(err) return console.log(err)
+        })
+      }
+    } 
   ])
 }
 
+//TODO: Remove the need for these "use" and "last" functions,
+//instead preferring "*" wildcard listeners that can act as middleware
+//executed in the order in which they are defined in a given app.
 ar.use = function(callback) {
   //Apply the function to a separate middleware property which 
   //will be called on every fire.
@@ -137,6 +151,20 @@ ar.use = function(callback) {
   //this is replaced by a seed function when ar.fire is called.
   this.middleware.push(callback)
   //^ push the callback to the stack.
+}
+
+ar.last = function(callback) {
+  if(!this.lastMiddleware) this.lastMiddleware = [null]
+  this.lastMiddleware.push(callback)
+}
+
+ar.lastOff = function() {
+  this.lastMiddlewareDisabled = _.clone(this.lastMiddleware)
+  this.lastMiddleware = false
+}
+
+ar.lastOn = function() {
+  this.lastMiddleware = this.lastMiddlewareDisabled
 }
 
 ar.disable = function(path) {

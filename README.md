@@ -51,7 +51,7 @@ Each fire the state object is modified to include a req property with the corres
 
 ###  Modularity
 
-The current hypothesis is that now you have a super simple control flow to your application you can focus on building actual functionality via modules that stack together as middleware. 
+The current hypothesis is that now you have a super simple control flow to your application you can focus on building actual functionality via modules that stack together as middleware.  Modules for your app can simply drop in as a function that runs an ar.listener or set of ar.listeners. 
 
 
 ### TODOs

@@ -6,7 +6,7 @@ The idea is to enforce a familiar route driven, synchronous control flow to your
 
 Asynchronous functions are accommodated with standard callback pattern and modularity encouraged via middleware. 
 
-## Instal
+## Install
 ```
 npm install --save async-router
 ```
@@ -57,4 +57,4 @@ The current hypothesis is that now you have a super simple control flow to your 
 ### TODOs
 - Document more clearly the state.req object
 - Write test to ensure all listeners are fired from a single fire
-
+- Get catch-all wildcard listeners ie: ar.listen('*') working as expected

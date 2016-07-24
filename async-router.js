@@ -178,7 +178,16 @@ ar.disable = function(path) {
 //Helper functions: 
 var snipSignature = function(path) {
   //Expected pattern is: @name-of-module/actual/route
-  return path.split('/')[0]
+  //or an array consisting of multiple paths. 
+
+  //Accomodate for an array consisting of multiple paths:  
+  if(_.isArray(path)) {
+    return _.map(path, function(aPath) {
+      return aPath.split('/')[0]
+    })
+  } else { //Otherwise, it's just a single path: 
+    return path.split('/')[0]    
+  }
 }
 
 var trimSigFromPath = function(path) {

@@ -2,9 +2,9 @@ var async = require('async'),
     _ = require('underscore'), 
     routeParser = require('route-parser')
 
-var ar = { routes : [] }
+var cs = { routes : [] }
 
-ar.listen = function(param1, callback) {
+cs.listen = function(param1, callback) {
   //param1: a string or an array of strings.
   //(is either a single path or array of paths)  
 
@@ -60,7 +60,7 @@ ar.listen = function(param1, callback) {
   })
 }
 
-ar.fire = function(path, state, callback) {
+cs.fire = function(path, state, callback) {
 
   //Check for signature: 
   if(path.charAt(0) == '@') {
@@ -143,31 +143,31 @@ ar.fire = function(path, state, callback) {
 //TODO: Remove the need for these "use" and "last" functions,
 //instead preferring "*" wildcard listeners that can act as middleware
 //executed in the order in which they are defined in a given app.
-ar.use = function(callback) {
+cs.use = function(callback) {
   //Apply the function to a separate middleware property which 
   //will be called on every fire.
   if(!this.middleware) this.middleware = [null]
   //Set a null placeholder into the [0] position of the array, 
-  //this is replaced by a seed function when ar.fire is called.
+  //this is replaced by a seed function when cs.fire is called.
   this.middleware.push(callback)
   //^ push the callback to the stack.
 }
 
-ar.last = function(callback) {
+cs.last = function(callback) {
   if(!this.lastMiddleware) this.lastMiddleware = [null]
   this.lastMiddleware.push(callback)
 }
 
-ar.lastOff = function() {
+cs.lastOff = function() {
   this.lastMiddlewareDisabled = _.clone(this.lastMiddleware)
   this.lastMiddleware = false
 }
 
-ar.lastOn = function() {
+cs.lastOn = function() {
   this.lastMiddleware = this.lastMiddlewareDisabled
 }
 
-ar.disable = function(path) {
+cs.disable = function(path) {
   //Disable the supplied command based on it's unique path.
   //Expecting @name-of-module/actual-command-path
   var targetRoute = _.find(this.routes, function(route) { return route.route.spec == trimSigFromPath(path) })
@@ -195,4 +195,4 @@ var trimSigFromPath = function(path) {
 }
 
 
-module.exports = ar
+module.exports = cs

@@ -2,9 +2,9 @@ var async = require('async'),
     _ = require('underscore'), 
     routeParser = require('route-parser')
 
-var cs = { routes : [] }
+var stack = { routes : [] }
 
-cs.listen = function(param1, callback) {
+stack.listen = function(param1, callback) {
   //param1: a string or an array of strings.
   //(is either a single path or array of paths)  
 
@@ -60,7 +60,7 @@ cs.listen = function(param1, callback) {
   })
 }
 
-cs.fire = function(path, state, callback) {
+stack.fire = function(path, state, callback) {
 
   //Check for signature: 
   if(path.charAt(0) == '@') {
@@ -146,7 +146,7 @@ cs.fire = function(path, state, callback) {
 //TODO: Remove the need for these "use" and "last" functions,
 //instead preferring "*" wildcard listeners that can act as middleware
 //executed in the order in which they are defined in a given app.
-cs.use = function(callback) {
+stack.use = function(callback) {
   //Apply the function to a separate middleware property which 
   //will be called on every fire.
   if(!this.middleware) this.middleware = [null]
@@ -156,21 +156,21 @@ cs.use = function(callback) {
   //^ push the callback to the stack.
 }
 
-cs.last = function(callback) {
+stack.last = function(callback) {
   if(!this.lastMiddleware) this.lastMiddleware = [null]
   this.lastMiddleware.push(callback)
 }
 
-cs.lastOff = function() {
+stack.lastOff = function() {
   this.lastMiddlewareDisabled = _.clone(this.lastMiddleware)
   this.lastMiddleware = false
 }
 
-cs.lastOn = function() {
+stack.lastOn = function() {
   this.lastMiddleware = this.lastMiddlewareDisabled
 }
 
-cs.disable = function(path) {
+stack.disable = function(path) {
   //Disable the supplied command based on it's unique path.
   //Expecting @name-of-module/actual-command-path
   var targetRoute = _.find(this.routes, function(route) { return route.route.spec == trimSigFromPath(path) })
@@ -198,4 +198,4 @@ var trimSigFromPath = function(path) {
 }
 
 
-module.exports = cs
+module.exports = stack

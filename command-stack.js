@@ -120,11 +120,13 @@ cs.fire = function(path, state, callback) {
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return console.log(err)
           if(_.isFunction(callback)) callback(null, state)
+          that.state = state //< Set this as latest state so it's available as prop.
           seriesCallback(null, state)
         })
       } else {
         //(no matching routes found)
         if(_.isFunction(callback)) callback(null, state)
+        that.state = state 
         seriesCallback(null, state)
       }
     }, 
@@ -134,6 +136,7 @@ cs.fire = function(path, state, callback) {
         that.lastMiddleware[0] = function(next) { next(null, state) }
         async.waterfall(that.lastMiddleware, function(err, state) {
           if(err) return console.log(err)
+          that.latestState = state
         })
       }
     } 

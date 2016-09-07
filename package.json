@@ -1,8 +1,8 @@
 {
-  "name": "command-stack",
-  "version": "0.1.0",
-  "description": "An internal router for managing control flow / application state",
-  "main": "command-stack.js",
+  "name": "stack",
+  "version": "2.0.0",
+  "description": "A command driven middleware stack for managing control flow / application state",
+  "main": "stack.js",
   "author": "Derrick Schwabe <admin@nerdbusiness.com>",
   "homepage": "https://github.com/drschwabe/command-stack",
   "repository": {
@@ -15,7 +15,8 @@
     "control flow",
     "state", 
     "state management", 
-    "service bus"
+    "service bus", 
+    "pubsub"
   ],
   "license": "MIT",
   "dependencies": {

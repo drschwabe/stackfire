@@ -16,7 +16,9 @@
     "state", 
     "state management", 
     "service bus", 
-    "pubsub"
+    "pubsub", 
+    "stack", 
+    "command stack"
   ],
   "license": "MIT",
   "dependencies": {

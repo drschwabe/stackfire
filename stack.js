@@ -4,7 +4,7 @@ var async = require('async'),
 
 var stack = { routes : [] }
 
-stack.listen = function(param1, callback) {
+stack.on = function(param1, callback) {
   //param1: a string or an array of strings.
   //(is either a single path or array of paths)  
 

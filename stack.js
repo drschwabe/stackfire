@@ -11,11 +11,10 @@ stack.on = function(param1, callback) {
   var that = this
   var registerRoute = function(path, listenerCallback) {
 
-    var route = routeParser(trimSigFromPath(path))
+    var route = new routeParser(trimSigFromPath(path))
     var existingRoute = _.find(that.routes, function(existingRoute) {
-      //Return true if we find an exact match: 
-      return existingRoute.route.spec == route.spec
-    })
+      return existingRoute.route.match(path)      
+    })    
 
     //The newMiddleware contains two properties; one is the callback
     //the other is the full path (containing sig) so we can later target/override this. 

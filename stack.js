@@ -2,7 +2,12 @@ var async = require('async'),
     _ = require('underscore'), 
     routeParser = require('route-parser')
 
-var stack = { routes : [] }
+var stack = { 
+  routes : [], 
+  state : {}, 
+  req_queue : [], 
+  sig_queue : []
+}
 
 stack.on = function(param1, callback) {
   //param1: a string or an array of strings.
@@ -66,7 +71,15 @@ stack.fire = function(path, state, callback) {
   //If state was not included, use the latest available on
   //this stack object.        
   else if(_.isUndefined(state)) state = this.state
- 
+
+  //If there are currently req and sig it means there is
+  //a parent fire already in progress. 
+  //So we must store these to apply them back after
+  //this particular fire completes. 
+  if(state.req) stack.req_queue.push(state.req)
+  if(state.sig) stack.sig_queue.push(state.sig)
+
+
   //Check for signature: 
   if(path.charAt(0) == '@') {
     state.sig = snipSignature(path) //< Apply to state obj.
@@ -78,7 +91,7 @@ stack.fire = function(path, state, callback) {
     var result = route.route.match(path)
     if(result) {
       req = result
-    } else {
+    } else if(!result || _.isUndefined(result)) {
       req = {} //<If there was no matching route, create an obj anyway.       
     }
     req.path = path
@@ -141,12 +154,25 @@ stack.fire = function(path, state, callback) {
         async.waterfall(that.lastMiddleware, function(err, state) {
           if(err) return console.log(err)
           that.state = state //< Set the latest state. 
-          if(_.isFunction(callback)) callback(null, state)        
+          return seriesCallback(null, state)
         })
       } else {
-        if(_.isFunction(callback)) callback(null, state)        
+        seriesCallback(null, state)        
       }
-    } 
+    }, 
+    function(state) {
+      //Apply any previous state and sig values that were
+      //saved from before:
+      if(that.req_queue.length > 0) state.req = that.req_queue.pop()
+      else delete state.req
+      if(that.sig_queue.length > 0) state.sig = that.sig_queue.pop()       
+      else delete state.sig        
+      //^ The reason to delete the sig and req
+      //is to clear these values so that listeners listening to a parent
+      //command aren't 'passed up' the wrong req or sig after a child
+      //fire's callback occcurs. 
+      if(_.isFunction(callback)) callback(null, state)                
+    }
   ])
 }
 

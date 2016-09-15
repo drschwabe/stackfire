@@ -61,6 +61,12 @@ stack.on = function(param1, callback) {
 
 stack.fire = function(path, state, callback) {
 
+  //If state is a function, we assume it is the callback: 
+  if(_.isFunction(state)) callback = state
+  //If state was not included, use the latest available on
+  //this stack object.        
+  else if(_.isUndefined(state)) state = this.state
+ 
   //Check for signature: 
   if(path.charAt(0) == '@') {
     state.sig = snipSignature(path) //< Apply to state obj.
@@ -94,6 +100,7 @@ stack.fire = function(path, state, callback) {
         //Run the middleware stack: 
         async.waterfall(that.middleware, function(err, state) {
           if(err) return console.log(err)
+          that.state = state
           seriesCallback(null, state)
         })
       } else {
@@ -118,13 +125,11 @@ stack.fire = function(path, state, callback) {
 
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return console.log(err)
-          if(_.isFunction(callback)) callback(null, state)
           that.state = state //< Set this as latest state so it's available as prop.
           seriesCallback(null, state)
         })
       } else {
         //(no matching routes found)
-        if(_.isFunction(callback)) callback(null, state)
         that.state = state 
         seriesCallback(null, state)
       }
@@ -135,8 +140,11 @@ stack.fire = function(path, state, callback) {
         that.lastMiddleware[0] = function(next) { next(null, state) }
         async.waterfall(that.lastMiddleware, function(err, state) {
           if(err) return console.log(err)
-          that.latestState = state
+          that.state = state //< Set the latest state. 
+          if(_.isFunction(callback)) callback(null, state)        
         })
+      } else {
+        if(_.isFunction(callback)) callback(null, state)        
       }
     } 
   ])
@@ -154,7 +162,8 @@ stack.use = function(callback) {
   this.middleware.push(callback)
   //^ push the callback to the stack.
 }
-
+//...though "last" is useful for if you need to guarantee your
+//given code runs after all routes are defined. 
 stack.last = function(callback) {
   if(!this.lastMiddleware) this.lastMiddleware = [null]
   this.lastMiddleware.push(callback)

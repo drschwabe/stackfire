@@ -6,7 +6,8 @@ var stack = {
   routes : [], 
   state : {}, 
   req_queue : [], 
-  sig_queue : []
+  sig_queue : [], 
+  next_queue : []
 }
 
 stack.on = function(param1, callback) {
@@ -64,13 +65,24 @@ stack.on = function(param1, callback) {
   })
 }
 
-stack.fire = function(path, state, callback) {
+stack.fire = function(path, param2, param3) {
 
-  //If state is a function, we assume it is the callback: 
-  if(_.isFunction(state)) callback = state
-  //If state was not included, use the latest available on
-  //this stack object.        
-  else if(_.isUndefined(state)) state = this.state
+  var state, callback
+  //Parse the parameters to figure out what we got: 
+  if(_.isFunction(param2)) { 
+    callback = param2 //< param2 is the callback. 
+    state = this.state //< state was not supplied, so we use the last known.
+  }
+  if(_.isFunction(param3)) {
+    callback = param3 //< param3 is the callback
+    state = param2 //< param2 is assumed to be a fresh state obj
+  }
+  if(_.isUndefined(param2) && _.isUndefined(param3)) {
+    //If no params supplied: 
+    callback = this.next_queue.pop()
+    state = this.state //< TODO: use a pop() pattern like doing iwth next_queue
+  }
+
 
   //If there are currently req and sig it means there is
   //a parent fire already in progress. 

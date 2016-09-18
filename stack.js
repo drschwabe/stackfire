@@ -73,16 +73,20 @@ stack.fire = function(path, param2, param3) {
     callback = param2 //< param2 is the callback. 
     state = this.state //< state was not supplied, so we use the last known.
   }
-  if(_.isFunction(param3)) {
+  else if(_.isFunction(param3)) {
     callback = param3 //< param3 is the callback
     state = param2 //< param2 is assumed to be a fresh state obj
   }
-  if(_.isUndefined(param2) && _.isUndefined(param3)) {
-    //If no params supplied: 
+  else if(_.isObject(param2)) {
+    //Only a state object was supplied.
     callback = this.next_queue.pop()
-    state = this.state //< TODO: use a pop() pattern like doing iwth next_queue
+    state = param2
   }
-
+  else if(_.isUndefined(param2)) {
+    //No params were supplied.
+    callback = this.next_queue.pop()
+    state = this.state //< TODO: use a pop() pattern like doing iwth next_queue    
+  }
 
   //If there are currently req and sig it means there is
   //a parent fire already in progress. 
@@ -90,7 +94,6 @@ stack.fire = function(path, param2, param3) {
   //this particular fire completes. 
   if(state.req) stack.req_queue.push(state.req)
   if(state.sig) stack.sig_queue.push(state.sig)
-
 
   //Check for signature: 
   if(path.charAt(0) == '@') {

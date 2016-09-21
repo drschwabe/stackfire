@@ -179,9 +179,7 @@ stack.fire = function(path, param2, param3) {
       //Apply any previous state and sig values that were
       //saved from before:
       if(that.req_queue.length > 0) state.req = that.req_queue.pop()
-      else delete state.req
       if(that.sig_queue.length > 0) state.sig = that.sig_queue.pop()       
-      else delete state.sig        
       //^ The reason to delete the sig and req
       //is to clear these values so that listeners listening to a parent
       //command aren't 'passed up' the wrong req or sig after a child

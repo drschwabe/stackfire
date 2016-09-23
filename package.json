@@ -13,11 +13,11 @@
     "router",
     "async",
     "control flow",
-    "state", 
-    "state management", 
-    "service bus", 
-    "pubsub", 
-    "stack", 
+    "state",
+    "state management",
+    "service bus",
+    "pubsub",
+    "stack",
     "command stack"
   ],
   "license": "MIT",
@@ -25,5 +25,12 @@
     "async": "^2.0.0-rc.3",
     "route-parser": "0.0.5",
     "underscore": "^1.8.3"
+  },
+  "scripts": {
+    "test": "tape test.js | tap-spec"
+  },
+  "devDependencies": {
+    "tap-spec": "^4.1.1",
+    "tape": "^4.6.0"
   }
 }

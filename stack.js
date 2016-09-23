@@ -6,7 +6,6 @@ var stack = {
   routes : [], 
   state : {}, 
   req_queue : [], 
-  sig_queue : [], 
   next_queue : []
 }
 
@@ -17,13 +16,13 @@ stack.on = function(param1, callback) {
   var that = this
   var registerRoute = function(path, listenerCallback) {
 
-    var route = new routeParser(trimSigFromPath(path))
+    var route = new routeParser(path)
     var existingRoute = _.find(that.routes, function(existingRoute) {
       return existingRoute.route.match(path)      
     })    
 
     //The newMiddleware contains two properties; one is the callback
-    //the other is the full path (containing sig) so we can later target/override this. 
+    //the other is the full path so we can later target/override this. 
     var newMiddleware = { func : listenerCallback, path: path }    
 
     //Determine if the route already exists:
@@ -44,24 +43,7 @@ stack.on = function(param1, callback) {
   else paths = param1
 
   paths.forEach(function(path) {
-    //Check for signature: 
-    if(path.charAt(0) == '@') {
-      //Register it with two padding functions that set and clear the signature
-      //on the state object.  
-      registerRoute(path, function(state, next) {
-        state.sig = snipSignature(param1) //< Stamps signature.
-        next(null, state)
-      })
-      //The actual function: 
-      registerRoute(path, callback)
-      //Clear the signature: 
-      registerRoute(path, function(state, next) {
-        delete state.sig
-        next(null, state)        
-      })
-    } else {
-      registerRoute(path, callback)
-    }
+    registerRoute(path, callback)
   })
 }
 
@@ -88,18 +70,10 @@ stack.fire = function(path, param2, param3) {
     state = this.state //< TODO: use a pop() pattern like doing iwth next_queue    
   }
 
-  //If there are currently req and sig it means there is
+  //At this point if there is already a stack.req it means there is
   //a parent fire already in progress. 
-  //So we must store these to apply them back after
-  //this particular fire completes. 
+  //So we store it so it can be applied after this particular fire completes. 
   if(state.req) stack.req_queue.push(state.req)
-  if(state.sig) stack.sig_queue.push(state.sig)
-
-  //Check for signature: 
-  if(path.charAt(0) == '@') {
-    state.sig = snipSignature(path) //< Apply to state obj.
-    path = trimSigFromPath(path) //Trim from actual command path.
-  }
 
   var matchingRoute, req
   matchingRoute = _.find(this.routes, function(route) {
@@ -107,7 +81,7 @@ stack.fire = function(path, param2, param3) {
     if(result) {
       req = result
     } else if(!result || _.isUndefined(result)) {
-      req = {} //<If there was no matching route, create an obj anyway.       
+      req = {} //< If there was no matching route, create an obj anyway.       
     }
     req.path = path
     //^ Parses the route; organizing params into a tidy object.
@@ -176,23 +150,18 @@ stack.fire = function(path, param2, param3) {
       }
     }, 
     function(state) {
-      //Apply any previous state and sig values that were
-      //saved from before:
+      //Apply any previous state that was saved from before:
       if(that.req_queue.length > 0) state.req = that.req_queue.pop()
-      if(that.sig_queue.length > 0) state.sig = that.sig_queue.pop()       
-      //^ The reason to delete the sig and req
-      //is to clear these values so that listeners listening to a parent
-      //command aren't 'passed up' the wrong req or sig after a child
-      //fire's callback occcurs. 
+      //^ The reason to delete the req is to clear these values so that listeners 
+      //listening to a parent command aren't 'passed up' the wrong req after
+      // a child fire's callback occcurs. 
       if(_.isFunction(callback)) callback(null, state)                
     }
   ])
 }
 
-//TODO: Remove the need for these "use" and "last" functions,
-//instead preferring "*" wildcard listeners that can act as middleware
-//executed in the order in which they are defined in a given app.
-stack.use = function(callback) {
+//"first" middleware (executes at the top of the stack): 
+stack.first = function(callback) {
   //Apply the function to a separate middleware property which 
   //will be called on every fire.
   if(!this.middleware) this.middleware = [null]
@@ -201,48 +170,11 @@ stack.use = function(callback) {
   this.middleware.push(callback)
   //^ push the callback to the stack.
 }
-//...though "last" is useful for if you need to guarantee your
-//given code runs after all routes are defined. 
+
+//"last" middleware (executes at the end of the stack)
 stack.last = function(callback) {
   if(!this.lastMiddleware) this.lastMiddleware = [null]
   this.lastMiddleware.push(callback)
 }
-
-stack.lastOff = function() {
-  this.lastMiddlewareDisabled = _.clone(this.lastMiddleware)
-  this.lastMiddleware = false
-}
-
-stack.lastOn = function() {
-  this.lastMiddleware = this.lastMiddlewareDisabled
-}
-
-stack.disable = function(path) {
-  //Disable the supplied command based on it's unique path.
-  //Expecting @name-of-module/actual-command-path
-  var targetRoute = _.find(this.routes, function(route) { return route.route.spec == trimSigFromPath(path) })
-  var targetListeners = _.filter(targetRoute.middleware, function(listener) { return listener.path == path })
-  targetRoute.middleware = _.difference(targetRoute.middleware, targetListeners)
-}
-
-//Helper functions: 
-var snipSignature = function(path) {
-  //Expected pattern is: @name-of-module/actual/route
-  //or an array consisting of multiple paths. 
-
-  //Accomodate for an array consisting of multiple paths:  
-  if(_.isArray(path)) {
-    return _.map(path, function(aPath) {
-      return aPath.split('/')[0]
-    })
-  } else { //Otherwise, it's just a single path: 
-    return path.split('/')[0]    
-  }
-}
-
-var trimSigFromPath = function(path) {
-  return '/' + _.without(path.split('/'), path.split('/')[0]).join('/')
-}
-
 
 module.exports = stack

@@ -62,3 +62,42 @@ test("Moon mission: fire 3 commands and verify state consistency along the way",
 })
 
 
+test("Part A: Different command listeners should not fire from a single command", (t) => {
+
+  stack.on('/go', (state, next) => {
+    t.ok(state, 'expected listener invoked')
+    next(null, state)
+  })
+
+  //This should not run: 
+  stack.on('/stop', (state, next) => {
+    t.fail('listener invoked when it should not have')
+    next(null, state)
+  }) 
+
+  stack.fire('/go', (err, state) => {
+    t.ok(state, 'end of stack reached')
+    t.end()
+  })
+
+})
+
+test("Part B: (same, but more complex route)", (t) => {
+
+  stack.on('/go/somewhere', (state, next) => {
+    t.ok(state, 'expected listener invoked')
+    next(null, state)
+  })
+
+  //This should not run: 
+  stack.on('/stop/something', (state, next) => {
+    t.fail('listener invoked when it should not have')
+    next(null, state)
+  }) 
+
+  stack.fire('/go/somewhere', (err, state) => {
+    t.ok(state, 'end of stack reached')
+    t.end()
+  })
+
+})

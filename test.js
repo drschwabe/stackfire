@@ -101,3 +101,15 @@ test("Part B: (same, but more complex route)", (t) => {
   })
 
 })
+
+//Test to ensure stack.state is updated as expected. 
+test("stack.state", (t) => {
+  t.plan(2)
+  stack.fire('/take-off', (err, state) => {
+    t.equals(stack.state, state, 'stack.state equals the newly returned state')
+    state.flying = true 
+    stack.fire('/autopilot', (err, stateB) => {
+      t.ok(stateB.flying, 'We are flying.')
+    })    
+  })
+})

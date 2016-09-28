@@ -1,12 +1,7 @@
 # Stack
 
-Stack is a command driven middleware stack intended for internal routing of application state (and not for http requests or browser pushState). 
+Stack is a route driven state management library that leverages a familiar callback and middleware pattern similar to Express.  
 
-Commands are simply regex strings ala Express routes (ex: '/my/command'). 
-
-The idea is to expose a set of commands (ie: routes) your application is built around to enforce a familiar route driven, synchronous control flow & ensure consistent handling of state.   
-
-Asynchronous functions are accommodated with standard callback pattern and modularity encouraged via middleware. 
 
 ## Install
 ```
@@ -17,50 +12,49 @@ npm install --save stack
 ```
 var stack = require('stack')
 
-stack.on('/', (state, next) => {
-   //functionality here
+stack.on('/do-something', (state, next) => {
+   //modify state here, then pass it along: 
    next(null, state)
 })
+
+stack.fire('/do-something')
 ```
 
-The command definition above itself is middleware, we simply listen for the desired route and call next() 
+Unlike Express however, instead of http requests the idea is to pass your entire application's state through this 'stack' of listeners.  Each execute in order, asynchronously, passing along the modified state via next()
 
-And when you are ready to invoke the route: 
-
-```
-stack.fire('/', (err, newState) => {
-  //any function listening for the given route will do it's thing...
-  //each listener function is fired in the order it was defined.
-  //the callback from fire receives the final result after all listener functions have completed
-  //so if the fire command was called from within
-  //another fire event already underway, you can now pass state up to the original stack again.  
-})
-```
-
-Because of the guaranteed synchronous execution of the middleware stack you can nest commands that 'go horizontal' from within this stack; without breaking or complicating the overall control flow of the application. Ex: 
-
-```
-stack.on('/command', (state, next) => {
-    //Branch off and fire another stack: 
-    cs.fire('/another-command', (err, newState) => { 
-        next(null, newState) //< Return the modified state to original stack.
-    })
-})
-```
-
-Each fire the state object is modified to include a req property with the corresponding route and parameters.  Ex: state.req
+The main benefit to this approach is the set of 'commands' (ie: routes) your application now inheritently exposes; essentially an API you can tap into from anywhere, including from modules you later introduce or from outside contributors who can standardize around as the formal way to extend and create new functionality in your app.
 
 
-###  Modularity
+## API
 
-The current hypothesis is that now you have a super simple control flow to your application you can focus on building actual functionality via modules that stack together as middleware.  Modules for your app can simply drop in as a function that runs a stack.on listener or set of listeners.  Ex: 
+`stack.on(command, callback)`
+Creates a listener that invokes `callback` on the given `command`
 
-```
-require('do-awesome-stuff')(stack)
-//(pass an existing stack to the do-awesome-stuff module which extends it with a bunch of new commands)
-```
 
-### TODOs
-- Document all functionality
-- Fix/add support for catch-all wildcard listeners ie: stack.on('*')
-- Write tests
+`stack.fire(command, state, callback)`
+Fires an arbitrary `command` causing the stack of listeners listening to that command to fire (in order) until the end of the stack. 
+
+
+`stack.first(command, state, callback)`
+Same as on, but queued to the top of your stack so that it executes first (unless you add another .first listener)
+
+
+`stack.last(command, state, callback)`
+Same as first, but queued to the bottom of your stack. 
+
+
+`stack.state`
+The last known state of the stack.  Persists after a fire concludes; after the bottom of the stack is reached hence the updated state is retained and available to subsequent fires. 
+
+
+`stack.state._command`
+A special property added to your state object to keep track of the current command being issued. 
+
+
+`stack.state._command[parameter]`
+Any number of parameters on the command itself (ie: `/do-something/:time` are made available as a property of the `stack.state._command` object (ie: `stack.state._command.time`).  
+
+This is essentially how URL parameters are treated in web routers; for example in Express they are accessed via req.params
+
+
+## Examples

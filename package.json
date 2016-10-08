@@ -1,6 +1,6 @@
 {
   "name": "stack",
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-alpha.6",
   "description": "A command driven middleware stack for managing control flow / application state",
   "main": "stack.js",
   "author": "Derrick Schwabe <admin@nerdbusiness.com>",

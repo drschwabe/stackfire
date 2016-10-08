@@ -126,7 +126,7 @@ stack.fire = function(path, param2, param3) {
         var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { return entry.func })
 
         async.waterfall(middlewareToRun, function(err, state) {
-          if(err) return console.log(err)
+          if(err) return callback(err)
           that.state = state //< Set this as latest state so it's available as prop.
           seriesCallback(null, state)
         })

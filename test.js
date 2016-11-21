@@ -6,7 +6,7 @@ test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
 
   stack.on('/do-something', (state, next) => {
     t.ok(state, 'listener invoked')    
-    t.equal(state.req.path, '/do-something', "state.req.path equals '/do-something'")
+    t.equal(state._command.path, '/do-something', "state._command.path equals '/do-something'")
   })
 
   stack.fire('/do-something') 
@@ -25,7 +25,7 @@ test("stack.fire from within a stack.on listener", (t) => {
 
   stack.on('/do-another-thing', (state, next) => {
     t.ok(state, 'root level listener invoked from a nested fire')
-    t.equal(state.req.path, '/do-another-thing', "state.req.path equals the command from the nested fire (not the original command).")    
+    t.equal(state._command.path, '/do-another-thing', "state._command.path equals the command from the nested fire (not the original command).")    
   })
   
   //Original command: 

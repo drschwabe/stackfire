@@ -5,7 +5,7 @@ var async = require('async'),
 var stack = { 
   routes : [], 
   state : {}, 
-  req_queue : [], 
+  command_queue : [], 
   next_queue : []
 }
 
@@ -70,28 +70,28 @@ stack.fire = function(path, param2, param3) {
     state = this.state //< TODO: use a pop() pattern like doing iwth next_queue    
   }
 
-  //At this point if there is already a stack.req it means there is
+  //At this point if there is already a stack._command it means there is
   //a parent fire already in progress. 
   //So we store it so it can be applied after this particular fire completes. 
-  if(state.req) stack.req_queue.push(state.req)
+  if(state._command) stack.command_queue.push(state._command)
 
-  var matchingRoute, req
+  var matchingRoute, command
   matchingRoute = _.find(this.routes, function(route) {
     var result = route.route.match(path)
     if(result) {
-      req = result
+      command = result
     } else if(!result || _.isUndefined(result)) {
-      req = {} //< If there was no matching route, create an obj anyway.       
+      command = {} //< If there was no matching route, create an obj anyway.       
     }
-    req.path = path
+    command.path = path
     //^ Parses the route; organizing params into a tidy object.
     return result
   })
 
   var that = this
 
-  //Apply req as a property of state. 
-  state.req = req
+  //Apply command as a property of state. 
+  state._command = command
 
   async.waterfall([
     function(seriesCallback) {
@@ -117,7 +117,7 @@ stack.fire = function(path, param2, param3) {
           matchingRoute.middleware.unshift({func: seedFunction })      
           matchingRoute.seeded = true      
         } else { //If already seeded, we overwrite the original seed function
-          //(because req and state may have changed): 
+          //(because command and state may have changed): 
           matchingRoute.middleware[0].func = seedFunction
         }
         //Create a copy of the middleware stack we are about to run
@@ -151,8 +151,8 @@ stack.fire = function(path, param2, param3) {
     }, 
     function(state) {
       //Apply any previous state that was saved from before:
-      if(that.req_queue.length > 0) state.req = that.req_queue.pop()
-      //^ The reason to delete the req is to clear these values so that listeners 
+      if(that.command_queue.length > 0) state._command = that.command_queue.pop()
+      //^ The reason to delete the command is to clear these values so that listeners 
       //listening to a parent command aren't 'passed up' the wrong req after
       // a child fire's callback occcurs. 
       if(_.isFunction(callback)) callback(null, state)                

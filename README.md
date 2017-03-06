@@ -48,16 +48,11 @@ The last known state of the stack.  Persists after a fire concludes; after the b
 
 
 `stack.state._command`  
-A special property added to your state object to keep track of the current command being issued. 
+A special property added to your state object to keep track of the current command being issued. Analogous to req.parms in Express. 
 
 
 `stack.state._command[parameter]`  
-Any number of parameters on the command itself (ie: `/do-something/:time` are made available as a property of the `stack.state._command` object (ie: `stack.state._command.time`).  
-
-This is essentially how URL parameters are treated in web routers; for example in Express they are accessed via req.params
-
-
-## Examples
+Any number of parameters on the command itself (ie: `/do-something/:time` are made available as a property of the `stack.state._command` object (ie: `stack.state._command.time`). 
 
 
 #### License

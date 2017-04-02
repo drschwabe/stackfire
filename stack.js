@@ -160,21 +160,5 @@ stack.fire = function(path, param2, param3) {
   ])
 }
 
-//"first" middleware (executes at the top of the stack): 
-stack.first = function(callback) {
-  //Apply the function to a separate middleware property which 
-  //will be called on every fire.
-  if(!this.middleware) this.middleware = [null]
-  //Set a null placeholder into the [0] position of the array, 
-  //this is replaced by a seed function when cs.fire is called.
-  this.middleware.push(callback)
-  //^ push the callback to the stack.
-}
-
-//"last" middleware (executes at the end of the stack)
-stack.last = function(callback) {
-  if(!this.lastMiddleware) this.lastMiddleware = [null]
-  this.lastMiddleware.push(callback)
-}
 
 module.exports = stack

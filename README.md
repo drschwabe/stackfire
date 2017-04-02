@@ -34,15 +34,7 @@ Creates a listener that invokes `callback` on the given `command`
 `stack.fire(command, state, callback)`   
 Fires an arbitrary `command` causing the stack of listeners listening to that command to fire (in order) until the end of the stack. 
 
-
-`stack.first(command, state, callback)`  
-Same as on, but queued to the top of your stack so that it executes first (unless you add another .first listener)
-
-
-`stack.last(command, state, callback)`  
-Same as first, but queued to the bottom of your stack. 
-
-
+### Properties
 `stack.state`  
 The last known state of the stack.  Persists after a fire concludes; after the bottom of the stack is reached hence the updated state is retained and available to subsequent fires. 
 

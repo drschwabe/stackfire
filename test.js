@@ -113,3 +113,20 @@ test("stack.state", (t) => {
     })    
   })
 })
+
+//Test that wildcards work: 
+test('Catch all wildcard listener', (t) => {
+  t.plan(4)
+
+  stack.on('*wild', (state, next) => {
+    t.pass('wildcard listener ran')
+    next(null, state)
+  })
+  stack.fire('anything', (err, next) => {
+    t.pass('anything fired')
+  })
+  stack.fire('anything/else', (err, next) => {
+    t.pass('anything else fired too')
+  })
+
+})

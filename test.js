@@ -1,8 +1,10 @@
-var test = require('tape'), 
-    stack = require('./stack.js')
-
+const test = require('tape'), 
+      requireUncached = require('require-uncached')
+      //^ ensures a clean slate for stack for each test. 
+  
 test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
   t.plan(2)
+  let stack = requireUncached('./stack.js')
 
   stack.on('/do-something', (state, next) => {
     t.ok(state, 'listener invoked')    
@@ -15,6 +17,7 @@ test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
 
 test("stack.fire from within a stack.on listener", (t) => {
   t.plan(2)
+  let stack = requireUncached('./stack.js')
 
   stack.on('/do-something-else', (state, next) => {
     //Nested fire: 
@@ -36,6 +39,7 @@ test("stack.fire from within a stack.on listener", (t) => {
 
 test("fire 3 commands and verify state consistency along the way", (t) => {
   t.plan(6)
+  let stack = requireUncached('./stack.js')
 
   stack.on('/land-on-moon', (state, next) => {
     state.landed = true
@@ -63,6 +67,7 @@ test("fire 3 commands and verify state consistency along the way", (t) => {
 
 
 test("Different command listeners should not fire from a single command", (t) => {
+  let stack = requireUncached('./stack.js')
 
   stack.on('/go', (state, next) => {
     t.ok(state, 'expected listener invoked')
@@ -84,6 +89,7 @@ test("Different command listeners should not fire from a single command", (t) =>
 
 test("(same as above, but more complex route)", (t) => {
 
+  let stack = require('./stack.js')
   stack.on('/go/somewhere', (state, next) => {
     t.ok(state, 'expected listener invoked')
     next(null, state)
@@ -105,6 +111,7 @@ test("(same as above, but more complex route)", (t) => {
 //Test to ensure stack.state is updated as expected. 
 test("stack.state", (t) => {
   t.plan(2)
+  let stack = requireUncached('./stack.js')
   stack.fire('/take-off', (err, state) => {
     t.equals(stack.state, state, 'stack.state equals the newly returned state')
     state.flying = true 
@@ -118,15 +125,67 @@ test("stack.state", (t) => {
 test('Catch all wildcard listener', (t) => {
   t.plan(4)
 
+  let stack = requireUncached('./stack.js')
+
   stack.on('*wild', (state, next) => {
     t.pass('wildcard listener ran')
     next(null, state)
   })
+
   stack.fire('anything', (err, next) => {
     t.pass('anything fired')
   })
+  
   stack.fire('anything/else', (err, next) => {
     t.pass('anything else fired too')
   })
 
+})
+
+test("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
+  let stack = requireUncached('./stack.js')
+  t.plan(2)
+
+  stack.on('heart', (state, next) => {
+    t.fail("listener ('heart') which was never explicitly fired was invoked!")
+    next(null, state)
+  })
+
+  //Establish wildcard before diamond: 
+  stack.on('*wild', (state, next) => {
+    t.pass('*wild listener invoked')
+    next(null, state)
+  })
+
+  stack.on('diamond', (state, next) => {
+    t.pass('diamond listener invoked')    
+    next(null, state) 
+  })
+
+  stack.fire('diamond')
+})
+
+//This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same. 
+test("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
+
+  let stack = requireUncached('./stack.js')
+  t.plan(2)
+
+  stack.on('heart', (state, next) => {
+    t.fail("listener ('heart') which was never explicitly fired was invoked!")
+    next(null, state)
+  })
+
+  stack.on('diamond', (state, next) => {
+    t.pass('diamond listener invoked')    
+    next(null, state) 
+  })
+
+  //Establish wildcard after diamond: 
+  stack.on('*wild', (state, next) => {
+    t.pass('*wild listener invoked')
+    next(null, state)
+  })  
+
+  stack.fire('diamond')
 })

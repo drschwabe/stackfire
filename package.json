@@ -2,7 +2,7 @@
   "name": "stack",
   "description": "A command driven middleware stack for managing control flow / application state",
   "keywords": ["router", "async", "control flow", "state","state management","service bus","pubsub","stack","command stack"],  
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "",
   "contributors": [
     "Tim Caswell <tim@creationix.com>",
@@ -24,8 +24,9 @@
     "test": "tape test.js | tap-spec"
   },
   "devDependencies": {
+    "require-uncached": "^1.0.3",
     "tap-spec": "^4.1.1",
     "tape": "^4.6.0"
-  }, 
-  "main": "stack.js"  
+  },
+  "main": "stack.js"
 }

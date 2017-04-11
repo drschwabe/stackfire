@@ -95,21 +95,6 @@ stack.fire = function(path, param2, param3) {
 
   async.waterfall([
     function(seriesCallback) {
-      //Fire any middleware (route agnostic)...
-      if(that.middleware) { 
-        //Seed it with the req and state:   
-        that.middleware[0] = function(next) { next(null, state) }
-        //Run the middleware stack: 
-        async.waterfall(that.middleware, function(err, state) {
-          if(err) return console.log(err)
-          that.state = state
-          seriesCallback(null, state)
-        })
-      } else {
-        seriesCallback(null, state)
-      }
-    }, 
-    function(state, seriesCallback) {
       var seedFunction = function(next) { next(null, state) }
       if(matchingRoute) {      
         //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
@@ -135,20 +120,7 @@ stack.fire = function(path, param2, param3) {
         that.state = state 
         seriesCallback(null, state)
       }
-    }, 
-    function(state, seriesCallback) {
-      //Fire any "last" middleware: 
-      if(that.lastMiddleware) { 
-        that.lastMiddleware[0] = function(next) { next(null, state) }
-        async.waterfall(that.lastMiddleware, function(err, state) {
-          if(err) return console.log(err)
-          that.state = state //< Set the latest state. 
-          return seriesCallback(null, state)
-        })
-      } else {
-        seriesCallback(null, state)        
-      }
-    }, 
+    },
     function(state) {
       //Apply any previous state that was saved from before:
       if(that.command_queue.length > 0) state._command = that.command_queue.pop()

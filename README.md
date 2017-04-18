@@ -1,11 +1,11 @@
 # Stack
 
-Stack is a route driven state management library that leverages a familiar callback and middleware pattern used in Express.  
+Stack is a route driven state management library that leverages a familiar callback and middleware pattern used in Express. 
 
 
 ## Install
 ```
-npm install --save stack
+npm install --save @drschwabe/stack
 ```
 
 ## Usage

@@ -1,19 +1,17 @@
 {
-  "name": "stack",
+  "name": "@drschwabe/stack",
   "description": "A command driven middleware stack for managing control flow / application state",
   "keywords": ["router", "async", "control flow", "state","state management","service bus","pubsub","stack","command stack"],  
   "version": "2.0.0",
-  "author": "",
   "contributors": [
-    "Tim Caswell <tim@creationix.com>",
     "Derrick Schwabe <admin@nerdbusiness.com>"
   ],
-  "homepage": "https://github.com/creationix/stack",
+  "homepage": "https://github.com/drschwabe/stack",
   "repository": {
     "type": "git",
-    "url": "https://github.com/creationix/stack"
+    "url": "https://github.com/drschwabe/stack"
   },
-  "bugs": "http://github.com/creationix/stack/issues",  
+  "bugs": "http://github.com/drschwabe/stack/issues",  
   "license": "MIT",
   "dependencies": {
     "async": "2.0.0-rc.3",

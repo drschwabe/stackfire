@@ -1,6 +1,6 @@
 # Stack
 
-Stack is a route driven state management library that leverages a familiar callback and middleware pattern used in Express. 
+Stack is a route driven state management library that leverages the familiar callback and middleware pattern used in Express. 
 
 
 ## Install
@@ -49,6 +49,3 @@ Any number of parameters on the command itself (ie: `/do-something/:time` are ma
 
 #### License
 MIT
-
-#### Stack v1
-For the original stack by Tim checkout branch stack1 of this repo or install with ```npm install stack@0.1.0``` 

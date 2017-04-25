@@ -1,5 +1,5 @@
 {
-  "name": "@drschwabe/stack",
+  "name": "stack-core",
   "description": "A command driven middleware stack for managing control flow / application state",
   "keywords": ["router", "async", "control flow", "state","state management","service bus","pubsub","stack","command stack"],  
   "version": "2.0.1-b",
@@ -22,8 +22,8 @@
     "test": "tape test.js | tap-spec"
   },
   "devDependencies": {
-    "tap-spec": "^4.1.1",
-    "tape": "^4.6.0"
+    "tap-spec": "4.1.1",
+    "tape": "4.6.0"
   }, 
   "main": "stack.js"  
 }

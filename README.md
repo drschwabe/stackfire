@@ -5,12 +5,12 @@ Stack is a route driven state management library that leverages the familiar cal
 
 ## Install
 ```
-npm install --save @drschwabe/stack
+npm install --save stack-core
 ```
 
 ## Usage
 ```javascript
-var stack = require('stack')
+var stack = require('stack-core')
 
 stack.on('/do-something', (state, next) => {
    //modify state here, then pass it along: 

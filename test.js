@@ -189,3 +189,39 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
 
   stack.fire('diamond')
 })
+
+test("Wildcard correctly is added to stacks and fires in the correct order)", (t) => {
+
+  let stack = requireUncached('./stack.js')
+  t.plan(3)
+
+  stack.on('ten', (state, next) => {
+    state.counter = 10
+    next(null, state)
+  })
+  stack.on('one', (state, next) => {
+    state.counter = 1
+    next(null, state)
+  })
+  stack.on('zero', (state, next) => {
+    state.counter = 0
+    next(null, state)
+  })
+
+  stack.on('*multiply', (state, next) => {
+    state.counter *= 10
+    next(null, state)
+  })
+
+  stack.on('*multiply', (state, next) => {
+    state.counter *= 10
+    next(null, state)
+  })
+
+  stack.fire('ten')
+  t.equal(stack.state.counter, 1000, 'multiply called twice on ten')
+  stack.fire('zero')
+  t.equal(stack.state.counter, 0, 'zero canned with multiply is zero')
+  stack.fire('one')
+  t.equal(stack.state.counter, 100, 'one begets 100')
+})

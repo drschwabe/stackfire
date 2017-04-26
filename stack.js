@@ -19,12 +19,21 @@ stack.on = function(param1, callback) {
     var route = new routeParser(path)
     var existingRoute = _.find(that.routes, function(existingRoute) {
       return existingRoute.route.match(path)      
-    })    
-
+    })
     //The newMiddleware contains two properties; one is the callback
     //the other is the full path so we can later target/override this. 
     var newMiddleware = { func : listenerCallback, path: path }    
-
+    // wildcard paths naturally do not get added to other routes,
+    // instead other paths are added to wildcard routes only after they
+    // are defined.  Because we want wildcard paths to also work with prior
+    // defined routes, then we must add the wildcard paths to the middlewares
+    // of the other routes.
+    // This could get tricky though, and more testing is needed to make sure
+    // this does not introduce even more problems.
+    var isWild = (~path.indexOf('*'))
+    if (isWild) {
+      that.routes.forEach(routes => routes.middleware.push(newMiddleware))
+    }
     //Determine if the route already exists:
     if(!existingRoute) {
       route = { route: route, middleware: [newMiddleware] }

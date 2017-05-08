@@ -32,7 +32,7 @@ stack.on = function(param1, callback) {
     // this does not introduce even more problems.
     var isWild = (~path.indexOf('*'))
     if (isWild) {
-      that.routes.forEach(routes => routes.middleware.push(newMiddleware))
+      that.routes.map(routes => Object.assign({}, routes, {middleware: [...routes.middleware, ...newMiddleware]}))
     }
     //Determine if the route already exists:
     if(!existingRoute) {

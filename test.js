@@ -89,7 +89,7 @@ test("Different command listeners should not fire from a single command", (t) =>
 
 test("(same as above, but more complex route)", (t) => {
 
-  let stack = require('./stack.js')
+  let stack = requireUncached('./stack.js')
   stack.on('/go/somewhere', (state, next) => {
     t.ok(state, 'expected listener invoked')
     next(null, state)
@@ -102,6 +102,50 @@ test("(same as above, but more complex route)", (t) => {
   }) 
 
   stack.fire('/go/somewhere', (err, state) => {
+    t.ok(state, 'end of stack reached')
+    t.end()
+  })
+
+})
+
+
+test("(same as above, but even more complex routes using a parameter)", (t) => {
+
+  let stack = requireUncached('./stack.js')
+  stack.on('/inventory/:item/deliver', (state, next) => {
+    t.ok(state, 'expected listener invoked')
+    next(null, state)
+  })
+
+  //This should not run: 
+  stack.on('/inventory/:item/destroy', (state, next) => {
+    t.fail('listener invoked when it should not have')
+    next(null, state)
+  })
+
+  stack.fire('/inventory/widget/deliver', (err, state) => {
+    t.ok(state, 'end of stack reached')
+    t.end()
+  })
+
+})
+
+
+test("(same as above, but even more complex routes using multiple parameters)", (t) => {
+
+  let stack = requireUncached('./stack.js')
+  stack.on('/go/:destination/:time', (state, next) => {
+    t.ok(state, 'expected listener invoked')
+    next(null, state)
+  })
+
+  //This should not run: 
+  stack.on('/some/other/route', (state, next) => {
+    t.fail('listener invoked when it should not have')
+    next(null, state)
+  })
+
+  stack.fire('/go/Brisbane/tomorrow', (err, state) => {
     t.ok(state, 'end of stack reached')
     t.end()
   })

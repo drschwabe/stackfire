@@ -269,3 +269,35 @@ test("Wildcard correctly is added to stacks and fires in the correct order)", (t
   stack.fire('one')
   t.equal(stack.state.counter, 100, 'one begets 100')
 })
+
+
+test("Commands not issued should not fire (using wildcard commands)", (t) => {
+  t.plan(3)
+
+  let stack = requireUncached('./stack.js')
+
+  //Defining a wildcard listener atop of the stack seems to result in 
+  //subsequent listeners being fired even though their command was not issued...
+
+  stack.on('*wildcard', (state, next) => {
+    t.pass('this should invoke on every fire')
+    next(null, state)    
+  })
+
+  stack.on('/release-prisoner', (state, next) => {
+    t.pass('expected listener invoked')
+    next(null, state)
+  })
+
+  //This should not run! 
+  stack.on('/execute-prisoner', (state, next) => {
+    t.fail('listener invoked when it should not have')
+    next(null, state)
+  })
+
+  stack.fire('/release-prisoner', (err, state) => {
+    t.pass('end of stack reached')
+    t.end()
+  })
+
+})

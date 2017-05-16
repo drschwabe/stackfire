@@ -301,3 +301,31 @@ test("Commands not issued should not fire (using wildcard commands)", (t) => {
   })
 
 })
+
+
+test("Commands not issued should not fire (using commands that use URL param)", (t) => {
+t.plan(3)
+
+  let stack = requireUncached('./stack.js')
+
+  stack.on('/bomb/:anything', (state, next) => {
+    t.pass('this should invoke on every fire')
+    next(null, state)    
+  })
+
+  stack.on('/bomb/disarm', (state, next) => {
+    t.pass('expected listener invoked')
+    next(null, state)
+  })
+
+  //This should not run! 
+  stack.on('/bomb/detonate', (state, next) => {
+    t.fail('listener invoked when it should not have')
+    next(null, state)
+  })
+
+  stack.fire('/bomb/disarm', (err, state) => {
+    t.pass('end of stack reached')
+    t.end()
+  })  
+})

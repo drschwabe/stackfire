@@ -16,6 +16,9 @@ stack.on = function(param1, callback) {
   var that = this
   var registerRoute = function(path, listenerCallback) {
 
+    //Ensure path always is prefixed with a slash: 
+    if(path.substr(0, 1) != '/') path = '/' + path
+
     var route = new routeParser(path)
     var existingRoute = _.find(that.routes, function(existingRoute) {
       return existingRoute.route.match(path)      
@@ -57,6 +60,8 @@ stack.on = function(param1, callback) {
 }
 
 stack.fire = function(path, param2, param3) {
+
+  if(path.substr(0, 1) != '/') path = '/' + path  
 
   var state, callback
   //Parse the parameters to figure out what we got: 

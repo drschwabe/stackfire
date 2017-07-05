@@ -269,3 +269,35 @@ test("Wildcard correctly is added to stacks and fires in the correct order)", (t
   stack.fire('one')
   t.equal(stack.state.counter, 100, 'one begets 100')
 })
+
+
+
+test("Commands are agnostic to stating with a slash or not", (t) => {
+
+  let stack = requireUncached('./stack.js')
+  t.plan(4)
+
+  stack.on('party', (state, next) => {
+    t.pass("It's a party!")
+    next(null, state)
+  })
+
+  stack.on('/party', (state, next) => {
+    t.pass("it's the same party!")
+  })  
+
+  stack.fire('party')  
+
+
+  stack.on('/earthquake', (state, next) => {
+    t.pass('earthquake!')
+    next(null, state)
+  })
+
+  stack.on('earthquake', (state, next) => {
+    t.pass('earthquake!!!!')
+  })
+
+  stack.fire('/earthquake')
+
+})

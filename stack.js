@@ -6,7 +6,9 @@ var stack = {
   routes : [], 
   state : {}, 
   command_queue : [], 
-  next_queue : []
+  next_queue : [], 
+  fire_queue : [], 
+  depth : 0
 }
 
 stack.on = function(param1, callback) {
@@ -61,7 +63,24 @@ stack.on = function(param1, callback) {
 
 stack.fire = function(path, param2, param3) {
 
-  if(path.substr(0, 1) != '/') path = '/' + path  
+  if(path.substr(0, 1) != '/') path = '/' + path    
+
+  //Push this fire to the queue: 
+  stack.fire_queue.push({ params: [path, param2, param3, stack.depth], depth: stack.depth })
+
+  //if the path provided is not first in the queue then
+  //that means there is already a fire underway, 
+  //so we simply queue this and let the current firing 
+  //finish and fire the queue later
+  console.log(stack.fire_queue[0].params[0])
+  debugger  //Do not fire if the path and depth are different 
+  //(if path is different, but depth is same - we do fire it; this is called a 'horizontal fire' )
+  if( stack.fire_queue[0].params[0] != path && stack.depth != stack.fire_queue[0].depth ) {
+    //We have to determine depth... 
+    //the fire can continue... IF it is a child of a parent fire...
+    //how to determine that... 
+    return
+  }
 
   var state, callback
   //Parse the parameters to figure out what we got: 
@@ -141,7 +160,24 @@ stack.fire = function(path, param2, param3) {
       //^ The reason to delete the command is to clear these values so that listeners 
       //listening to a parent command aren't 'passed up' the wrong req after
       // a child fire's callback occcurs. 
-      if(_.isFunction(callback)) callback(null, state)                
+
+      //Remove the first element of the stack.fire_queue: 
+      stack.fire_queue.shift()
+      //If there is aything left in the queue, fire it...       
+      if(stack.fire_queue.length) {
+        //only fire if it is a different depth!  
+        if( stack.fire_queue[0].params[0] != path && stack.depth != stack.fire_queue[0].depth ) {
+          stack.fire( stack.fire_queue[0].params[0], stack.fire_queue[0].params[1], stack.fire_queue[0].params[2])
+        } else {
+          //otherwise it was already called, so remove it: 
+          stack.fire_queue.shift()
+        } //^^ this may cause a bug in whereby it will only apply one-time; we need to apply this logic
+        //recursively to x number of potential fires in the queue
+        //ie: stack.fire_queue.forEach
+        //alternatively; might call the callback .... 
+      }
+      stack.depth++       
+      if(_.isFunction(callback)) callback(null, state)
     }
   ])
 }

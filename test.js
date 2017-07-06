@@ -1,6 +1,7 @@
 const test = require('tape'), 
-      requireUncached = require('require-uncached')
+      requireUncached = require('require-uncached'), 
       //^ ensures a clean slate for stack for each test. 
+      _ = require('underscore')
   
 test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
   t.plan(2)
@@ -20,7 +21,9 @@ test("stack.fire from within a stack.on listener", (t) => {
   let stack = requireUncached('./stack.js')
 
   stack.on('/do-something-else', (state, next) => {
+    console.log('do something....')
     //Nested fire: 
+    debugger
     stack.fire('/do-another-thing', (err, newState) => {
       next(null, newState)
     })
@@ -271,7 +274,6 @@ test("Wildcard correctly is added to stacks and fires in the correct order)", (t
 })
 
 
-
 test("Commands are agnostic to stating with a slash or not", (t) => {
 
   let stack = requireUncached('./stack.js')
@@ -301,3 +303,33 @@ test("Commands are agnostic to stating with a slash or not", (t) => {
   stack.fire('/earthquake')
 
 })
+
+//passes: 
+test('berries', (t) => {
+  t.plan(4)
+
+  let stack = requireUncached('./stack.js')    
+
+  t.ok(_.isArray(stack.fire_queue) && _.isEmpty(stack.fire_queue))
+
+  stack.on('berry', (state, next) => {
+    //stack.command_queue = [ [{path:'berry'}] ]
+    //t.equals(stack.command_queue[0][0].path, 'berry' )
+    t.equals(stack.fire_queue[0].params[0], '/berry') 
+    next(null, state)
+  })
+
+  stack.fire('berry', (err, state) => {  
+    //now the fire has completed so should be just an empty array: 
+    //stack.command_queue = []  
+    t.ok(_.isArray(stack.fire_queue) && _.isEmpty(stack.fire_queue))    
+  })  
+
+  stack.fire('vegetable', (err, state) => {  //stack.command_queue = [ [{path:'vegetable'}] ]
+    //now the fire has completed so... 
+    //stack.command_queue = []  
+    t.ok(_.isArray(stack.fire_queue) && _.isEmpty(stack.fire_queue))        
+  }) 
+
+})
+

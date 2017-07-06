@@ -333,3 +333,37 @@ test('berries', (t) => {
 
 })
 
+
+
+test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+  t.plan(1)
+
+  let stack = requireUncached('./stack.js')  
+
+  console.log('proceed with test')
+
+  stack.on('warning-alarm', (state, next) => {
+    //stack.fire_queue = [ ['/warning-alarm'] ]
+    console.log('you have 5 seconds to comply')
+    setTimeout(() => next, 5000)
+  })
+
+  stack.fire('warning-alarm', (err, state) => {
+    // stack.fire_queue = [ ]
+  }) 
+
+  stack.fire('fire-turret', (err, state) => {
+    //t.equals(stack.fire_queue[0][0], '/fire-turret')
+    //stack.fire_queue = [ ['/warning-alarm'], ['/fire-turrent'] ]    
+    //The following should apply to state 
+    //only AFTER warning alarm completes: 
+    state.firing_turret = true
+  })
+
+  //Wait one second and check: 
+  setTimeout( () => {
+    t.notOk(stack.state.firing_turret)
+  }, 1000 )
+
+})
+

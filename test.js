@@ -335,8 +335,8 @@ test('berries', (t) => {
 
 
 
-test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
-  t.plan(1)
+test.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+  t.plan(2)
 
   let stack = requireUncached('./stack.js')  
 
@@ -350,6 +350,8 @@ test("A subsequent fire waits until the current stack is finished before becomin
 
   stack.fire('warning-alarm', (err, state) => {
     // stack.fire_queue = [ ]
+    console.log('warning alarm finished')
+    t.pass('warning alarm finished')
   }) 
 
   stack.fire('fire-turret', (err, state) => {

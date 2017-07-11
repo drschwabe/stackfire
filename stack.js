@@ -1,6 +1,9 @@
 var async = require('async'), 
     _ = require('underscore'), 
-    routeParser = require('route-parser')
+    routeParser = require('route-parser'), 
+    $ = require('jquery'), 
+    createHtmlElem = require('create-html-element'), 
+    gg = require('gg')    
 
 var stack = { 
   routes : [], 
@@ -10,6 +13,39 @@ var stack = {
   fire_queue : [], 
   depth : 0
 }
+
+stack.grid = gg.createGrid(6,6)
+stack.grid = gg.populateCells(stack.grid)
+
+var renderGrid = () => {
+  $('#vizgrid').html('')
+  stack.grid.cells.forEach((cell,index) => {
+    let entyCell = createHtmlElem({
+      name : 'div', 
+      attributes : {
+        class : 'col-2 border border-silver p2 center', 
+        id : index
+      }
+    })
+    $('#vizgrid').append(entyCell)
+    //Append a 'firebox' if any: 
+    var fireEnty = gg.examine(stack.grid, index) 
+    //debugger
+    if( fireEnty ) {
+      $('#vizgrid #' + index).append(
+        createHtmlElem({
+          name : 'div', 
+          attributes : {
+            class : 'center blue bg-white border border-gray p2', 
+            id : index
+          }, 
+          value : fireEnty.path
+        })
+      )
+    }    
+  })
+}
+
 
 stack.on = function(param1, callback) {
   //param1: a string or an array of strings.
@@ -65,22 +101,6 @@ stack.fire = function(path, param2, param3) {
 
   if(path.substr(0, 1) != '/') path = '/' + path    
 
-  //Push this fire to the queue: 
-  stack.fire_queue.push({ params: [path, param2, param3, stack.depth], depth: stack.depth })
-
-  //if the path provided is not first in the queue then
-  //that means there is already a fire underway, 
-  //so we simply queue this and let the current firing 
-  //finish and fire the queue later
-  console.log(stack.fire_queue[0].params[0])
-  debugger  //Do not fire if the path and depth are different 
-  //(if path is different, but depth is same - we do fire it; this is called a 'horizontal fire' )
-  if( stack.fire_queue[0].params[0] != path && stack.depth != stack.fire_queue[0].depth ) {
-    //We have to determine depth... 
-    //the fire can continue... IF it is a child of a parent fire...
-    //how to determine that... 
-    return
-  }
 
   var state, callback
   //Parse the parameters to figure out what we got: 
@@ -106,7 +126,7 @@ stack.fire = function(path, param2, param3) {
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress. 
   //So we store it so it can be applied after this particular fire completes. 
-  if(state._command) stack.command_queue.push(state._command)
+  //if(state._command) stack.command_queue.push(state._command)
 
   var matchingRoute, command
   matchingRoute = _.find(this.routes, function(route) {
@@ -121,10 +141,26 @@ stack.fire = function(path, param2, param3) {
     return result
   })
 
+  if(!command) {
+    console.log('no matching route (no listeners) defined.')
+    if(callback) return callback
+    else return 
+  }
+
   var that = this
+
+  //Push this fire to the queue: 
+  //stack.command_queue.push({ params: [path, param2, param3, stack.depth], depth: stack.depth })
 
   //Apply command as a property of state. 
   state._command = command
+
+  //$('#vizgrid').append('<div class="col-2 bg-white border-black p2 center m2">' + command.path + '</div>')
+
+  stack.grid = gg.insertEnty(stack.grid, { cell: stack.grid.enties.length, path : command.path })
+
+  renderGrid()
+
 
   async.waterfall([
     function(seriesCallback) {

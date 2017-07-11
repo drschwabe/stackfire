@@ -335,7 +335,7 @@ test('berries', (t) => {
 
 
 
-test.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
   t.plan(2)
 
   let stack = requireUncached('./stack.js')  

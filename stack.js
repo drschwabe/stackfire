@@ -9,21 +9,24 @@ var stack = {
   routes : [], 
   state : {}, 
   command_queue : [], 
+  command_history : [],   
   next_queue : [], 
-  fire_queue : [], 
-  depth : 0
+  fire_queue : []
 }
 
-stack.grid = gg.createGrid(6,6)
+stack.grid = gg.createGrid(3,3)
 stack.grid = gg.populateCells(stack.grid)
 
 var renderGrid = () => {
+
+//  stack.grid = gg.populateCells(stack.grid)
+
   $('#vizgrid').html('')
   stack.grid.cells.forEach((cell,index) => {
     let entyCell = createHtmlElem({
       name : 'div', 
       attributes : {
-        class : 'col-2 border border-silver p2 center', 
+        class : 'col-4 border border-silver p2 center', 
         id : index
       }
     })
@@ -36,7 +39,7 @@ var renderGrid = () => {
         createHtmlElem({
           name : 'div', 
           attributes : {
-            class : 'center blue bg-white border border-gray p2', 
+            class : 'center blue bg-white border border-gray p2 h5', 
             id : index
           }, 
           value : fireEnty.path
@@ -157,9 +160,25 @@ stack.fire = function(path, param2, param3) {
 
   //$('#vizgrid').append('<div class="col-2 bg-white border-black p2 center m2">' + command.path + '</div>')
 
-  stack.grid = gg.insertEnty(stack.grid, { cell: stack.grid.enties.length, path : command.path })
+  console.log(command)
+  // command.depth = stack.fire_queue.length
+  // command.sequence = stack.fire_queue[0]
+  //Somehow have to determine the depth and sequence... 
+  command.sequence = 0  
+  command.depth = 0
+  //this is our x and y in the grid
+  depth and sequence need to increment when a fire occurs and then decrement upon completion 
+  //stack.depth++
+  //Determine if this is a horizontal or vertical fire...
+
+
+  debugger
+
+  stack.grid = gg.insertEnty(stack.grid, { cell: gg.xy(stack.grid, command.depth, command.sequence), path : command.path })
 
   renderGrid()
+
+  //stack.command_history
 
 
   async.waterfall([

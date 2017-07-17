@@ -154,17 +154,23 @@ stack.fire = function(path, param2, param3) {
     else return 
   }
 
-
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
 
   if(state._command) {
-    //so determine which one takes priority, and adjust the queue accordingly 
-    debugger
+    //so determine which one takes priority, and adjust the queue accordingly..
+    //analzye the sequence (x direction)
+    console.log(state._command.sequence)
+    console.log(command.sequence)    
+    debugger    
     return 
   } else {
-    //if it takes priority, we apply the new command: 
-    state._command = command    
+    //if no command active, we assume it is root level;
+    //We assign it a sequence based on stack sequence property
+    command.sequence = stack.sequence + 1
+    //(sequence is just number of fires occurred at root level)
+    //and then apply it to state: 
+    state._command = command        
   }
 
   //stack.grid = gg.insertEnty(stack.grid, { cell: gg.xy(stack.grid, command.depth, command.sequence), path : command.path })

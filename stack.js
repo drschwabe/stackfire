@@ -4,10 +4,13 @@ var async = require('async'),
     createHtmlElem = require('create-html-element'), 
     gg = require('gg')    
 
+var browser = false
 if (typeof window === 'undefined') {
-  console.log('stuff')
+  console.log('load jquery')
+  var $ = require('jquery')  
+  browser = true
 } else {
-  var $ = require('jquery')
+  console.log('do not load jquery')  
 }
 
 var stack = { 
@@ -23,9 +26,8 @@ var stack = {
 stack.grid = gg.createGrid(3,3)
 stack.grid = gg.populateCells(stack.grid)
 
-if(window.document) {
+if(browser) {
   var renderGrid = () => {
-
     //  stack.grid = gg.populateCells(stack.grid)
 
     $('#vizgrid').html('')
@@ -177,7 +179,7 @@ stack.fire = function(path, param2, param3) {
 
   stack.grid = gg.insertEnty(stack.grid, { cell: stack.sequence, path : command.path })
  
-  if(window) renderGrid()
+  if(browser) renderGrid()
 
   var that = this
 

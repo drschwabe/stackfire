@@ -158,12 +158,25 @@ stack.fire = function(path, param2, param3) {
 
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
-
   if(state._command) {
     //so determine which one takes priority, and adjust the queue accordingly..
     //analzye the sequence (x direction)
     console.log(state._command.sequence)
     console.log(command.sequence)    
+    //firt, let's measure the depth of the current command...
+    //how do we determine to add to the x or the y? 
+    //we need to determine if there is sequence
+    //sequence gets reduced at the end
+    //this way we dont have to track parents/children
+    //we know that if ever there is sequence slots it means there is queue
+    //if sequence is 0 it means there is nothing in the queue 
+
+    //but still how do we figure out... depth
+    //for now i'll just make everything add to sequence ..
+    //but somehow we need to determine if a fire is already in progress... 
+
+    //for now just queue everything: 
+    stack.command_queue = command 
     debugger    
     return 
   } else {
@@ -233,7 +246,8 @@ stack.fire = function(path, param2, param3) {
         //ie: stack.fire_queue.forEach
         //alternatively; might call the callback .... 
       }
-      stack.sequence++       
+      stack.sequence-- //< should now be 0
+      debugger
       if(_.isFunction(callback)) callback(null, state)
     }
   ])

@@ -25,6 +25,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "2.0.0-rc.3",
+    "detect-node": "^2.0.3",
     "route-parser": "0.0.5",
     "underscore": "1.8.3"
   },

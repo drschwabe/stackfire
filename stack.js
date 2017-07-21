@@ -2,10 +2,11 @@ var async = require('async'),
     _ = require('underscore'), 
     routeParser = require('route-parser'), 
     createHtmlElem = require('create-html-element'), 
-    gg = require('gg')    
+    gg = require('gg'),    
+    isNode = require('detect-node');
 
 var browser = false
-if (typeof window === 'undefined') {
+if (!isNode) {
   console.log('load jquery')
   var $ = require('jquery')  
   browser = true
@@ -20,17 +21,23 @@ var stack = {
   command_history : [],   
   next_queue : [], 
   fire_queue : [], 
-  sequence : 0 //We track only sequence; depth is measured on the command at the given sequence slot.
+  sequence : 0, //We track only sequence; depth is measured on the command at the given sequence slot.
+  grid : gg.createGrid(1,1) 
 }
 
-stack.grid = gg.createGrid(3,3)
-stack.grid = gg.populateCells(stack.grid)
+//stack.internal_grid = gg.insertEnty(stack.internal_grid, { name: 'state point', cell: 0 })
+
+// stack.grid = gg.createGrid(3,3)
+// stack.grid = gg.populateCells(stack.grid)
 
 if(browser) {
   var renderGrid = () => {
     //  stack.grid = gg.populateCells(stack.grid)
 
+    stack.grid = gg.populateCells(stack.grid)
+
     $('#vizgrid').html('')
+    if(!stack.grid.cells) return 
     stack.grid.cells.forEach((cell,index) => {
       let entyCell = createHtmlElem({
         name : 'div', 
@@ -51,7 +58,7 @@ if(browser) {
               class : 'center blue bg-white border border-gray p2 h5', 
               id : index
             }, 
-            value : fireEnty.path
+            value : fireEnty.command.path
           })
         )
       }    
@@ -115,7 +122,6 @@ stack.fire = function(path, param2, param3) {
 
   if(path.substr(0, 1) != '/') path = '/' + path    
 
-
   var state, callback
   //Parse the parameters to figure out what we got: 
   if(_.isFunction(param2)) { 
@@ -159,6 +165,25 @@ stack.fire = function(path, param2, param3) {
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
   if(state._command) {
+    console.log('there is a command!')
+
+    //Find the this current command in the grid... 
+    let existingCommand = _.find(stack.grid.cells, (cell) => {
+        return cell.path = state._command.path 
+      })
+      .enties[0]
+
+    //determine the column of the current cell... 
+    //... 
+    //is the grid necessary?  I just need to keep track of sequence and depth
+    //but chicken and egg problem... 
+    //how to get the depth... 
+    //sequence is easy initally... i guess depth is easy too cause that is also set at 0,0
+    //soooo a command at
+    .../// 1, 0  is next in sequence; top of the stack
+
+
+    debugger
     //so determine which one takes priority, and adjust the queue accordingly..
     //analzye the sequence (x direction)
     console.log(state._command.sequence)
@@ -177,7 +202,7 @@ stack.fire = function(path, param2, param3) {
 
     //for now just queue everything: 
     stack.command_queue = command 
-    debugger    
+    //debugger    
     return 
   } else {
     //if no command active, we assume it is root level;
@@ -185,12 +210,14 @@ stack.fire = function(path, param2, param3) {
     command.sequence = stack.sequence + 1
     //(sequence is just number of fires occurred at root level)
     //and then apply it to state: 
-    state._command = command        
+    state._command = command   
+    stack.grid = gg.insertEnty(stack.grid, { command : command, cell: 0 }) 
+    //insert this in sequence -- OR insert into rightmost-est column
   }
 
   //stack.grid = gg.insertEnty(stack.grid, { cell: gg.xy(stack.grid, command.depth, command.sequence), path : command.path })
 
-  stack.grid = gg.insertEnty(stack.grid, { cell: stack.sequence, path : command.path })
+  //stack.grid = gg.insertEnty(stack.grid, { cell: stack.sequence, path : command.path })
  
   if(browser) renderGrid()
 
@@ -247,7 +274,7 @@ stack.fire = function(path, param2, param3) {
         //alternatively; might call the callback .... 
       }
       stack.sequence-- //< should now be 0
-      debugger
+      //debugger
       if(_.isFunction(callback)) callback(null, state)
     }
   ])

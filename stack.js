@@ -24,6 +24,8 @@ var stack = {
   sequence : 0, //We track only sequence; depth is measured on the command at the given sequence slot.
   grid : gg.createGrid(1,1) 
 }
+stack.grid = gg.populateCells(stack.grid)
+
 
 //stack.internal_grid = gg.insertEnty(stack.internal_grid, { name: 'state point', cell: 0 })
 
@@ -34,7 +36,9 @@ if(browser) {
   var renderGrid = () => {
     //  stack.grid = gg.populateCells(stack.grid)
 
-    stack.grid = gg.populateCells(stack.grid)
+    console.log('render grid')
+
+    //stack.grid = gg.populateCells(stack.grid)
 
     $('#vizgrid').html('')
     if(!stack.grid.cells) return 
@@ -42,10 +46,10 @@ if(browser) {
       let entyCell = createHtmlElem({
         name : 'div', 
         attributes : {
-          class : 'col-4 border border-silver p2 center', 
+          class : 'border border-silver p2 center', 
           id : index
         }
-      })
+      }) //could implement a dynamic column class based on size of grid
       $('#vizgrid').append(entyCell)
       //Append a 'firebox' if any: 
       var fireEnty = gg.examine(stack.grid, index) 
@@ -55,7 +59,7 @@ if(browser) {
           createHtmlElem({
             name : 'div', 
             attributes : {
-              class : 'center blue bg-white border border-gray p2 h5', 
+              class : `center blue bg-white border border-gray p2 h5 ${fireEnty.command.done ? 'bg-blue' : ''}`, 
               id : index
             }, 
             value : fireEnty.command.path
@@ -120,6 +124,9 @@ stack.on = function(param1, callback) {
 
 stack.fire = function(path, param2, param3) {
 
+  var caller = arguments.callee.caller.toString()
+
+
   if(path.substr(0, 1) != '/') path = '/' + path    
 
   var state, callback
@@ -165,13 +172,14 @@ stack.fire = function(path, param2, param3) {
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
   if(state._command) {
+    debugger
     console.log('there is a command!')
 
     //Find the this current command in the grid... 
-    let existingCommand = _.find(stack.grid.cells, (cell) => {
-        return cell.path = state._command.path 
-      })
-      .enties[0]
+    // let existingCommand = _.find(stack.grid.cells, (cell) => {
+    //     return cell.path = state._command.path 
+    //   })
+    //   .enties[0]
 
     //determine the column of the current cell... 
     //... 
@@ -180,10 +188,10 @@ stack.fire = function(path, param2, param3) {
     //how to get the depth... 
     //sequence is easy initally... i guess depth is easy too cause that is also set at 0,0
     //soooo a command at
-    .../// 1, 0  is next in sequence; top of the stack
+    //.../// 1, 0  is next in sequence; top of the stack
 
 
-    debugger
+    //debugger
     //so determine which one takes priority, and adjust the queue accordingly..
     //analzye the sequence (x direction)
     console.log(state._command.sequence)
@@ -200,16 +208,35 @@ stack.fire = function(path, param2, param3) {
     //for now i'll just make everything add to sequence ..
     //but somehow we need to determine if a fire is already in progress... 
 
+    //if(command.open) stack.command_queue = command
+    //so at htis point we would know there is a command already going
+    //doesnt matter that its open; the command being there is good enough
+    //we just need to queu this. 
+    //we need to determine if the command should queu into the next column
+    //OR below
+
     //for now just queue everything: 
-    stack.command_queue = command 
-    //debugger    
+    //debugger   
+    //debugger
+    //stack.grid = gg.insertEnty(stack.grid, { cell : stack.grid.cells.length + 1 })
+    //stack.grid = gg.insertEnty(stack.grid, { command: command, cell : stack.grid.enties.length + 1 }) 
+    var enties = _.clone(stack.grid.enties)
+    stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
+    stack.grid.enties = enties //< restore original enties, then add new enty: 
+    command.cell = gg.xy(stack.grid, [0, enties.length] )
+    stack.grid = gg.insertEnty(stack.grid, { command: command, cell : [0, enties.length ] })    
+    stack.grid = gg.populateCells(stack.grid)
+    if(browser) renderGrid()
     return 
   } else {
     //if no command active, we assume it is root level;
     //We assign it a sequence based on stack sequence property
-    command.sequence = stack.sequence + 1
+    //command.sequence = stack.sequence + 1
+    //We also 'open' it such that it remains open until it reaches the end. 
+    //command.open = true 
     //(sequence is just number of fires occurred at root level)
     //and then apply it to state: 
+    command.cell = 0
     state._command = command   
     stack.grid = gg.insertEnty(stack.grid, { command : command, cell: 0 }) 
     //insert this in sequence -- OR insert into rightmost-est column
@@ -252,30 +279,18 @@ stack.fire = function(path, param2, param3) {
       }
     },
     function(state) {
-      //Apply any previous state that was saved from before:
-      if(that.command_queue.length > 0) state._command = that.command_queue.pop()
-      //^ The reason to delete the command is to clear these values so that listeners 
-      //listening to a parent command aren't 'passed up' the wrong req after
-      // a child fire's callback occcurs. 
+      var next 
+      //if(stack._command.)
+      //find the next cell in the grid; see if there is a command there. 
+      if(stack.grid.cells[stack._command.cell + 1].enties)
+      next = stack.grid.cells[stack._command.cell + 1].enties.unshift()
+      //need to consider this... this will return the command - but the user
+      //needs a function to execute... hmmm. 
+      //very close... should we have the command just sort of recreate at this point
+      //such that we can make 'next' :   stack.fire('path')  ? hmmmm
 
-      //Remove the first element of the stack.fire_queue: 
-      stack.fire_queue.shift()
-      //If there is aything left in the queue, fire it...       
-      if(stack.fire_queue.length) {
-        //only fire if it is a different depth!  
-        if( stack.fire_queue[0].params[0] != path && stack.depth != stack.fire_queue[0].depth ) {
-          stack.fire( stack.fire_queue[0].params[0], stack.fire_queue[0].params[1], stack.fire_queue[0].params[2])
-        } else {
-          //otherwise it was already called, so remove it: 
-          stack.fire_queue.shift()
-        } //^^ this may cause a bug in whereby it will only apply one-time; we need to apply this logic
-        //recursively to x number of potential fires in the queue
-        //ie: stack.fire_queue.forEach
-        //alternatively; might call the callback .... 
-      }
-      stack.sequence-- //< should now be 0
-      //debugger
-      if(_.isFunction(callback)) callback(null, state)
+      //(somehow ensure we are looking down first, and then look right) 
+      if(_.isFunction(callback)) callback(null, state, next)
     }
   ])
 }

@@ -12,7 +12,7 @@ test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
     t.equal(state._command.path, '/do-something', "state._command.path equals '/do-something'")
   })
 
-  stack.fire('/do-something') 
+  stack.fire('/do-something')
 
 })
 
@@ -334,7 +334,6 @@ test('berries', (t) => {
 })
 
 
-
 test.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
   t.plan(3)
 
@@ -342,21 +341,21 @@ test.only("A subsequent fire waits until the current stack is finished before be
 
   console.log('proceed with test')
 
-  stack.on('warning-alarm', (state, down) => {
+  stack.on('warning-alarm', (state, next) => {
     //stack.fire_queue = [ ['/warning-alarm'] ]
     console.log('you have 5 seconds to comply')
     debugger
-    setTimeout(() => down, 5000)
+    setTimeout(() => next, 5000)
   })
 
-  stack.fire('warning-alarm', (err, state, right) => {
+  stack.fire('warning-alarm', (err, state, next) => {
     // stack.fire_queue = [ ]
     console.log('warning alarm finished')
     t.pass('warning alarm finished')
-    right() 
+    next() 
   }) 
 
-  stack.fire('fire-turret', (err, state, right) => {
+  stack.fire('fire-turret', (err, state, next) => {
     //t.equals(stack.fire_queue[0][0], '/fire-turret')
     //stack.fire_queue = [ ['/warning-alarm'], ['/fire-turrent'] ]    
     //The following should apply to state 
@@ -371,7 +370,7 @@ test.only("A subsequent fire waits until the current stack is finished before be
 
   setTimeout( () => {
     t.ok(stack.state.firing_turret, 'Turret is now firing!')    
-  }, 5000)
+  }, 6000)
 
 })
 

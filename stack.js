@@ -279,17 +279,21 @@ stack.fire = function(path, param2, param3) {
       }
     },
     function(state) {
+      if(_.isUndefined(state)) state = that.state
       var next 
+      debugger
       //if(stack._command.)
       //find the next cell in the grid; see if there is a command there. 
-      if(stack.grid.cells[stack._command.cell + 1].enties)
-      next = stack.grid.cells[stack._command.cell + 1].enties.unshift()
+      if(stack.grid.cells[state._command.cell + 1].enties)
+      next = stack.grid.cells[state._command.cell + 1].enties.unshift()
       //need to consider this... this will return the command - but the user
       //needs a function to execute... hmmm. 
       //very close... should we have the command just sort of recreate at this point
       //such that we can make 'next' :   stack.fire('path')  ? hmmmm
 
       //(somehow ensure we are looking down first, and then look right) 
+      debugger
+
       if(_.isFunction(callback)) callback(null, state, next)
     }
   ])

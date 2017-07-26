@@ -22,12 +22,8 @@ var stack = {
 stack.grid = gg.populateCells(stack.grid)
 
 if(browser) {
-  var renderGrid = () => {
+  window.renderGrid = () => {
     console.log('render grid')
-    debugger
-    if(!stack.state._command) return 
-    if(!stack.grid.cells) return 
-    var existingVizGrdHTML = $('#vizgrid').html()
     $('#vizgrid').html('')      
     stack.grid.cells.forEach((cell,index) => {
       let entyCell = createHtmlElem({
@@ -38,22 +34,16 @@ if(browser) {
         }
       }) //could implement a dynamic column class based on size of grid
       $('#vizgrid').append(entyCell)
-      //Append a 'firebox' if any: 
-      var fireEnty = gg.examine(stack.grid, index) 
-      if(!fireEnty || !fireEnty.command) {
-        $('#vizgrid').html(existingVizGrdHTML)
-        return
-      }
-      //debugger
-      if( fireEnty ) {
+      var enty = gg.examine(stack.grid, index)       
+      if( enty ) {
         $('#vizgrid #' + index).append(
           createHtmlElem({
             name : 'div', 
             attributes : {
-              class : `center blue bg-white border border-gray p2 h5 ${fireEnty.command.done ? 'bg-teal' : ''}`, 
+              class : `center blue bg-white border border-gray p2 h5 ${enty.command.done ? 'bg-teal' : ''}`, 
               id : index
             }, 
-            value : fireEnty.command.path
+            value : enty.command.path
           })
         )
       }    

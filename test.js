@@ -356,6 +356,7 @@ test.only("A subsequent fire waits until the current stack is finished before be
   }) 
 
   stack.fire('fire-turret', (err, state, next) => {
+    console.log('fire turret!')
     //t.equals(stack.fire_queue[0][0], '/fire-turret')
     //stack.fire_queue = [ ['/warning-alarm'], ['/fire-turrent'] ]    
     //The following should apply to state 

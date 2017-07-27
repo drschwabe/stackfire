@@ -29,7 +29,7 @@ if(browser) {
       let entyCell = createHtmlElem({
         name : 'div', 
         attributes : {
-          class : 'border border-silver p2 center', 
+          class : 'border border-silver p2 center col-6', 
           id : index
         }
       }) //could implement a dynamic column class based on size of grid
@@ -106,7 +106,6 @@ stack.on = function(param1, callback) {
 stack.fire = function(path, param2, param3) {
 
   var caller = arguments.callee.caller.toString()
-
 
   if(path.substr(0, 1) != '/') path = '/' + path    
 
@@ -216,13 +215,16 @@ stack.fire = function(path, param2, param3) {
       console.log(command)
       if(_.isUndefined(state)) state = that.state
       var next 
-      //find the next cell in the grid; see if there is a command there. 
-      if(that.grid.cells[state._command.cell + 1]) {
-        next = that.grid.cells[state._command.cell + 1].enties.unshift()
+      //find the next cell in the grid (if existing); see if there is a new command waiting....
+      //(but if state._command not existing nothing is queued anyway)
+      if(state._command && that.grid.cells[state._command.cell + 1].enties[0]) {
+        var nextCommand = that.grid.cells[state._command.cell + 1].enties[0].command
+        //Fire!
+        if(nextCommand) next = () => stack.fire(nextCommand.path)
+        else next = () => null
       } else {
         next = () => null
       }
-
       //need to consider this... this will return the command - but the user
       //needs a function to execute... hmmm. 
       //very close... should we have the command just sort of recreate at this point
@@ -233,7 +235,6 @@ stack.fire = function(path, param2, param3) {
       command.done = true
 
       if(browser) renderGrid()      
-
 
       state._command = null
 

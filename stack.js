@@ -124,7 +124,7 @@ stack.fire = function(path, param2, param3) {
     state = param2
   }
   else if(_.isUndefined(param2)) {
-    state = this.state    
+    state = this.state
   }
 
   var matchingRoute, command
@@ -180,8 +180,15 @@ stack.fire = function(path, param2, param3) {
 
   if(browser) renderGrid()
 
-  var that = this
+  if(matchingRoute) command.matching_route = matchingRoute
+  if(callback) command.callback = callback
 
+  waterfall(command)
+}
+
+var waterfall = (command) => {
+  var matchingRoute = command.matchingRoute, 
+      state = stack.state
   async.waterfall([
     function(seriesCallback) {
       var seedFunction = function(next) { next(null, state) }
@@ -201,26 +208,25 @@ stack.fire = function(path, param2, param3) {
 
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return callback(err)
-          that.state = state //< Set this as latest state so it's available as prop.
+          stack.state = state //< Set this as latest state so it's available as prop.
           seriesCallback(null, state)
         })
       } else {
-        //(no matching routes found)
-        that.state = state 
+        //(no matching routes found; fire a 'blank' (callback still executed))
         seriesCallback(null, state)
       }
     },
     function(state) {
       console.log(`"${command.path}" command completed firing...`)
       console.log(command)
-      if(_.isUndefined(state)) state = that.state
       var next 
       //find the next cell in the grid (if existing); see if there is a new command waiting....
       //(but if state._command not existing nothing is queued anyway)
-      if(state._command && that.grid.cells[state._command.cell + 1].enties[0]) {
-        var nextCommand = that.grid.cells[state._command.cell + 1].enties[0].command
+      //debugger
+      if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
+        var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
         //Fire!
-        if(nextCommand) next = () => stack.fire(nextCommand.path)
+        if(nextCommand) next = () => waterfall(nextCommand)
         else next = () => null
       } else {
         next = () => null
@@ -239,9 +245,9 @@ stack.fire = function(path, param2, param3) {
       state._command = null
 
       //(somehow ensure we are looking down first, and then look right) 
-      if(_.isFunction(callback)) callback(null, state, next)
+      if(command.callback) command.callback(null, state, next)
     }
-  ])
+  ])  
 }
 
 

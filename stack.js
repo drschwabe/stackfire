@@ -7,11 +7,8 @@ var async = require('async'),
 
 var browser = false
 if (!isNode) {
-  console.log('load jquery')
   var $ = require('jquery')  
   browser = true
-} else {
-  console.log('do not load jquery')  
 }
 
 var stack = { 
@@ -142,15 +139,19 @@ stack.fire = function(path, param2, param3) {
 
   if(!command) {
     console.log('no matching route (no listeners) defined.')
+    debugger
     if(callback) return callback
     else return 
   }
 
+  if(matchingRoute) command.matching_route = matchingRoute
+  if(callback) command.callback = callback
+
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
   if(state._command) {
-    debugger
     console.log('there is a command!')
+    debugger    
     var enties = _.clone(stack.grid.enties)
     stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
     stack.grid.enties = enties //< restore original enties, then add new enty: 
@@ -158,7 +159,6 @@ stack.fire = function(path, param2, param3) {
     stack.grid = gg.insertEnty(stack.grid, { command: command, cell : [0, enties.length ] })    
     stack.grid = gg.populateCells(stack.grid)
     //state._command = command
-    if(browser) renderGrid()
     return  //< we return because the current command will 
     //call the command just fired; we just queued it. 
   } else {
@@ -175,19 +175,17 @@ stack.fire = function(path, param2, param3) {
     stack.grid = gg.insertEnty(stack.grid, { command : command, cell: command.cell })
     stack.grid = gg.populateCells(stack.grid) 
     //insert this in sequence -- OR insert into rightmost-est column
-    if(browser) renderGrid()    
   }
 
   if(browser) renderGrid()
 
-  if(matchingRoute) command.matching_route = matchingRoute
-  if(callback) command.callback = callback
+  debugger 
 
   waterfall(command)
 }
 
 var waterfall = (command) => {
-  var matchingRoute = command.matchingRoute, 
+  var matchingRoute = command.matching_route, 
       state = stack.state
   async.waterfall([
     function(seriesCallback) {
@@ -208,7 +206,7 @@ var waterfall = (command) => {
 
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return callback(err)
-          stack.state = state //< Set this as latest state so it's available as prop.
+          //stack.state = state //< Set this as latest state so it's available as prop.
           seriesCallback(null, state)
         })
       } else {
@@ -219,10 +217,12 @@ var waterfall = (command) => {
     function(state) {
       console.log(`"${command.path}" command completed firing...`)
       console.log(command)
+      if(!state) state = stack.state
       var next 
       //find the next cell in the grid (if existing); see if there is a new command waiting....
       //(but if state._command not existing nothing is queued anyway)
       //debugger
+      debugger
       if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
         var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
         //Fire!

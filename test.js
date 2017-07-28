@@ -342,26 +342,27 @@ test.only("A subsequent fire waits until the current stack is finished before be
   console.log('proceed with test')
 
   stack.on('warning-alarm', (state, next) => {
-    //stack.fire_queue = [ ['/warning-alarm'] ]
     console.log('you have 5 seconds to comply')
     debugger
-    setTimeout(() => next, 5000)
+    //setTimeout(() => next, 5000)
+    setTimeout(() => {
+      next(null, state)
+    }, 5000)    
   })
 
   stack.fire('warning-alarm', (err, state, next) => {
-    // stack.fire_queue = [ ]
     console.log('warning alarm finished')
     t.pass('warning alarm finished')
-    next() 
+    next(null, state) 
   }) 
 
   stack.fire('fire-turret', (err, state, next) => {
-    console.log('fire turret!')
-    //t.equals(stack.fire_queue[0][0], '/fire-turret')
-    //stack.fire_queue = [ ['/warning-alarm'], ['/fire-turrent'] ]    
+    console.log('fire turret!') 
+    debugger
     //The following should apply to state 
     //only AFTER warning alarm completes: 
     state.firing_turret = true
+    next()
   })
 
   //Wait one second and check: 

@@ -3,7 +3,8 @@ var async = require('async'),
     routeParser = require('route-parser'), 
     createHtmlElem = require('create-html-element'), 
     gg = require('gg'),    
-    isNode = require('detect-node');
+    isNode = require('detect-node'), 
+    fnArgs = require('fn-args')
 
 var browser = false
 if (!isNode) {
@@ -208,8 +209,26 @@ var waterfall = (command) => {
         //Create a copy of the middleware stack we are about to run
         //containing only the functions
         //(preparing the data structure for what async.waterfall will expect): 
-        var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { return entry.func })
+        var middlewareToRunMap = _.map(matchingRoute.middleware, function(entry) { 
+          return entry.func 
+        })
+        var middlewareToRun = []
+        //Pad each function so we may apply "next" to the stack object; 
+        //making it possible to invoke the next callback from outside (ie- so stack.fire can do stack.next() to advance execution through the grid.
+        middlewareToRunMap.forEach((func, index) => {
+          if(index === 0) { //Skip the seed: 
+            middlewareToRun.push(func)
+            return
+          }
+          debugger
+          stack.next = fnArgs(func)[1]
 
+          
+          debugger
+          //middlewareToRun.push(function(func.arguments[1]))
+          middlewareToRun.push(func)
+        })
+        debugger
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return callback(err)
           seriesCallback(null, state)
@@ -219,8 +238,9 @@ var waterfall = (command) => {
         seriesCallback(null, state)
       }
     },
-    function(state) {
-      if(!state) state = stack.state
+    function() {
+      //if(state._command) nextCell(command)
+      state = stack.state
       var next 
       //find the next cell in the grid (if existing); see if there is a new command waiting....
       //Search the next cell below in same column: 

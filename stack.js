@@ -20,7 +20,6 @@ stack.grid = gg.populateCells(stack.grid)
 
 if(browser) {
   window.renderGrid = () => {
-    console.log('render grid')
     $('#vizgrid').html('')      
     stack.grid.cells.forEach((cell,index) => {
       let entyCell = createHtmlElem({
@@ -46,7 +45,6 @@ if(browser) {
       }    
     })
   }
-
 }
 
 
@@ -139,7 +137,6 @@ stack.fire = function(path, param2, param3) {
 
   if(!command) {
     console.log('no matching route (no listeners) defined.')
-    debugger
     if(callback) return callback
     else return 
   }
@@ -150,22 +147,17 @@ stack.fire = function(path, param2, param3) {
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
   if(state._command) {
-    console.log('there is a command!')
-    debugger    
     var enties = _.clone(stack.grid.enties)
     stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
     stack.grid.enties = enties //< restore original enties, then add new enty: 
     command.cell = gg.xy(stack.grid, [0, enties.length] )
     stack.grid = gg.insertEnty(stack.grid, { command: command, cell : [0, enties.length ] })    
     stack.grid = gg.populateCells(stack.grid)
-    //state._command = command
     return  //< we return because the current command will 
     //call the command just fired; we just queued it. 
   } else {
     //if no command active, we assume it is root level...
-    //stack.grid = gg.populateCells(stack.grid)
     //we need to exapnd the size of the grid... 
-
     var enties = _.clone(stack.grid.enties)
     stack.grid = gg.createGrid(enties.length + 1, enties.length +1)
     stack.grid.enties = enties //< restore original enties, then add new enty: 
@@ -174,12 +166,9 @@ stack.fire = function(path, param2, param3) {
     state._command = command   
     stack.grid = gg.insertEnty(stack.grid, { command : command, cell: command.cell })
     stack.grid = gg.populateCells(stack.grid) 
-    //insert this in sequence -- OR insert into rightmost-est column
   }
 
   if(browser) renderGrid()
-
-  debugger 
 
   waterfall(command)
 }
@@ -206,23 +195,18 @@ var waterfall = (command) => {
 
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return callback(err)
-          //stack.state = state //< Set this as latest state so it's available as prop.
           seriesCallback(null, state)
         })
       } else {
-        //(no matching routes found; fire a 'blank' (callback still executed))
+        //(no matching routes found; fire a 'blank' (callback still executes))
         seriesCallback(null, state)
       }
     },
     function(state) {
-      console.log(`"${command.path}" command completed firing...`)
-      console.log(command)
       if(!state) state = stack.state
       var next 
       //find the next cell in the grid (if existing); see if there is a new command waiting....
       //(but if state._command not existing nothing is queued anyway)
-      //debugger
-      debugger
       if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
         var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
         //Fire!
@@ -231,23 +215,15 @@ var waterfall = (command) => {
       } else {
         next = () => null
       }
-      //need to consider this... this will return the command - but the user
-      //needs a function to execute... hmmm. 
-      //very close... should we have the command just sort of recreate at this point
-      //such that we can make 'next' :   stack.fire('path')  ? hmmmm
-
-      //a littler above I am referring to functions to call as ".func"
-
       command.done = true
 
       if(browser) renderGrid()      
 
       state._command = null
 
-      //(somehow ensure we are looking down first, and then look right) 
       if(command.callback) command.callback(null, state, next)
     }
-  ])  
+  ])
 }
 
 

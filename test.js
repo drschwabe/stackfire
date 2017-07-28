@@ -339,26 +339,18 @@ test.only("A subsequent fire waits until the current stack is finished before be
 
   let stack = requireUncached('./stack.js')  
 
-  console.log('proceed with test')
-
   stack.on('warning-alarm', (state, next) => {
     console.log('you have 5 seconds to comply')
-    debugger
-    //setTimeout(() => next, 5000)
-    setTimeout(() => {
-      next(null, state)
-    }, 5000)    
+    setTimeout(next, 5000)  
   })
 
   stack.fire('warning-alarm', (err, state, next) => {
-    console.log('warning alarm finished')
     t.pass('warning alarm finished')
-    next(null, state) 
+    next() 
   }) 
 
   stack.fire('fire-turret', (err, state, next) => {
     console.log('fire turret!') 
-    debugger
     //The following should apply to state 
     //only AFTER warning alarm completes: 
     state.firing_turret = true

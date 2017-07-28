@@ -16,7 +16,7 @@ test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
 
 })
 
-test("stack.fire from within a stack.on listener", (t) => {
+test.only("stack.fire from within a stack.on listener", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
 
@@ -24,18 +24,22 @@ test("stack.fire from within a stack.on listener", (t) => {
     console.log('do something....')
     //Nested fire: 
     debugger
-    stack.fire('/do-another-thing', (err, newState) => {
-      next(null, newState)
+    stack.fire('/do-another-thing', (err, newState, next2) => {
+      debugger
+      next2(null, newState)
     })
   })
 
   stack.on('/do-another-thing', (state, next) => {
     t.ok(state, 'root level listener invoked from a nested fire')
-    t.equal(state._command.path, '/do-another-thing', "state._command.path equals the command from the nested fire (not the original command).")    
+    t.equal(state._command.path, '/do-another-thing', "state._command.path equals the command from the nested fire (not the original command).")   
+    next() 
   })
   
   //Original command: 
-  stack.fire('/do-something-else')
+  stack.fire('/do-something-else', (err, state, next) => {
+    next()
+  })
 
 })
 
@@ -334,7 +338,7 @@ test('berries', (t) => {
 })
 
 
-test.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')  

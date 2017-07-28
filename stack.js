@@ -101,6 +101,7 @@ stack.on = function(param1, callback) {
 stack.fire = function(path, param2, param3) {
 
   var caller = arguments.callee.caller.toString()
+  var callerName = arguments.callee.caller.name
 
   if(path.substr(0, 1) != '/') path = '/' + path    
 
@@ -143,15 +144,31 @@ stack.fire = function(path, param2, param3) {
 
   if(matchingRoute) command.matching_route = matchingRoute
   if(callback) command.callback = callback
+  command.caller = caller 
 
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
+  debugger
   if(state._command) {
+    debugger
     var enties = _.clone(stack.grid.enties)
     stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
     stack.grid.enties = enties //< restore original enties, then add new enty: 
-    command.cell = gg.xy(stack.grid, [0, enties.length] )
-    stack.grid = gg.insertEnty(stack.grid, { command: command, cell : [0, enties.length ] })    
+    //Before we determine the cell, we must determine if the current command is a parent or sibling.
+
+    //if its not done... well, that wont help us
+    //if(!state._command.done) 
+
+    var cell 
+    if(state._command.caller != command.caller) {  
+      //if it's a parent, give it a cell number/position exactly row below (same column)      
+      cell = state._command.cell + stack.grid.width
+    } else {
+      //otherwise as a sibling the command will get a cell in the next column (same row)      
+      cell = gg.xy(stack.grid, [0, enties.length] )
+    }
+    command.cell = cell 
+    stack.grid = gg.insertEnty(stack.grid, { command: command, cell : cell })    
     stack.grid = gg.populateCells(stack.grid)
     return  //< we return because the current command will 
     //call the command just fired; we just queued it. 
@@ -206,15 +223,25 @@ var waterfall = (command) => {
       if(!state) state = stack.state
       var next 
       //find the next cell in the grid (if existing); see if there is a new command waiting....
-      //(but if state._command not existing nothing is queued anyway)
-      if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
-        var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
+      //Search the next cell below in same column: 
+      if(state._command && stack.grid.cells[state._command.cell + stack.grid.width] && stack.grid.cells[state._command.cell + stack.grid.width].enties[0]) {
+        var nextCommand = stack.grid.cells[state._command.cell + stack.grid.width].enties[0].command
         //Fire!
         if(nextCommand) next = () => waterfall(nextCommand)
         else next = () => null
+        //Otherwise, search the next cell: 
+        //(if state._command not existing nothing is queued anyway)          
+      } else if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
+          var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
+          //Fire!
+          if(nextCommand) next = () => waterfall(nextCommand)
+          else next = () => null
       } else {
-        next = () => null
+        next = () => null   
       }
+
+      debugger
+
       command.done = true
 
       if(browser) renderGrid()      

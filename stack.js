@@ -4,7 +4,7 @@ var async = require('async'),
     createHtmlElem = require('create-html-element'), 
     gg = require('gg'),    
     isNode = require('detect-node'), 
-    fnArgs = require('fn-args')
+    _l = require('lodash')
 
 var browser = false
 if (!isNode) {
@@ -206,29 +206,21 @@ var waterfall = (command) => {
           //(because command and state may have changed): 
           matchingRoute.middleware[0].func = seedFunction
         }
-        //Create a copy of the middleware stack we are about to run
+        //Create a mapped copy of the middleware stack we are about to run
         //containing only the functions
-        //(preparing the data structure for what async.waterfall will expect): 
-        var middlewareToRunMap = _.map(matchingRoute.middleware, function(entry) { 
-          return entry.func 
-        })
-        var middlewareToRun = []
-        //Pad each function so we may apply "next" to the stack object; 
-        //making it possible to invoke the next callback from outside (ie- so stack.fire can do stack.next() to advance execution through the grid.
-        middlewareToRunMap.forEach((func, index) => {
-          if(index === 0) { //Skip the seed: 
-            middlewareToRun.push(func)
-            return
-          }
-          debugger
-          stack.next = fnArgs(func)[1]
+        //(preparing the data structure for what async.waterfall will expect)...
 
-          
-          debugger
-          //middlewareToRun.push(function(func.arguments[1]))
-          middlewareToRun.push(func)
+        //Also caputure the "next" argument such that we may apply it to the stack object; 
+        //making possible to invoke it from outside (ie- so stack.fire can do stack.next() to advance execution through the grid)
+        var captureNext = (stateOrNext) => {
+          if(!_.isFunction(stateOrNext)) return stateOrNext
+          stack.next = stateOrNext 
+          return stateOrNext
+        }
+        var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { 
+          return _l.overArgs(entry.func, captureNext)
         })
-        debugger
+        //debugger
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return callback(err)
           seriesCallback(null, state)

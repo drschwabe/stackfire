@@ -172,9 +172,7 @@ var waterfall = (command) => {
       state = stack.state
   async.series([
     function(seriesCallback) {
-      var seedFunction
-      if(command.parent) matchingRoute.seeded = true 
-      else seedFunction = function(next) { next(null, state) }
+      var seedFunction = function(next) { next(null, state) }
       if(matchingRoute) {      
         //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
         if(!matchingRoute.seeded) { //but only if we haven't already done it: 
@@ -188,7 +186,7 @@ var waterfall = (command) => {
         //containing only the functions
         //(preparing the data structure for what async.waterfall will expect)...
 
-        //Also caputure the "next" argument such that we may apply it to the stack object; 
+        //Also capture the "next" argument such that we may apply it to the stack object; 
         //making possible to invoke it from outside (ie- so stack.fire can do stack.next() to advance execution through the grid)
         var captureNext = (stateOrNext) => {
           if(!_.isFunction(stateOrNext)) return stateOrNext
@@ -203,6 +201,7 @@ var waterfall = (command) => {
         var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { 
           return _l.overArgs(entry.func, captureNext)
         })
+        //if(command.parent) middlewareToRun.unshift(function(next) { next(null, state) })
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return seriesCallback(err) //< Err for now being just used 
           //as a way to short circuit command in progress. 
@@ -254,16 +253,16 @@ var waterfall = (command) => {
 
     command.done = true
 
-    if(window.renderGrid) window.renderGrid()      
-
     if(command.child) {
       state._command = command.child
       //may have to delete child after it returns so we can skip over this and call the remaining
       //(if any) callbacks in the original parent waterfall
       debugger
+      if(window.renderGrid) window.renderGrid()            
       return waterfall(command.child)
     } else {
       state._command = null
+      if(window.renderGrid) window.renderGrid()      
       //TODO; call this after child finishes... 
       if(command.callback) command.callback(null, state, next)
     }

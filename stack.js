@@ -19,35 +19,6 @@ var stack = {
 }
 stack.grid = gg.populateCells(stack.grid)
 
-if(browser) {
-  window.renderGrid = () => {
-    $('#vizgrid').html('')      
-    stack.grid.cells.forEach((cell,index) => {
-      let entyCell = createHtmlElem({
-        name : 'div', 
-        attributes : {
-          class : 'border border-silver p2 center col-6', 
-          id : index
-        }
-      }) //could implement a dynamic column class based on size of grid
-      $('#vizgrid').append(entyCell)
-      var enty = gg.examine(stack.grid, index)       
-      if( enty ) {
-        $('#vizgrid #' + index).append(
-          createHtmlElem({
-            name : 'div', 
-            attributes : {
-              class : `center blue bg-white border border-gray p2 h5 ${enty.command.done ? 'bg-teal' : ''}`, 
-              id : index
-            }, 
-            value : enty.command.path
-          })
-        )
-      }    
-    })
-  }
-}
-
 
 stack.on = function(param1, callback) {
   //param1: a string or an array of strings.
@@ -193,7 +164,7 @@ stack.fire = function(path, param2, param3) {
     stack.grid = gg.insertEnty(stack.grid, { command : command, cell: command.cell })
     stack.grid = gg.populateCells(stack.grid) 
   }
-  if(browser) renderGrid()
+  if(window.renderGrid) window.renderGrid()      
   waterfall(command)
 }
 
@@ -275,11 +246,10 @@ var waterfall = (command) => {
         next = () => null   
       }
 
-      //debugger
-
       command.done = true
 
-      if(browser) renderGrid()      
+      //debugger
+      if(window.renderGrid) window.renderGrid()      
 
       state._command = null
 

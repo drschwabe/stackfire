@@ -160,10 +160,14 @@ stack.fire = function(path, param2, param3) {
     //if its not done... well, that wont help us
     //if(!state._command.done) 
 
-    var cell 
+    var cell  //DETERMINE SILBING OR CHILD: 
     if(state._command.caller != command.caller) {  
-      //if it's a parent, give it a cell number/position exactly row below (same column)      
+      //if it's a child, give it a cell number/position exactly row below (same column)      
       cell = state._command.cell + stack.grid.width
+      //also make note of parent... 
+      command.parent = state._command.path
+      //let's give the command reference to it's new child too: 
+      state._command.child = command
     } else {
       //otherwise as a sibling the command will get a cell in the next column (same row)      
       cell = gg.xy(stack.grid, [0, enties.length] )
@@ -171,8 +175,12 @@ stack.fire = function(path, param2, param3) {
     command.cell = cell 
     stack.grid = gg.insertEnty(stack.grid, { command: command, cell : cell })    
     stack.grid = gg.populateCells(stack.grid)
-    return  //< we return because the current command will 
-    //call the command just fired; we just queued it. 
+
+    if(!command.parent) return  //< We return if sibling because the current command 
+    //should finish first (stack will now call it upon completion; we just queued it)
+    //If sibling, we fire right now!  Let's do a short circuit...
+    return state._command.next(true) //< Calling next on a command with a child command will 
+    //fire said child command. 
   } else {
     //if no command active, we assume it is root level...
     //we need to exapnd the size of the grid... 
@@ -185,9 +193,7 @@ stack.fire = function(path, param2, param3) {
     stack.grid = gg.insertEnty(stack.grid, { command : command, cell: command.cell })
     stack.grid = gg.populateCells(stack.grid) 
   }
-
   if(browser) renderGrid()
-
   waterfall(command)
 }
 
@@ -214,7 +220,7 @@ var waterfall = (command) => {
         //making possible to invoke it from outside (ie- so stack.fire can do stack.next() to advance execution through the grid)
         var captureNext = (stateOrNext) => {
           if(!_.isFunction(stateOrNext)) return stateOrNext
-          stack.next = stateOrNext 
+          stack.state._command.next = stateOrNext 
           return stateOrNext
         }
         var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { 
@@ -222,7 +228,8 @@ var waterfall = (command) => {
         })
         //debugger
         async.waterfall(middlewareToRun, function(err, state) {
-          if(err) return callback(err)
+          if(err) return seriesCallback(err) //< Err for now being just used 
+          //as a way to short circuit command in progress. 
           seriesCallback(null, state)
         })
       } else {
@@ -236,6 +243,22 @@ var waterfall = (command) => {
       var next 
       //find the next cell in the grid (if existing); see if there is a new command waiting....
       //Search the next cell below in same column: 
+
+      //If there is a _command at this point it means we have a command which is already firing....
+
+      //Short circuit it! 
+      //this will cause the final function to invoke....
+      //clearing the _.command 
+      //(effectively re-runs this)
+      //TODO: copy the existing / remaining stack in the 'in progress waterfall'
+      //so we may run them after this one finishes 
+      // if(state._command && !state._command.intercepted) {
+      //   state._command.intercepted = true
+      //   debugger
+      //   return state._command.next(true)
+      // }
+      //hmmmm - yes, we want to short circuit it however, THIS function itself only runs if either a short circuit state._command.next(true) is run or the command finishes entirely; so the short-circuit state._command.next(true) needs to be called earlier
+
       if(state._command && stack.grid.cells[state._command.cell + stack.grid.width] && stack.grid.cells[state._command.cell + stack.grid.width].enties[0]) {
         var nextCommand = stack.grid.cells[state._command.cell + stack.grid.width].enties[0].command
         //Fire!
@@ -252,7 +275,7 @@ var waterfall = (command) => {
         next = () => null   
       }
 
-      debugger
+      //debugger
 
       command.done = true
 

@@ -73,7 +73,6 @@ stack.on = function(param1, callback) {
 stack.fire = function(path, param2, param3) {
 
   var caller = arguments.callee.caller.toString()
-  var callerName = arguments.callee.caller.name
 
   if(path.substr(0, 1) != '/') path = '/' + path    
 
@@ -120,10 +119,7 @@ stack.fire = function(path, param2, param3) {
 
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
-  //debugger
-  //debugger
   if(state._command) {
-    //debugger
     var enties = _.clone(stack.grid.enties)
     stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
     stack.grid.enties = enties //< restore original enties, then add new enty: 
@@ -150,11 +146,9 @@ stack.fire = function(path, param2, param3) {
 
     if(window.renderGrid) window.renderGrid()          
 
-    //debugger
     if(!command.parent) return  //< We return if sibling because the current command 
     //should finish first (stack will now call it upon completion; we just queued it)
     //If sibling, we fire right now!  Let's do a short circuit...
-    //debugger
     return state._command.next(true) //< Calling next on a command with a child will 
     //fire said child command. 
   } else {
@@ -176,9 +170,11 @@ stack.fire = function(path, param2, param3) {
 var waterfall = (command) => {
   var matchingRoute = command.matching_route, 
       state = stack.state
-  async.waterfall([
+  async.series([
     function(seriesCallback) {
-      var seedFunction = function(next) { next(null, state) }
+      var seedFunction
+      if(command.parent) matchingRoute.seeded = true 
+      else seedFunction = function(next) { next(null, state) }
       if(matchingRoute) {      
         //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
         if(!matchingRoute.seeded) { //but only if we haven't already done it: 
@@ -186,7 +182,7 @@ var waterfall = (command) => {
           matchingRoute.seeded = true      
         } else { //If already seeded, we overwrite the original seed function
           //(because command and state may have changed): 
-          matchingRoute.middleware[0].func = seedFunction
+          //matchingRoute.middleware[0].func = seedFunction
         }
         //Create a mapped copy of the middleware stack we are about to run
         //containing only the functions
@@ -196,31 +192,32 @@ var waterfall = (command) => {
         //making possible to invoke it from outside (ie- so stack.fire can do stack.next() to advance execution through the grid)
         var captureNext = (stateOrNext) => {
           if(!_.isFunction(stateOrNext)) return stateOrNext
-          debugger
-          stack.state._command.next = stateOrNext 
-          return stateOrNext
+          if(stack.state._command) {
+            stack.state._command.next = stateOrNext 
+            return stateOrNext
+          } else {
+            return stateOrNext 
+          }
         }
+        //var middlewareToRun = []
         var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { 
           return _l.overArgs(entry.func, captureNext)
         })
-        //debugger
         async.waterfall(middlewareToRun, function(err, state) {
-          //debugger
           if(err) return seriesCallback(err) //< Err for now being just used 
           //as a way to short circuit command in progress. 
-          seriesCallback(null, state)
+          return seriesCallback(null, state)
         })
       } else {
         //(no matching routes found; fire a 'blank' (callback still executes))
-        seriesCallback(null, state)
+        return seriesCallback(null, state)
       }
     }
   ], 
   function() {
-    debugger
     //if(state._command) nextCell(command)
     state = stack.state
-    var next 
+    var next
     //find the next cell in the grid (if existing); see if there is a new command waiting....
     //Search the next cell below in same column: 
 
@@ -234,18 +231,17 @@ var waterfall = (command) => {
     //so we may run them after this one finishes 
     // if(state._command && !state._command.intercepted) {
     //   state._command.intercepted = true
-    //   debugger
     //   return state._command.next(true)
     // }
     //hmmmm - yes, we want to short circuit it however, THIS function itself only runs if either a short circuit state._command.next(true) is run or the command finishes entirely; so the short-circuit state._command.next(true) needs to be called earlier
 
-
+    //search the next cell below (for children): 
     if(state._command && stack.grid.cells[state._command.cell + stack.grid.width] && stack.grid.cells[state._command.cell + stack.grid.width].enties[0]) {
       var nextCommand = stack.grid.cells[state._command.cell + stack.grid.width].enties[0].command
       //Fire!
       if(nextCommand) next = () => waterfall(nextCommand)
       else next = () => null
-      //Otherwise, search the next cell: 
+      //Otherwise, search the next cell to the right (for siblings): 
       //(if state._command not existing nothing is queued anyway)          
     } else if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
         var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
@@ -258,12 +254,19 @@ var waterfall = (command) => {
 
     command.done = true
 
-    //debugger
     if(window.renderGrid) window.renderGrid()      
 
-    state._command = null
-
-    if(command.callback) command.callback(null, state, next)
+    if(command.child) {
+      state._command = command.child
+      //may have to delete child after it returns so we can skip over this and call the remaining
+      //(if any) callbacks in the original parent waterfall
+      debugger
+      return waterfall(command.child)
+    } else {
+      state._command = null
+      //TODO; call this after child finishes... 
+      if(command.callback) command.callback(null, state, next)
+    }
   })
 }
 

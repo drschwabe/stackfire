@@ -234,12 +234,22 @@ var waterfall = (command) => {
     // }
     //hmmmm - yes, we want to short circuit it however, THIS function itself only runs if either a short circuit state._command.next(true) is run or the command finishes entirely; so the short-circuit state._command.next(true) needs to be called earlier
 
+    command.done = true
+
     //search the next cell below (for children): 
-    if(state._command && stack.grid.cells[state._command.cell + stack.grid.width] && stack.grid.cells[state._command.cell + stack.grid.width].enties[0]) {
+    if(command.child) {
       var nextCommand = stack.grid.cells[state._command.cell + stack.grid.width].enties[0].command
       //Fire!
       if(nextCommand) next = () => waterfall(nextCommand)
       else next = () => null
+
+      state._command = command.child
+      //may have to delete child after it returns so we can skip over this and call the remaining
+      //(if any) callbacks in the original parent waterfall
+      debugger
+      if(window.renderGrid) window.renderGrid()            
+      return waterfall(command.child)
+
       //Otherwise, search the next cell to the right (for siblings): 
       //(if state._command not existing nothing is queued anyway)          
     } else if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
@@ -251,21 +261,11 @@ var waterfall = (command) => {
       next = () => null   
     }
 
-    command.done = true
+    state._command = null
 
-    if(command.child) {
-      state._command = command.child
-      //may have to delete child after it returns so we can skip over this and call the remaining
-      //(if any) callbacks in the original parent waterfall
-      debugger
-      if(window.renderGrid) window.renderGrid()            
-      return waterfall(command.child)
-    } else {
-      state._command = null
-      if(window.renderGrid) window.renderGrid()      
-      //TODO; call this after child finishes... 
-      if(command.callback) command.callback(null, state, next)
-    }
+    if(window.renderGrid) window.renderGrid()      
+    //TODO; call this after child finishes... 
+    if(command.callback) command.callback(null, state, next)
   })
 }
 

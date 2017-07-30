@@ -119,7 +119,6 @@ stack.fire = function(path, param2, param3) {
 
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
-  debugger
   if(state._command) {
     var enties = _.clone(stack.grid.enties)
     stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
@@ -252,8 +251,6 @@ var waterfall = (command) => {
     // }
     //hmmmm - yes, we want to short circuit it however, THIS function itself only runs if either a short circuit state._command.next(true) is run or the command finishes entirely; so the short-circuit state._command.next(true) needs to be called earlier
 
-    debugger
-
     //search the next cell below (for children): 
     if(command.child) {
       var nextCommand = stack.grid.cells[state._command.cell + stack.grid.width].enties[0].command
@@ -264,17 +261,51 @@ var waterfall = (command) => {
       state._command = command.child
       //may have to delete child after it returns so we can skip over this and call the remaining
       //(if any) callbacks in the original parent waterfall
-      debugger
       if(window.renderGrid) window.renderGrid()            
       return waterfall(command.child)
 
+    } else if(command.parent) {
+      console.log('restore the parent stack!')
+      //Determine if there are remaining middleware to run: 
+      if(command.parent.current_middleware_index < command.parent.matching_route - 1) {
+        console.log('middlware is remaining!')
+      } else {
+        //otherwise the parent has no more middleware, 
+        //so execute the parent's last command;
+        command.done = true 
+        if(window.renderGrid) window.renderGrid()                      
+        if(command.callback) {
+          command.callback(null, stack.state, () => {
+            console.log("completed callback")
+            delete command.parent.child
+            //state._command = command.parent 
+            command.parent.done = true
+            var nextCommand
+            //check for sibling: 
+            if(command && stack.grid.cells[command.cell + 1] && stack.grid.cells[command.cell + 1].enties[0]) {
+              nextCommand = stack.grid.cells[command.cell + 1].enties[0].command
+              //Fire! (but make sure it isn't already fired (done))
+              debugger
+              if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
+              else nextCommand = () => null
+            } else {
+              nextCommand = () => null
+            }
+            debugger
+            state._command = null
+            if(window.renderGrid) window.renderGrid()                                  
+            return command.parent.callback(null, stack.state, nextCommand)
+          })         
+        } else {
+          debugger
+        }
+      }
       //Otherwise, search the next cell to the right (for siblings): 
       //(if state._command not existing nothing is queued anyway)          
     } else if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
-        debugger
         var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
         //Fire!
-        if(nextCommand) next = () => waterfall(nextCommand)
+        if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
         else next = () => null
     } else {
       next = () => null   

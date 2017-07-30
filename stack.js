@@ -149,7 +149,11 @@ stack.fire = function(path, param2, param3) {
     if(!command.parent) return  //< We return if sibling because the current command 
     //should finish first (stack will now call it upon completion; we just queued it)
     //If sibling, we fire right now!  Let's do a short circuit...
-    return state._command.next(true) //< Calling next on a command with a child will 
+    //state._command.next(null)     
+    var nextFunc = state._command.next
+    delete state._command.next
+    return nextFunc(true)
+    //return state._command.next(true) //< Calling next on a command with a child will 
     //fire said child command. 
   } else {
     //if no command active, we assume it is root level...
@@ -233,6 +237,7 @@ var waterfall = (command) => {
   function() {
     //if(state._command) nextCell(command)
     state = stack.state
+    debugger
     var next
     //find the next cell in the grid (if existing); see if there is a new command waiting....
     //Search the next cell below in same column: 
@@ -251,6 +256,8 @@ var waterfall = (command) => {
     // }
     //hmmmm - yes, we want to short circuit it however, THIS function itself only runs if either a short circuit state._command.next(true) is run or the command finishes entirely; so the short-circuit state._command.next(true) needs to be called earlier
 
+    if(command.done) return 
+
     //search the next cell below (for children): 
     if(command.child) {
       var nextCommand = stack.grid.cells[state._command.cell + stack.grid.width].enties[0].command
@@ -261,8 +268,9 @@ var waterfall = (command) => {
       state._command = command.child
       //may have to delete child after it returns so we can skip over this and call the remaining
       //(if any) callbacks in the original parent waterfall
-      if(window.renderGrid) window.renderGrid()            
-      return waterfall(command.child)
+      if(window.renderGrid) window.renderGrid()
+      delete command.child
+      return waterfall(state._command)
 
     } else if(command.parent) {
       console.log('restore the parent stack!')
@@ -275,7 +283,11 @@ var waterfall = (command) => {
         command.done = true 
         if(window.renderGrid) window.renderGrid()                      
         if(command.callback) {
-          command.callback(null, stack.state, () => {
+          var commandCallback = command.callback 
+          delete command.callback
+          
+          commandCallback(null, stack.state, () => {
+            delete command.callback 
             console.log("completed callback")
             delete command.parent.child
             //state._command = command.parent 
@@ -285,13 +297,11 @@ var waterfall = (command) => {
             if(command && stack.grid.cells[command.cell + 1] && stack.grid.cells[command.cell + 1].enties[0]) {
               nextCommand = stack.grid.cells[command.cell + 1].enties[0].command
               //Fire! (but make sure it isn't already fired (done))
-              debugger
               if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
               else nextCommand = () => null
             } else {
               nextCommand = () => null
             }
-            debugger
             state._command = null
             if(window.renderGrid) window.renderGrid()                                  
             return command.parent.callback(null, stack.state, nextCommand)
@@ -317,7 +327,11 @@ var waterfall = (command) => {
 
     if(window.renderGrid) window.renderGrid()      
     //TODO; call this after child finishes... 
-    if(command.callback) command.callback(null, state, next)
+    if(command.callback) {
+      var commandCallback = command.callback 
+      delete command.callback
+      commandCallback(null, state, next)
+    }
   })
 }
 

@@ -149,10 +149,16 @@ stack.fire = function(path, param2, param3) {
     if(!command.parent) return  //< We return if sibling because the current command 
     //should finish first (stack will now call it upon completion; we just queued it)
     //If sibling, we fire right now!  Let's do a short circuit...
-    //state._command.next(null)     
-    var nextFunc = state._command.next
-    delete state._command.next
-    return nextFunc(true)
+    //state._command.next(null) 
+    _.defer(()=> {
+      if(stack.state._command) {
+        var nextFunc = stack.state._command.next
+        delete stack.state._command.next
+        return nextFunc(true)         
+      } else {
+        return 
+      }
+    })
     //return state._command.next(true) //< Calling next on a command with a child will 
     //fire said child command. 
   } else {

@@ -16,7 +16,7 @@ test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
 
 })
 
-test.only("stack.fire from within a stack.on listener", (t) => {
+test("stack.fire from within a stack.on listener", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
 
@@ -338,14 +338,16 @@ test('berries', (t) => {
 })
 
 
-test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+test.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')  
 
   stack.on('warning-alarm', (state, next) => {
     console.log('you have 5 seconds to comply')
-    setTimeout(next, 5000)  
+    setTimeout(()=> {
+      next(null, state)
+    }, 5000)  
   })
 
   stack.fire('warning-alarm', (err, state, next) => {

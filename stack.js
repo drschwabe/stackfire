@@ -119,6 +119,7 @@ stack.fire = function(path, param2, param3) {
 
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
+  debugger
   if(state._command) {
     var enties = _.clone(stack.grid.enties)
     stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
@@ -133,7 +134,7 @@ stack.fire = function(path, param2, param3) {
       //if it's a child, give it a cell number/position exactly row below (same column)      
       cell = state._command.cell + stack.grid.width
       //also make note of parent... 
-      command.parent = state._command.path
+      command.parent = state._command
       //let's give the command reference to it's new child too: 
       state._command.child = command
     } else {
@@ -172,7 +173,10 @@ var waterfall = (command) => {
       state = stack.state
   async.series([
     function(seriesCallback) {
-      var seedFunction = function(next) { next(null, state) }
+      var seedFunction = function(next) { 
+        stack.state._command.current_middleware_index = 0 
+        next(null, state) 
+      }
       if(matchingRoute) {      
         //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
         if(!matchingRoute.seeded) { //but only if we haven't already done it: 
@@ -197,12 +201,26 @@ var waterfall = (command) => {
             return stateOrNext 
           }
         }
-        //var middlewareToRun = []
+
+       //var middlewareToRun = []
         var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { 
           return _l.overArgs(entry.func, captureNext)
+        })    
+
+        //Add a 'buffer' function after each middleware function to keep track of the
+        //current middleware index. 
+        var middlewareToReallyRun = []
+        middlewareToRun.forEach((func, index) => {
+          middlewareToReallyRun.push(func)     
+          var bufferFunctionForCount = (state, next) => {
+            state._command.current_middleware_index++
+            next(null, state)
+          }
+          middlewareToReallyRun.push(bufferFunctionForCount)
         })
+
         //if(command.parent) middlewareToRun.unshift(function(next) { next(null, state) })
-        async.waterfall(middlewareToRun, function(err, state) {
+        async.waterfall(middlewareToReallyRun, function(err, state) {
           if(err) return seriesCallback(err) //< Err for now being just used 
           //as a way to short circuit command in progress. 
           return seriesCallback(null, state)
@@ -234,7 +252,7 @@ var waterfall = (command) => {
     // }
     //hmmmm - yes, we want to short circuit it however, THIS function itself only runs if either a short circuit state._command.next(true) is run or the command finishes entirely; so the short-circuit state._command.next(true) needs to be called earlier
 
-    command.done = true
+    debugger
 
     //search the next cell below (for children): 
     if(command.child) {
@@ -253,6 +271,7 @@ var waterfall = (command) => {
       //Otherwise, search the next cell to the right (for siblings): 
       //(if state._command not existing nothing is queued anyway)          
     } else if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
+        debugger
         var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
         //Fire!
         if(nextCommand) next = () => waterfall(nextCommand)
@@ -260,6 +279,8 @@ var waterfall = (command) => {
     } else {
       next = () => null   
     }
+
+    command.done = true
 
     state._command = null
 

@@ -104,7 +104,7 @@ stack.fire = function(path, param2, param3) {
 
   if(!command) {
     console.log('no matching route (no listeners) defined.')
-    if(callback) return callback
+    if(callback) return callback(null, stack.state)
     else return 
   }
 
@@ -299,7 +299,7 @@ var waterfall = (command) => {
     state._command = null
 
     if(window.renderGrid) window.renderGrid()  
-        
+
     if(command.callback) {
       var commandCallback = command.callback 
       delete command.callback

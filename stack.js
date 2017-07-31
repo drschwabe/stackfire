@@ -115,21 +115,16 @@ stack.fire = function(path, param2, param3) {
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
   if(state._command) {
-    debugger
     var enties = _.clone(stack.grid.enties)
     //stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid
     stack.grid = gg.createGrid(3,3) //Create a fixed grid for now... 
-    stack.grid.enties = enties //< restore original enties, then add new enty.... 
+    stack.grid.enties = enties //< restore original enties (commands), then add the new one
 
-    //WE have to convert the given enties to the new size of the grid... 
-    //ie: gg.convertEnties(grid, newGrid) or maybe gg.expandGrid(grid, newWidth, newHeight, "center" )
-    //this then assigns the enties.  Possibly a css-like "top-left" "bottom-right" 
-
-    //before we determine the cell, we must determine if current command is a parent or sibling...
+    //before we determine its cell, first determine if the current command is a parent or sibling...
     var cell  //DETERMINE SILBING OR CHILD: 
-    if(state._command.caller != command.caller) {  
-      //if it's a child, give it a cell number/position exactly row below (same column)      
-      cell = state._command.cell + stack.grid.width
+    if(state._command.caller != command.caller) { //< Sibling will share the same caller
+      //Search the next row down: 
+      cell = (stack.grid.enties.filter((enty) => enty.command.parent == state._command).length * stack.grid.width) +  stack.grid.width
       //also make note of parent... 
       command.parent = state._command
       //let's give the command reference to it's new child too: 
@@ -147,7 +142,6 @@ stack.fire = function(path, param2, param3) {
     if(!command.parent) return  //< We return if sibling because the current command 
     //should finish first (stack will now call it upon completion; we just queued it)
     //If sibling, we fire right now!  Let's do a short circuit...
-    //state._command.next(null) 
     _.defer(()=> {
       if(stack.state._command) {
         var nextFunc = stack.state._command.next
@@ -157,11 +151,10 @@ stack.fire = function(path, param2, param3) {
         return 
       }
     })
-    //return state._command.next(true) //< Calling next on a command with a child will 
-    //fire said child command. 
+
   } else {
     //if no command active, we assume it is root level...
-    //we need to exapnd the size of the grid... 
+    //we need to expand the size of the grid... 
     var enties = _.clone(stack.grid.enties)
     //stack.grid = gg.createGrid(enties.length + 1, enties.length +1)
     stack.grid = gg.createGrid(3,3) 
@@ -223,7 +216,6 @@ var waterfall = (command) => {
           middlewareToReallyRun.push(bufferFunctionForCount)
         })
 
-        //if(command.parent) middlewareToRun.unshift(function(next) { next(null, state) })
         async.waterfall(middlewareToReallyRun, function(err, state) {
           if(err) return seriesCallback(err) //< Err for now being just used 
           //as a way to short circuit command in progress. 
@@ -242,8 +234,12 @@ var waterfall = (command) => {
     if(command.done) return 
 
     //search the next cell below (for children): 
+    if(command.child && command.child.done) delete command.child 
+    //^ if it's done then we delete the reference
+
     if(command.child) {
-      var nextCommand = stack.grid.cells[state._command.cell + stack.grid.width].enties[0].command
+      var nextCommand = command.child
+
       //Fire!
       if(nextCommand) next = () => waterfall(nextCommand)
       else next = () => null
@@ -254,10 +250,8 @@ var waterfall = (command) => {
       return waterfall(state._command)
 
     } else if(command.parent) {
-      console.log('restore the parent stack!')
       //Determine if there are remaining middleware to run: 
       if(command.parent.current_middleware_index < command.parent.matching_route - 1) {
-        console.log('middlware is remaining!')
       } else {
         //otherwise the parent has no more middleware, 
         //so execute the parent's last command;
@@ -269,7 +263,6 @@ var waterfall = (command) => {
           
           commandCallback(null, stack.state, () => {
             delete command.callback 
-            console.log("completed callback")
             delete command.parent.child
             //state._command = command.parent 
             command.parent.done = true
@@ -303,11 +296,10 @@ var waterfall = (command) => {
     }
 
     command.done = true
-
     state._command = null
 
-    if(window.renderGrid) window.renderGrid()      
-    //TODO; call this after child finishes... 
+    if(window.renderGrid) window.renderGrid()  
+        
     if(command.callback) {
       var commandCallback = command.callback 
       delete command.callback

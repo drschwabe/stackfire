@@ -1,4 +1,4 @@
-const test = require('tape'), 
+const test = require('tape-catch'), 
       requireUncached = require('require-uncached'), 
       //^ ensures a clean slate for stack for each test. 
       _ = require('underscore')
@@ -44,7 +44,7 @@ test("stack.fire nested within stack.on", (t) => {
 
 })
 
-test.only("stack.fire nested within stack.on (async)", (t) => {
+test("stack.fire nested within stack.on (async)", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
   stack.on('/do-something-else', (state, next) => {
@@ -68,7 +68,7 @@ test.only("stack.fire nested within stack.on (async)", (t) => {
 })
 
 
-test("fire 3 commands and verify state consistency along the way", (t) => {
+test("fire 3 nested commands and verify state consistency along the way", (t) => {
   t.plan(6) //This will be the next major engineering hurdle; 
   //to ensure that commands that are children of children fire and return back to the 
   //root command; will wnat to make a visualization of this. 
@@ -186,7 +186,7 @@ test("(same as above, but even more complex routes using multiple parameters)", 
 })
 
 //Test to ensure stack.state is updated as expected. 
-test("stack.state", (t) => {
+test("stack.state integrity (and commands without listeners)", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
   stack.fire('/take-off', (err, state) => {
@@ -316,10 +316,10 @@ test("Commands are agnostic to stating with a slash or not", (t) => {
 
   stack.on('/party', (state, next) => {
     t.pass("it's the same party!")
+    next(null, state)
   })  
 
-  stack.fire('party')  
-
+  stack.fire('party')
 
   stack.on('/earthquake', (state, next) => {
     t.pass('earthquake!')
@@ -334,31 +334,27 @@ test("Commands are agnostic to stating with a slash or not", (t) => {
 
 })
 
-//passes: 
 test('berries', (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')    
 
-  t.ok(_.isArray(stack.fire_queue) && _.isEmpty(stack.fire_queue))
+  t.ok(_.isArray(stack.grid.cells))
 
   stack.on('berry', (state, next) => {
-    //stack.command_queue = [ [{path:'berry'}] ]
-    //t.equals(stack.command_queue[0][0].path, 'berry' )
-    t.equals(stack.fire_queue[0].params[0], '/berry') 
+    t.equals(stack.grid.enties[0].command.path, '/berry') 
     next(null, state)
   })
 
-  stack.fire('berry', (err, state) => {  
-    //now the fire has completed so should be just an empty array: 
-    //stack.command_queue = []  
-    t.ok(_.isArray(stack.fire_queue) && _.isEmpty(stack.fire_queue))    
+  stack.fire('berry', (err, state, next) => {  
+    //now the fire has completed: 
+    t.ok(stack.grid.enties[0].command.done)
+    next(null, state)    
   })  
 
-  stack.fire('vegetable', (err, state) => {  //stack.command_queue = [ [{path:'vegetable'}] ]
-    //now the fire has completed so... 
-    //stack.command_queue = []  
-    t.ok(_.isArray(stack.fire_queue) && _.isEmpty(stack.fire_queue))        
+  stack.fire('vegetable', (err, state) => { 
+    //We check the next enty: 
+    t.ok(stack.grid.enties[1].command.done)        
   }) 
 
 })
@@ -370,10 +366,10 @@ test("A subsequent fire waits until the current stack is finished before becomin
   let stack = requireUncached('./stack.js')  
 
   stack.on('warning-alarm', (state, next) => {
-    console.log('you have 5 seconds to comply')
+    console.log('you have 2 seconds to comply')
     setTimeout(()=> {
       next(null, state)
-    }, 5000)  
+    }, 2000)  
   })
 
   stack.fire('warning-alarm', (err, state, next) => {
@@ -392,11 +388,11 @@ test("A subsequent fire waits until the current stack is finished before becomin
   //Wait one second and check: 
   setTimeout( () => {
     t.notOk(stack.state.firing_turret, 'Turret is not firing yet')
-  }, 1000 )
+  }, 500 )
 
   setTimeout( () => {
     t.ok(stack.state.firing_turret, 'Turret is now firing!')    
-  }, 6000)
+  }, 2500)
 
 })
 

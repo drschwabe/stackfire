@@ -12,7 +12,7 @@ if (!isNode) browser = true
 var stack = { 
   routes : [], 
   state : {}, 
-  grid : gg.createGrid(1,1) 
+  grid : gg.createGrid(3,3) 
 }
 stack.grid = gg.populateCells(stack.grid)
 
@@ -115,12 +115,17 @@ stack.fire = function(path, param2, param3) {
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.
   if(state._command) {
+    debugger
     var enties = _.clone(stack.grid.enties)
-    stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
+    //stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid
+    stack.grid = gg.createGrid(3,3) //Create a fixed grid for now... 
     stack.grid.enties = enties //< restore original enties, then add new enty.... 
 
-    //before we determine the cell, we must determine if current command is a parent or sibling...
+    //WE have to convert the given enties to the new size of the grid... 
+    //ie: gg.convertEnties(grid, newGrid) or maybe gg.expandGrid(grid, newWidth, newHeight, "center" )
+    //this then assigns the enties.  Possibly a css-like "top-left" "bottom-right" 
 
+    //before we determine the cell, we must determine if current command is a parent or sibling...
     var cell  //DETERMINE SILBING OR CHILD: 
     if(state._command.caller != command.caller) {  
       //if it's a child, give it a cell number/position exactly row below (same column)      
@@ -158,7 +163,8 @@ stack.fire = function(path, param2, param3) {
     //if no command active, we assume it is root level...
     //we need to exapnd the size of the grid... 
     var enties = _.clone(stack.grid.enties)
-    stack.grid = gg.createGrid(enties.length + 1, enties.length +1)
+    //stack.grid = gg.createGrid(enties.length + 1, enties.length +1)
+    stack.grid = gg.createGrid(3,3) 
     stack.grid.enties = enties //< restore original enties, then add new enty: 
     stack.grid = gg.populateCells(stack.grid)
     command.cell = gg.nextOpenCell(stack.grid)

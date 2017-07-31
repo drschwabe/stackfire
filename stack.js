@@ -7,10 +7,7 @@ var async = require('async'),
     _l = require('lodash')
 
 var browser = false
-if (!isNode) {
-  var $ = require('jquery')  
-  browser = true
-}
+if (!isNode) browser = true
 
 var stack = { 
   routes : [], 
@@ -37,13 +34,11 @@ stack.on = function(param1, callback) {
     //The newMiddleware contains two properties; one is the callback
     //the other is the full path so we can later target/override this. 
     var newMiddleware = { func : listenerCallback, path: path }    
-    // wildcard paths naturally do not get added to other routes,
+    // Wildcard paths naturally do not get added to other routes,
     // instead other paths are added to wildcard routes only after they
     // are defined.  Because we want wildcard paths to also work with prior
     // defined routes, then we must add the wildcard paths to the middlewares
     // of the other routes.
-    // This could get tricky though, and more testing is needed to make sure
-    // this does not introduce even more problems.
     var isWild = (~path.indexOf('*'))
     if (isWild) {
       that.routes = that.routes.map(routes => Object.assign({}, routes, {middleware: [...routes.middleware, newMiddleware]}))
@@ -122,11 +117,9 @@ stack.fire = function(path, param2, param3) {
   if(state._command) {
     var enties = _.clone(stack.grid.enties)
     stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid:
-    stack.grid.enties = enties //< restore original enties, then add new enty: 
-    //Before we determine the cell, we must determine if the current command is a parent or sibling.
+    stack.grid.enties = enties //< restore original enties, then add new enty.... 
 
-    //if its not done... well, that wont help us
-    //if(!state._command.done) 
+    //before we determine the cell, we must determine if current command is a parent or sibling...
 
     var cell  //DETERMINE SILBING OR CHILD: 
     if(state._command.caller != command.caller) {  
@@ -191,15 +184,9 @@ var waterfall = (command) => {
         if(!matchingRoute.seeded) { //but only if we haven't already done it: 
           matchingRoute.middleware.unshift({func: seedFunction })      
           matchingRoute.seeded = true      
-        } else { //If already seeded, we overwrite the original seed function
-          //(because command and state may have changed): 
-          //matchingRoute.middleware[0].func = seedFunction
         }
-        //Create a mapped copy of the middleware stack we are about to run
-        //containing only the functions
-        //(preparing the data structure for what async.waterfall will expect)...
 
-        //Also capture the "next" argument such that we may apply it to the stack object; 
+        //Capture the "next" argument such that we may apply it to the stack object; 
         //making possible to invoke it from outside (ie- so stack.fire can do stack.next() to advance execution through the grid)
         var captureNext = (stateOrNext) => {
           if(!_.isFunction(stateOrNext)) return stateOrNext
@@ -211,7 +198,9 @@ var waterfall = (command) => {
           }
         }
 
-       //var middlewareToRun = []
+        //Create a mapped copy of the middleware stack we are about to run
+        //containing only the functions
+        //(preparing the data structure for what async.waterfall will expect)...
         var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { 
           return _l.overArgs(entry.func, captureNext)
         })    
@@ -241,26 +230,8 @@ var waterfall = (command) => {
     }
   ], 
   function() {
-    //if(state._command) nextCell(command)
     state = stack.state
-    debugger
     var next
-    //find the next cell in the grid (if existing); see if there is a new command waiting....
-    //Search the next cell below in same column: 
-
-    //If there is a _command at this point it means we have a command which is already firing....
-
-    //Short circuit it! 
-    //this will cause the final function to invoke....
-    //clearing the _.command 
-    //(effectively re-runs this)
-    //TODO: copy the existing / remaining stack in the 'in progress waterfall'
-    //so we may run them after this one finishes 
-    // if(state._command && !state._command.intercepted) {
-    //   state._command.intercepted = true
-    //   return state._command.next(true)
-    // }
-    //hmmmm - yes, we want to short circuit it however, THIS function itself only runs if either a short circuit state._command.next(true) is run or the command finishes entirely; so the short-circuit state._command.next(true) needs to be called earlier
 
     if(command.done) return 
 
@@ -272,8 +243,6 @@ var waterfall = (command) => {
       else next = () => null
 
       state._command = command.child
-      //may have to delete child after it returns so we can skip over this and call the remaining
-      //(if any) callbacks in the original parent waterfall
       if(window.renderGrid) window.renderGrid()
       delete command.child
       return waterfall(state._command)

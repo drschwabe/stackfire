@@ -3,7 +3,7 @@ const test = require('tape'),
       //^ ensures a clean slate for stack for each test. 
       _ = require('underscore')
   
-test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
+test("stack.fire invokes stack.on", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
 
@@ -16,7 +16,7 @@ test("stack.fire('/do-something') to invoke stack.on('/do-something')", (t) => {
 
 })
 
-test("stack.fire from within a stack.on listener", (t) => {
+test("stack.fire nested within stack.on", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
 
@@ -44,9 +44,34 @@ test("stack.fire from within a stack.on listener", (t) => {
 
 })
 
+test.only("stack.fire nested within stack.on (async)", (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js')
+  stack.on('/do-something-else', (state, next) => {
+    //Nested async fire: 
+    setTimeout(() => {
+      stack.fire('/do-another-thing', (err, newState, next2) => {
+        next2(null, newState)
+      }, 1000)
+    })
+  })
+  stack.on('/do-another-thing', (state, next) => {
+    t.ok(state, 'root level listener invoked from a nested fire')
+    t.equal(state._command.path, '/do-something-else', "state._command.path equals the command from the nested fire (not the original command).")   
+    next(null, state) 
+  })
+  stack.fire('/do-something-else', (err, state, next) => {
+    setTimeout(() => {
+      next()
+    }, 500)
+  })
+})
+
 
 test("fire 3 commands and verify state consistency along the way", (t) => {
-  t.plan(6)
+  t.plan(6) //This will be the next major engineering hurdle; 
+  //to ensure that commands that are children of children fire and return back to the 
+  //root command; will wnat to make a visualization of this. 
   let stack = requireUncached('./stack.js')
 
   stack.on('/land-on-moon', (state, next) => {

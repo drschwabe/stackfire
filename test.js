@@ -396,3 +396,66 @@ test("A subsequent fire waits until the current stack is finished before becomin
 
 })
 
+
+test("Commands not issued should not fire (using wildcard commands)", (t) => {
+  t.plan(3)
+
+  let stack = requireUncached('./stack.js')
+
+  //Defining a wildcard listener atop of the stack seems to result in 
+  //subsequent listeners being fired even though their command was not issued...
+
+  stack.on('*wildcard', (state, next) => {
+    t.pass('this should invoke on every fire')
+    next(null, state)    
+  })
+
+  stack.on('/release-prisoner', (state, next) => {
+    t.pass('expected listener invoked')
+    next(null, state)
+  })
+
+  //This should not run! 
+  stack.on('/execute-prisoner', (state, next) => {
+    //workaround by manually checking: 
+    if(state._command != '/execute-prisoner') return next(null, state)
+    t.fail('listener invoked when it should not have')
+    next(null, state)
+  })
+
+  stack.fire('/release-prisoner', (err, state) => {
+    t.pass('end of stack reached')
+    t.end()
+  })
+
+})
+
+
+test("Commands not issued should not fire (using commands that use URL param)", (t) => {
+t.plan(3)
+
+  let stack = requireUncached('./stack.js')
+
+  stack.on('/bomb/:anything', (state, next) => {
+    t.pass('this should invoke on every fire')
+    next(null, state)    
+  })
+
+  stack.on('/bomb/disarm', (state, next) => {
+    t.pass('expected listener invoked')
+    next(null, state)
+  })
+
+  //This should not run! 
+  stack.on('/bomb/detonate', (state, next) => {
+    //workaround by manually checking: 
+    if(state._command != '/bomb-detonate') return next(null, state)    
+    t.fail('listener invoked when it should not have')
+    next(null, state)
+  })
+
+  stack.fire('/bomb/disarm', (err, state) => {
+    t.pass('end of stack reached')
+    t.end()
+  })  
+})

@@ -70,9 +70,10 @@ stack.on = function(param1, callback) {
 
 stack.fire = function(path, param2, param3) {
 
-  //debugger
+  var callee = arguments.callee 
 
-  var caller = arguments.callee.caller.toString()
+  var caller
+  if(arguments.callee.caller) caller = arguments.callee.caller.toString()
 
   if(path.substr(0, 1) != '/') path = '/' + path    
 
@@ -177,7 +178,7 @@ stack.fire = function(path, param2, param3) {
 var waterfall = (command) => {
   var matchingRoute = command.matching_route, 
       state = stack.state
-      
+
   state._command = command   
 
   async.series([

@@ -31,6 +31,9 @@ stack.on = function(param1, callback) {
     var existingRoute = _.find(that.routes, function(existingRoute) {
       return existingRoute.route.match(path)      
     })
+
+   //debugger 
+
     //The newMiddleware contains two properties; one is the callback
     //the other is the full path so we can later target/override this. 
     var newMiddleware = { func : listenerCallback, path: path }    
@@ -66,6 +69,8 @@ stack.on = function(param1, callback) {
 }
 
 stack.fire = function(path, param2, param3) {
+
+  //debugger
 
   var caller = arguments.callee.caller.toString()
 
@@ -172,6 +177,9 @@ stack.fire = function(path, param2, param3) {
 var waterfall = (command) => {
   var matchingRoute = command.matching_route, 
       state = stack.state
+      
+  state._command = command   
+
   async.series([
     function(seriesCallback) {
       var seedFunction = function(next) { 
@@ -281,7 +289,7 @@ var waterfall = (command) => {
             return command.parent.callback(null, stack.state, nextCommand)
           })         
         } else {
-          debugger
+          //debugger
         }
       }
       //Otherwise, search the next cell to the right (for siblings): 

@@ -33,7 +33,7 @@ test("stack.fire nested within stack.on", (t) => {
 
   stack.on('/do-another-thing', (state, next) => {
     t.ok(state, 'root level listener invoked from a nested fire')
-    t.equal(state._command.path, '/do-something-else', "state._command.path equals the command from the nested fire (not the original command).")   
+    t.equal(state._command.path, '/do-another-thing', "state._command.path equals the path of the current 'on' listener.")       
     next(null, state) 
   })
   
@@ -57,7 +57,7 @@ test("stack.fire nested within stack.on (async)", (t) => {
   })
   stack.on('/do-another-thing', (state, next) => {
     t.ok(state, 'root level listener invoked from a nested fire')
-    t.equal(state._command.path, '/do-something-else', "state._command.path equals the command from the nested fire (not the original command).")   
+    t.equal(state._command.path, '/do-another-thing', "state._command.path equals the path of the current 'on' listener.")       
     next(null, state) 
   })
   stack.fire('/do-something-else', (err, state, next) => {
@@ -432,7 +432,7 @@ test("Commands not issued should not fire (using wildcard commands)", (t) => {
 
 
 test("Commands not issued should not fire (using commands that use URL param)", (t) => {
-t.plan(3)
+  t.plan(3)
 
   let stack = requireUncached('./stack.js')
 
@@ -459,3 +459,37 @@ t.plan(3)
     t.end()
   })  
 })
+
+test('Robot assembly', (t) => {
+  t.plan(3)
+
+  let stack = requireUncached('./stack.js')
+
+  stack.on('robot/assemble/:product', (state, next) => {
+    console.log('"robot/assemble/:product" on!')    
+    t.equals(state._command.path, '/robot/assemble/box')    
+
+    stack.fire('robot/box', (err, state, next) => {
+      console.log('"robot/box" fire complete')
+      console.log(`state._command.path is: ${state._command.path}
+      `)
+      next(null, state)
+    })
+  })
+
+  stack.on('robot/:product', (state, next) => {
+    console.log('"robot/:product" on!')    
+    console.log(`state._command.path is: ${state._command.path}
+    `)  
+    t.equals(state._command.path, '/robot/box')
+    next(null, state)   
+  })
+
+  stack.fire('robot/assemble/box', (err, state) => {
+    console.log('"robot/assemble/box" fire complete')
+    t.equals(null, state._command)
+  })
+
+})
+
+

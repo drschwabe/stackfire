@@ -219,8 +219,16 @@ var waterfall = (command) => {
         middlewareToRun.forEach((func, index) => {
           middlewareToReallyRun.push(func)     
           var bufferFunctionForCount = (state, next) => {
-            state._command.current_middleware_index++
-            next(null, state)
+            if(stack.state._command) {
+              stack.state._command.current_middleware_index++              
+            }
+            if(next) {
+              next(null, state)
+            } else {
+              debugger
+              //run the next on the last middleware .... 
+              //stack.state._command.current_middleware_index++ 
+            }
           }
           middlewareToReallyRun.push(bufferFunctionForCount)
         })
@@ -286,8 +294,8 @@ var waterfall = (command) => {
               nextCommand = () => null
             }
             state._command = null
-            if(window.renderGrid) window.renderGrid()                                  
-            return command.parent.callback(null, stack.state, nextCommand)
+            if(window.renderGrid) window.renderGrid()
+            if(command.parent.callback) return command.parent.callback(null, stack.state, nextCommand)
           })         
         } else {
           //debugger

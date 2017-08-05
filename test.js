@@ -460,7 +460,7 @@ test("Commands not issued should not fire (using commands that use URL param)", 
   })  
 })
 
-test('Robot assembly', (t) => {
+test('Robot assembly line', (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')
@@ -493,3 +493,31 @@ test('Robot assembly', (t) => {
 })
 
 
+test('Async element initialization', (t) => {
+  t.plan(1)
+  let stack = requireUncached('./stack.js')
+  let async = requireUncached('async')
+
+  stack.on('element/init/:prefix', (state, next) => {
+    var elems = ['a', 'b', 'c']
+    var nextFires = []
+    async.eachSeries(elems, (elem, callback) => {
+      stack.fire('element/' + elem,  stack.state, (err, state, nextFire) => {
+        nextFires.push(nextFire)
+        callback(null)
+      })
+    }, (err) => {
+      nextFires[0]()
+    })
+  })
+
+  stack.on('element/:elementName', (state, next) => { 
+    stack.fire('element/' + state._command.elementName + '/connected', function(err, newState, fireNext) {
+      next(null, newState)
+    })
+  })
+
+  stack.fire('element/init/my-element', (err, state, nextFire) => {
+    t.pass('Finished')
+  })
+})

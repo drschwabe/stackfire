@@ -32,8 +32,6 @@ stack.on = function(param1, callback) {
       return existingRoute.route.match(path)      
     })
 
-   //debugger 
-
     //The newMiddleware contains two properties; one is the callback
     //the other is the full path so we can later target/override this. 
     var newMiddleware = { func : listenerCallback, path: path }    
@@ -193,47 +191,48 @@ var waterfall = (command) => {
           matchingRoute.middleware.unshift({func: seedFunction })      
           matchingRoute.seeded = true      
         }
-
         //Capture the "next" argument such that we may apply it to the stack object; 
-        //making possible to invoke it from outside (ie- so stack.fire can do stack.next() to advance execution through the grid)
-        var captureNext = (stateOrNext) => {
-          if(!_.isFunction(stateOrNext)) return stateOrNext
-          if(stack.state._command) {
-            stack.state._command.next = stateOrNext 
-            return stateOrNext
-          } else {
-            return stateOrNext 
-          }
-        }
+        //making possible to invoke it from outside (ie- so stack.fire can do stack.next() to advance execution through the grid)...
 
-        //Create a mapped copy of the middleware stack we are about to run
-        //containing only the functions
-        //(preparing the data structure for what async.waterfall will expect)...
-        var middlewareToRun = _.map(matchingRoute.middleware, function(entry) { 
-          return _l.overArgs(entry.func, captureNext)
-        })    
-
-        //Add a 'buffer' function after each middleware function to keep track of the
-        //current middleware index. 
-        var middlewareToReallyRun = []
-        middlewareToRun.forEach((func, index) => {
-          middlewareToReallyRun.push(func)     
-          var bufferFunctionForCount = (state, next) => {
+        //add a 'buffer' function after each middleware function to do this
+        //also keep track of the current middleware index. 
+        var middlewareToRun = []
+        matchingRoute.middleware.forEach((entry, index) => {
+          //Capture next: 
+          var middlewareFunc = _l.overArgs(entry.func, (stateOrNext) => {
+            if(!_.isFunction(stateOrNext)) return stateOrNext
+            //If it's not a function, it is the state object: 
+            if(stack.state._command) stack.state._command.next = stateOrNext 
+            return stateOrNext          
+          })
+          middlewareToRun.push(middlewareFunc)
+          var bufferFunction = (state, next) => {
+            if(!stack.state._command && _.isFunction(next)) return next()
+            if(!stack.state._command) {
+              console.log('no command.')
+              console.log(next)
+              //search the grid for any commands 
+              var incompleteCommand = _.chain(stack.grid.enties)
+               .filter((enty) => enty.command.done)
+               .last()
+               .value().command
+               stack.state._command = incompleteCommand
+              return incompleteCommand.next(null, state)
+            }
             if(stack.state._command) {
-              stack.state._command.current_middleware_index++              
+              stack.state._command.current_middleware_index++
             }
             if(next) {
-              next(null, state)
+              stack.state._command.next = next                                         
+              return next(null, state)
             } else {
-              debugger
-              //run the next on the last middleware .... 
-              //stack.state._command.current_middleware_index++ 
+              console.log('no next')
             }
           }
-          middlewareToReallyRun.push(bufferFunctionForCount)
+          middlewareToRun.push(bufferFunction)
         })
 
-        async.waterfall(middlewareToReallyRun, function(err, state) {
+        async.waterfall(middlewareToRun, function(err, state) {
           if(err) return seriesCallback(err) //< Err for now being just used 
           //as a way to short circuit command in progress. 
           return seriesCallback(null, state)
@@ -303,6 +302,7 @@ var waterfall = (command) => {
       }
       //Otherwise, search the next cell to the right (for siblings): 
       //(if state._command not existing nothing is queued anyway)          
+      //perhaps right here do a check for any commands not yet done...
     } else if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
         var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
         //Fire!

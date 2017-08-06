@@ -217,16 +217,18 @@ var waterfall = (command) => {
                .last()
                .value().command
                stack.state._command = incompleteCommand
-              return incompleteCommand.next(null, state)
+              return incompleteCommand.next(null, stack.state)
             }
             if(stack.state._command) {
               stack.state._command.current_middleware_index++
             }
             if(next) {
               stack.state._command.next = next                                         
-              return next(null, state)
+              return next(null, stack.state)
             } else {
-              console.log('no next')
+              //Next was not supplied so we use the one saved
+              //(ie- user did: next() with no params)
+              stack.state._command.next(null, stack.state)
             }
           }
           middlewareToRun.push(bufferFunction)

@@ -521,3 +521,25 @@ test('Async element initialization', (t) => {
     t.pass('Finished')
   })
 })
+
+
+test('Fire shorthand', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js')
+
+  stack.on('green', (state, next) => {
+    t.pass('green light')
+    stack.fire('go', next)
+  })
+
+  stack.on('go', (state, next) => {
+    t.pass('going')
+    //next(null, state)
+    next()
+  })  
+
+  stack.fire('green', (err, state, nextFire) => {
+    t.pass('gone')
+  })
+
+})

@@ -228,7 +228,9 @@ var waterfall = (command) => {
             } else {
               //Next was not supplied so we use the one saved
               //(ie- user did: next() with no params)
-              stack.state._command.next(null, stack.state)
+              if(stack.state._command.next) {
+                stack.state._command.next(null, stack.state)
+              }
             }
           }
           middlewareToRun.push(bufferFunction)

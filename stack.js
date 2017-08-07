@@ -207,31 +207,34 @@ var waterfall = (command) => {
           })
           middlewareToRun.push(middlewareFunc)
           var bufferFunction = (state, next) => {
-            if(!stack.state._command && _.isFunction(next)) return next()
-            if(!stack.state._command) {
-              console.log('no command.')
-              console.log(next)
-              //search the grid for any commands 
-              var incompleteCommand = _.chain(stack.grid.enties)
-               .filter((enty) => enty.command.done)
-               .last()
-               .value().command
-               stack.state._command = incompleteCommand
-              return incompleteCommand.next(null, stack.state)
-            }
-            if(stack.state._command) {
-              stack.state._command.current_middleware_index++
-            }
-            if(next) {
-              stack.state._command.next = next                                         
-              return next(null, stack.state)
-            } else {
-              //Next was not supplied so we use the one saved
-              //(ie- user did: next() with no params)
-              if(stack.state._command.next) {
-                stack.state._command.next(null, stack.state)
+            stack.fire('_buffer', (err, state, nextFire) => {
+              //debugger
+              if(!stack.state._command && _.isFunction(next)) return next()
+              if(!stack.state._command) {
+                console.log('no command.')
+                console.log(next)
+                //search the grid for any commands 
+                var incompleteCommand = _.chain(stack.grid.enties)
+                 .filter((enty) => enty.command.done)
+                 .last()
+                 .value().command
+                 stack.state._command = incompleteCommand
+                return incompleteCommand.next(null, stack.state)
               }
-            }
+              if(stack.state._command) {
+                stack.state._command.current_middleware_index++
+              }
+              if(next) {
+                stack.state._command.next = next                                         
+                return next(null, stack.state)
+              } else {
+                //Next was not supplied so we use the one saved
+                //(ie- user did: next() with no params)
+                if(stack.state._command.next) {
+                  stack.state._command.next(null, stack.state)
+                }
+              }
+            })
           }
           middlewareToRun.push(bufferFunction)
         })
@@ -250,6 +253,10 @@ var waterfall = (command) => {
   function() {
     state = stack.state
     var next
+    debugger
+    // if(command.path == '/_buffer') {
+    //   command.done = true
+    // } 
 
     if(command.done) return 
 
@@ -271,38 +278,35 @@ var waterfall = (command) => {
 
     } else if(command.parent) {
       //Determine if there are remaining middleware to run: 
-      if(command.parent.current_middleware_index < command.parent.matching_route - 1) {
-      } else {
-        //otherwise the parent has no more middleware, 
-        //so execute the parent's last command;
-        command.done = true 
-        if(window.renderGrid) window.renderGrid()                      
-        if(command.callback) {
-          var commandCallback = command.callback 
-          delete command.callback
-          
-          commandCallback(null, stack.state, () => {
-            delete command.callback 
-            delete command.parent.child
-            //state._command = command.parent 
-            command.parent.done = true
-            var nextCommand
-            //check for sibling: 
-            if(command && stack.grid.cells[command.cell + 1] && stack.grid.cells[command.cell + 1].enties[0]) {
-              nextCommand = stack.grid.cells[command.cell + 1].enties[0].command
-              //Fire! (but make sure it isn't already fired (done))
+      //otherwise the parent has no more middleware, 
+      //so execute the parent's last command;
+      command.done = true 
+      if(window.renderGrid) window.renderGrid()                      
+      if(command.callback) {
+        debugger
+        var commandCallback = _.clone(command.callback)
+        delete command.callback
+        delete command.parent.child
+        command.parent.done = true
+        var nextCommand
+        //check for sibling: 
+        if(command && stack.grid.cells[command.cell + 1] && stack.grid.cells[command.cell + 1].enties[0]) {
+          nextCommand = stack.grid.cells[command.cell + 1].enties[0].command
+          //Fire! (but make sure it isn't already fired (done))
+          if(commandCallback) next = () => {
+            commandCallback(null, stack.state, () => {
               if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
               else nextCommand = () => null
-            } else {
-              nextCommand = () => null
-            }
-            state._command = null
-            if(window.renderGrid) window.renderGrid()
-            if(command.parent.callback) return command.parent.callback(null, stack.state, nextCommand)
-          })         
+            })
+          }
+          if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
+          else nextCommand = () => null
         } else {
-          //debugger
+          nextCommand = () => null
         }
+        state._command = null
+        if(window.renderGrid) window.renderGrid()
+        if(command.parent.callback) return command.parent.callback(null, stack.state, nextCommand)
       }
       //Otherwise, search the next cell to the right (for siblings): 
       //(if state._command not existing nothing is queued anyway)          

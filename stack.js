@@ -207,33 +207,42 @@ var waterfall = (command) => {
           })
           middlewareToRun.push(middlewareFunc)
           var bufferFunction = (state, next) => {
+            var currentCommand = _.clone(state._command)
+            if(stack.state._command) {
+              stack.state._command.current_middleware_index++
+            }
+            if(next) {
+              stack.state._command.next = next                                         
+              return next(null, stack.state)
+            } else {
+              //Next was not supplied so we use the one saved
+              //(ie- user did: next() with no params)
+              if(stack.state._command.next) {
+                stack.state._command.next(null, stack.state)
+              }
+            }
+
             stack.fire('_buffer', (err, state, nextFire) => {
               //debugger
+
+              state._command = currentCommand
+
               if(!stack.state._command && _.isFunction(next)) return next()
               if(!stack.state._command) {
                 console.log('no command.')
                 console.log(next)
                 //search the grid for any commands 
                 var incompleteCommand = _.chain(stack.grid.enties)
-                 .filter((enty) => enty.command.done)
+                 .filter((enty) => !enty.command.done)
                  .last()
-                 .value().command
-                 stack.state._command = incompleteCommand
-                return incompleteCommand.next(null, stack.state)
-              }
-              if(stack.state._command) {
-                stack.state._command.current_middleware_index++
-              }
-              if(next) {
-                stack.state._command.next = next                                         
-                return next(null, stack.state)
-              } else {
-                //Next was not supplied so we use the one saved
-                //(ie- user did: next() with no params)
-                if(stack.state._command.next) {
-                  stack.state._command.next(null, stack.state)
+                 .value()
+
+                if(incompleteCommand) {
+                  stack.state._command = incompleteCommand.command
+                  return incompleteCommand.command.next(null, stack.state)                  
                 }
               }
+
             })
           }
           middlewareToRun.push(bufferFunction)
@@ -287,7 +296,7 @@ var waterfall = (command) => {
         var commandCallback = _.clone(command.callback)
         delete command.callback
         delete command.parent.child
-        command.parent.done = true
+        //command.parent.done = true
         var nextCommand
         //check for sibling: 
         if(command && stack.grid.cells[command.cell + 1] && stack.grid.cells[command.cell + 1].enties[0]) {
@@ -296,12 +305,14 @@ var waterfall = (command) => {
           if(commandCallback) next = () => {
             commandCallback(null, stack.state, () => {
               if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
+              //if(command.parent && !command.parent.done)
               else nextCommand = () => null
             })
           }
           if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
           else nextCommand = () => null
         } else {
+          //check to see if the 
           nextCommand = () => null
         }
         state._command = null

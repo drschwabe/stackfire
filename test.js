@@ -584,3 +584,34 @@ test('command nulls after fire', (t) => {
     t.equals(null, state._command, 'command finished/is null')
   })
 })
+
+test('stack.next works just like the supplied next param', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js')
+
+  //Using supplied next param: 
+  stack.on('fruit', (state, next) => {
+    state.fruit = 'apple'
+    next()
+  })
+  stack.on('fruit', (state, next) => {
+    state.fruit = 'strawberry'
+    next()
+  })
+  stack.fire('fruit', (state, next) => {
+    t.ok(state.fruit, 'strawberry')
+  })
+
+  //Using stack.next: 
+  stack.on('vegetable', () => {
+    stack.state.fruit = 'potatoe'
+    stack.next()
+  })
+  stack.on('vegetable', () => {
+    state.state.carrot = 'carrot'
+    stack.next()
+  })
+  stack.fire('vegetable', () => {
+    t.ok(state.vegetable, 'carrot')
+  })
+})

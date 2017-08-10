@@ -3,7 +3,7 @@ const test = require('tape-catch'),
       //^ ensures a clean slate for stack for each test. 
       _ = require('underscore')
   
-test("stack.fire invokes stack.on", (t) => {
+test.only("stack.fire invokes stack.on", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
 
@@ -529,12 +529,11 @@ test('Fire shorthand', (t) => {
 
   stack.on('green', (state, next) => {
     t.pass('green light')
-    stack.fire('go', next)
+    stack.fire('go', next) //< Shortand
   })
 
   stack.on('go', (state, next) => {
     t.pass('going')
-    //next(null, state)
     next()
   })  
 

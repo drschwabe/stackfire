@@ -68,12 +68,7 @@ stack.on = function(param1, callback) {
 
 stack.fire = function(path, param2, param3) {
 
-  var callee = arguments.callee 
-
-  var caller
-  if(arguments.callee.caller) caller = arguments.callee.caller.toString()
-
-  if(path.substr(0, 1) != '/') path = '/' + path    
+  if(path.substr(0, 1) != '/') path = '/' + path //< Ensure path is always prefixed with '/'
 
   var state, callback
   //Parse the parameters to figure out what we got: 
@@ -93,91 +88,100 @@ stack.fire = function(path, param2, param3) {
     state = this.state
   }
 
-  var matchingRoute, command
+  //Prepare the new command object: 
+  var matchingRoute, newCommand
   matchingRoute = _.find(this.routes, function(route) {
     var result = route.route.match(path)
+    //^ Parses the route; organizing params into a tidy object.    
     if(result) {
-      command = result
+      newCommand = result
     } else if(!result || _.isUndefined(result)) {
-      command = {} //< If there was no matching route, create an obj anyway.       
+      newCommand = {} //< If there was no matching route, create an obj anyway.       
     }
-    command.path = path
-    //^ Parses the route; organizing params into a tidy object.
+    newCommand.path = path
     return result
   })
 
-  if(!command) {
-    console.log('no matching route (no listeners) defined.')
-    if(callback) return callback(null, stack.state)
+  if(!newCommand) {
+    if(callback) return callback(null, stack.state) 
+    //^ No matching routes, but as a courtesy we will execute your callback anyway.
     else return 
   }
 
-  if(matchingRoute) command.matching_route = matchingRoute
-  if(callback) command.callback = callback
-  command.caller = caller 
+  if(matchingRoute) newCommand.matching_route = matchingRoute
+  if(callback) newCommand.callback = callback
+
+  //Store callee and caller for upcoming logic: 
+  var callee = arguments.callee, 
+      caller
+      
+  if(arguments.callee.caller) caller = arguments.callee.caller.toString()    
+  newCommand.caller = caller 
 
   //At this point if there is already a stack._command it means there is
-  //a parent fire already in progress.
+  //a parent fire already in progress.  Therefore, it must be queued.
+  //We use a grid based queing model (leveraging gg library). 
   if(state._command) {
-    var enties = _.clone(stack.grid.enties)
-    //stack.grid = gg.createGrid(enties.length + 1, enties.length +1) //< Premptiely create a new expanded grid
-    stack.grid = gg.createGrid(3,3) //Create a fixed grid for now... 
-    stack.grid.enties = enties //< restore original enties (commands), then add the new one
+    var existingCommands = _.clone(stack.grid.enties) //< Clone a copy of all existing commands.
+    stack.grid = gg.createGrid(3,3) //< Create a new grid (overwriting any previous one)
+    //^ Grid fixed at 3x3 for now until gg supports dynamic grid resizing from top-left to bottom-left). 
+    stack.grid.enties = existingCommands //< Restore original commands to the new grid.  
 
-    //before we determine its cell, first determine if the current command is a parent or sibling...
-    var cell  //DETERMINE SILBING OR CHILD: 
-    if(state._command.caller != command.caller) { //< Sibling will share the same caller
-      //Search the next row down: 
-      cell = (stack.grid.enties.filter((enty) => enty.command.parent == state._command).length * stack.grid.width) +  stack.grid.width
-      //also make note of parent... 
-      command.parent = state._command
-      //let's give the command reference to it's new child too: 
-      state._command.child = command
-    } else {
-      //otherwise as a sibling the command will get a cell in the next column (same row)      
-      cell = gg.xy(stack.grid, [0, enties.length] )
+    //Determine the cell; position on the grid the new command will be placed... 
+    var cell 
+    //first determine if the new command is a parent or sibling... 
+    if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
+      //as a sibling the command will get a cell in the next column (same row):     
+      cell = gg.xy(stack.grid, [0, stack.grid.enties.length] ) 
+      newCommand.parent = state._command  //< save reference to parent an child: 
+      state._command.child = newCommand
+    } else { //< this is a child of the current state._command:  
+      //TODO: ^^ consider if better determination needed here! 
+      //callers might be different but still be not a child of current command
+      //(though perhaps this logic is sound; just seems like it needs to be examined/tested more closely)
+
+      //search the next row down:  
+      cell = state._command.cell + stack.grid.width
+      //also make note of parent...  
+      newCommand.parent = state._command 
+      //give the command reference to it's new child too:  
+      state._command.child = newCommand 
     }
-    command.cell = cell 
-    stack.grid = gg.insertEnty(stack.grid, { command: command, cell : cell })    
-    stack.grid = gg.populateCells(stack.grid)
 
-    if(window.renderGrid) window.renderGrid()          
-
-    if(!command.parent) return  //< We return if sibling because the current command 
-    //should finish first (stack will now call it upon completion; we just queued it)
-    //If sibling, we fire right now!  Let's do a short circuit...
-    _.defer(()=> {
-      if(stack.state._command) {
-        var nextFunc = stack.state._command.next
-        delete stack.state._command.next
-        return nextFunc(true)         
-      } else {
-        return 
-      }
-    })
-
-  } else {
-    //if no command active, we assume it is root level...
-    //we need to expand the size of the grid... 
-    var enties = _.clone(stack.grid.enties)
-    //stack.grid = gg.createGrid(enties.length + 1, enties.length +1)
-    stack.grid = gg.createGrid(3,3) 
-    stack.grid.enties = enties //< restore original enties, then add new enty: 
-    stack.grid = gg.populateCells(stack.grid)
-    command.cell = gg.nextOpenCell(stack.grid)
-    state._command = command   
-    stack.grid = gg.insertEnty(stack.grid, { command : command, cell: command.cell })
+    newCommand.cell = cell  //< finally assign the cell, then insert it into grid: 
+    stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })     
     stack.grid = gg.populateCells(stack.grid) 
+ 
+    if(window.renderGrid) window.renderGrid()  
+
+    if(!newCommand.parent) return  //< We return if sibling because the current command  
+    //should finish first (stack will now call it upon completion; we just queued it) 
+
+    //If child, short-circuit the parent's in-progress middlestack waterfall
+    //by sending the new command as first param (typically an err)
+    //stack.state._command.shortCircuited = true
+    return stack.state._command.next(newCommand)
   }
+ 
+  //Otherwise, if no command active, we assume it is root level... 
+  var existingCommands = _.clone(stack.grid.enties) 
+  stack.grid = gg.createGrid(3,3)  
+  stack.grid.enties = existingCommands //< restore original commands, then add this new one... 
+  stack.grid = gg.populateCells(stack.grid) 
+  newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
+  stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
+  stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
+
   if(window.renderGrid) window.renderGrid()      
-  waterfall(command)
+  waterfall(newCommand) //< finally, run the middleware waterfall! 
 }
 
 var waterfall = (command) => {
+
+  stack.state._command = command   
+
   var matchingRoute = command.matching_route, 
       state = stack.state
-
-  state._command = command   
 
   async.series([
     function(seriesCallback) {
@@ -207,47 +211,17 @@ var waterfall = (command) => {
           })
           middlewareToRun.push(middlewareFunc)
           var bufferFunction = (state, next) => {
-            var currentCommand = _.clone(state._command)
-            if(stack.state._command) {
-              stack.state._command.current_middleware_index++
-            }
-            if(next) {
-              stack.state._command.next = next                                         
-              return next(null, stack.state)
-            } else {
-              //Next was not supplied so we use the one saved
-              //(ie- user did: next() with no params)
-              if(stack.state._command.next) {
-                stack.state._command.next(null, stack.state)
-              }
-            }
-
-            stack.fire('_buffer', (err, state, nextFire) => {
-              //debugger
-
-              state._command = currentCommand
-
-              if(!stack.state._command && _.isFunction(next)) return next()
-              if(!stack.state._command) {
-                console.log('no command.')
-                console.log(next)
-                //search the grid for any commands 
-                var incompleteCommand = _.chain(stack.grid.enties)
-                 .filter((enty) => !enty.command.done)
-                 .last()
-                 .value()
-
-                if(incompleteCommand) {
-                  stack.state._command = incompleteCommand.command
-                  return incompleteCommand.command.next(null, stack.state)                  
-                }
-              }
-
+            console.log('run a buffer func')
+            console.log(state._command.path)
+            stack.fire('/_buffer', (err, state, nextFire) => {
+              debugger
+              console.log('ran a buffer func')
+              return next()
             })
           }
-          middlewareToRun.push(bufferFunction)
+          if(state._command.path != '/_buffer') return middlewareToRun.push(bufferFunction)
+          return
         })
-
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return seriesCallback(err) //< Err for now being just used 
           //as a way to short circuit command in progress. 
@@ -259,90 +233,32 @@ var waterfall = (command) => {
       }
     }
   ], 
-  function() {
-    state = stack.state
-    var next
-    debugger
-    // if(command.path == '/_buffer') {
-    //   command.done = true
-    // } 
-
-    if(command.done) return 
-
-    //search the next cell below (for children): 
-    if(command.child && command.child.done) delete command.child 
-    //^ if it's done then we delete the reference
-
-    if(command.child) {
-      var nextCommand = command.child
-
-      //Fire!
-      if(nextCommand) next = () => waterfall(nextCommand)
-      else next = () => null
-
-      state._command = command.child
-      if(window.renderGrid) window.renderGrid()
-      delete command.child
-      return waterfall(state._command)
-
-    } else if(command.parent) {
-      //Determine if there are remaining middleware to run: 
-      //otherwise the parent has no more middleware, 
-      //so execute the parent's last command;
-      command.done = true 
-      if(window.renderGrid) window.renderGrid()                      
-      if(command.callback) {
-        debugger
-        var commandCallback = _.clone(command.callback)
-        delete command.callback
-        delete command.parent.child
-        //command.parent.done = true
-        var nextCommand
-        //check for sibling: 
-        if(command && stack.grid.cells[command.cell + 1] && stack.grid.cells[command.cell + 1].enties[0]) {
-          nextCommand = stack.grid.cells[command.cell + 1].enties[0].command
-          //Fire! (but make sure it isn't already fired (done))
-          if(commandCallback) next = () => {
-            commandCallback(null, stack.state, () => {
-              if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
-              //if(command.parent && !command.parent.done)
-              else nextCommand = () => null
-            })
-          }
-          if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
-          else nextCommand = () => null
-        } else {
-          //check to see if the 
-          nextCommand = () => null
-        }
-        state._command = null
-        if(window.renderGrid) window.renderGrid()
-        if(command.parent.callback) return command.parent.callback(null, stack.state, nextCommand)
-      }
-      //Otherwise, search the next cell to the right (for siblings): 
-      //(if state._command not existing nothing is queued anyway)          
-      //perhaps right here do a check for any commands not yet done...
-    } else if(state._command && stack.grid.cells[state._command.cell + 1] && stack.grid.cells[state._command.cell + 1].enties[0]) {
-        var nextCommand = stack.grid.cells[state._command.cell + 1].enties[0].command
-        //Fire!
-        if(nextCommand && !nextCommand.done) next = () => waterfall(nextCommand)
-        else next = () => null
-    } else {
-      next = () => null   
+  function(newCommand) { //End of waterfall: 
+    if(newCommand) {
+      state._command.done = false  
+      console.log(`execute new command: ${newCommand.path} (child of ${state._command.path})`)
+      return waterfall(newCommand)
     }
+    console.log('reached end of waterfall for: ' + state._command.path)
+    debugger
+    state._command.done = true  
+    if(window.renderGrid) window.renderGrid()
 
-    command.done = true
-    state._command = null
+    if(state._command.callback) return state._command.callback(null, state, ) 
+    //they will have to invoke 'nextFire or stack.next()'
 
-    if(window.renderGrid) window.renderGrid()  
-
-    if(command.callback) {
-      var commandCallback = command.callback 
-      delete command.callback
-      commandCallback(null, state, next)
+    //otherwise, if there is a parent - return and continue where it left off:
+    if(state._command.parent) {
+      console.log('there is a parent')
+      state._command = state._command.parent
+      return state._command.parent.next()
     }
   })
 }
 
+stack.on('/_buffer', (state, next) => {
+  console.log('test')
+  next()
+})
 
 module.exports = stack

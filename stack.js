@@ -211,14 +211,15 @@ var waterfall = (command) => {
           })
           middlewareToRun.push(middlewareFunc)
           var bufferFunction = (state, next) => {
-            console.log('run a buffer func')
+            console.log(`run a buffer func for ${state._command.path}`)
             stack.fire('/_buffer', (err, state, nextFire) => {
-              //debugger
-              console.log('ran a buffer func')
+              console.log('buffer func complete')
               return next(null, state)
             })
           }
-          if(state._command.path != '/_buffer') return middlewareToRun.push(bufferFunction)
+          //Only push the buffer function/fire if A) we are not already running
+          //a buffer and B) we have reached the end of the middleware.
+          if(state._command.path != '/_buffer' && index != matchingRoute.middleware.length -1) return middlewareToRun.push(bufferFunction)
           return
         })
         async.waterfall(middlewareToRun, function(err, state) {
@@ -234,13 +235,9 @@ var waterfall = (command) => {
   ], 
   function(newCommand) { //End of waterfall: 
     if(newCommand) {
-      debugger
       state._command.done = false  
-      console.log(`execute new command: ${newCommand.path} (child of ${state._command.path})`)
       return waterfall(newCommand)
     }
-    console.log('reached end of waterfall for: ' + state._command.path)
-    //debugger
     state._command.done = true  
     if(window.renderGrid) window.renderGrid()
 
@@ -248,7 +245,6 @@ var waterfall = (command) => {
 
     //otherwise, if there is a parent - return and continue where it left off:
     if(state._command.parent) {
-      console.log('there is a parent')
       //Make a copy and then overwrite the state._command with the parent command.       
       var oldCommand = _.clone(state._command)
       state._command = state._command.parent 

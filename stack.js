@@ -178,10 +178,10 @@ stack.fire = function(path, param2, param3) {
 
 var waterfall = (command) => {
 
-  stack.state._command = command   
-
   var matchingRoute = command.matching_route, 
       state = stack.state
+
+  state._command = command   
 
   async.series([
     function(seriesCallback) {
@@ -212,11 +212,10 @@ var waterfall = (command) => {
           middlewareToRun.push(middlewareFunc)
           var bufferFunction = (state, next) => {
             console.log('run a buffer func')
-            console.log(state._command.path)
             stack.fire('/_buffer', (err, state, nextFire) => {
-              debugger
+              //debugger
               console.log('ran a buffer func')
-              return next()
+              return next(null, state)
             })
           }
           if(state._command.path != '/_buffer') return middlewareToRun.push(bufferFunction)
@@ -235,24 +234,28 @@ var waterfall = (command) => {
   ], 
   function(newCommand) { //End of waterfall: 
     if(newCommand) {
+      debugger
       state._command.done = false  
       console.log(`execute new command: ${newCommand.path} (child of ${state._command.path})`)
       return waterfall(newCommand)
     }
     console.log('reached end of waterfall for: ' + state._command.path)
-    debugger
+    //debugger
     state._command.done = true  
     if(window.renderGrid) window.renderGrid()
 
-    if(state._command.callback) return state._command.callback(null, state, ) 
-    //they will have to invoke 'nextFire or stack.next()'
+    //Determine next fire...
 
     //otherwise, if there is a parent - return and continue where it left off:
     if(state._command.parent) {
       console.log('there is a parent')
-      state._command = state._command.parent
-      return state._command.parent.next()
+      //Make a copy and then overwrite the state._command with the parent command.       
+      var oldCommand = _.clone(state._command)
+      state._command = state._command.parent 
+      if(oldCommand.callback) return oldCommand.callback(null, stack.state, state._command.next)
+      else return state._command.parent.next(null, stack.state)
     }
+    console.log('all done')
   })
 }
 

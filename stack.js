@@ -160,24 +160,9 @@ stack.fire = function(path, param2, param3) {
     if(!newCommand.parent) return  //< We return if sibling because the current command  
     //should finish first (stack will now call it upon completion; we just queued it) 
 
-    //If child, short-circuit the parent's in-progress middlestack waterfall
-    //by sending the new command as first param (typically an err)
-    //stack.state._command.shortCircuited = true
-    console.log('### CALL NEXT ####')
-    console.log('state._command.path:')
-    console.log(stack.state._command.path)    
-    console.log('state._command:')
-    console.log(stack.state._command)       
-    console.log('state._command.child:')   
-    console.log(stack.state._command.child)
-    console.log('state._command.parent:')       
-    console.log(stack.state._command.parent)   
-    console.log('--------------------------')    
-    debugger
-    //_.defer(() => {
-    stack.state._command.next(newCommand)
-    //possibly use a different command like 'resume' - this calls a similar function as what happens in waterfall but instead of queing up a brand new commands we remove the first couple (2 for every middleware index) functions and then initiate a new waterfall with the existing middleware stack.
-    //})
+    //If child, end the parent's in-progress middlestack waterfall: 
+    endWaterfall(newCommand)
+
   } else {
     //Otherwise, if no command active, we assume it is root level... 
     var existingCommands = _.clone(stack.grid.enties) 

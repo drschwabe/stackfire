@@ -3,7 +3,7 @@ const test = require('tape-catch'),
       //^ ensures a clean slate for stack for each test. 
       _ = require('underscore')
   
-test.only("stack.fire invokes stack.on", (t) => {
+test("stack.fire invokes stack.on", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
 
@@ -44,14 +44,14 @@ test("stack.fire nested within stack.on", (t) => {
 
 })
 
-test("stack.fire nested within stack.on (async)", (t) => {
-  t.plan(2)
+test.only("stack.fire nested within stack.on (async)", (t) => {
+  t.plan(3)
   let stack = requireUncached('./stack.js')
   stack.on('/do-something-else', (state, next) => {
     //Nested async fire: 
     setTimeout(() => {
-      stack.fire('/do-another-thing', (err, newState, next2) => {
-        next2(null, newState)
+      stack.fire('/do-another-thing', (err, newState) => {
+        next()
       }, 1000)
     })
   })
@@ -60,9 +60,9 @@ test("stack.fire nested within stack.on (async)", (t) => {
     t.equal(state._command.path, '/do-another-thing', "state._command.path equals the path of the current 'on' listener.")       
     next(null, state) 
   })
-  stack.fire('/do-something-else', (err, state, next) => {
+  stack.fire('/do-something-else', (err, state) => {
     setTimeout(() => {
-      next()
+      t.pass('reached end of the original fire')
     }, 500)
   })
 })

@@ -394,12 +394,12 @@ test("A subsequent fire waits until the current stack is finished before becomin
     next() 
   }) 
 
-  stack.fire('fire-turret', (err, state, next) => {
+  stack.fire('fire-turret', (err, state) => {
     console.log('fire turret!') 
     //The following should apply to state 
     //only AFTER warning alarm completes: 
     state.firing_turret = true
-    next()
+    //next()
   })
 
   //Wait one second and check: 

@@ -241,6 +241,7 @@ var waterfall = (command) => {
 }
 
 var endWaterfall = (newCommand) => { //End of waterfall: 
+  debugger
   var state = stack.state
   if(newCommand) {
     state._command.done = false  
@@ -260,12 +261,20 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     })
     else return state._command.parent.next(null, stack.state)        
   }
+  var siblingCommand
+  //Determine if there is a sibling: 
+  stack.grid = gg.populateCells(stack.grid)
+  if(gg.examine(stack.grid, stack.state._command.cell + 1)) siblingCommand = _.findWhere(stack.grid.enties, { cell: stack.state._command.cell + 1 }).command
   //Otherwise, just run the callback...
-  //TODO: determine next fire (if any;ie- grid queieuing logic) to run after callback
   if(state._command.callback) {
-    state._command.callback(null, state) 
+    var nextCommand
+    if(siblingCommand) nextCommand = () => { return waterfall(siblingCommand) }
+    else nextCommand = () => null 
+    return state._command.callback(null, state, nextCommand)      
   }
+  if(siblingCommand) waterfall(siblingCommand)
   console.log('all done') 
+  //if(window.renderGrid) window.renderGrid()
 }
 
 var resumeWaterfall = (command) => {

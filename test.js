@@ -23,28 +23,25 @@ test("stack.fire nested within stack.on", (t) => {
   stack.on('/do-something-else', (state, next) => {
     console.log('do something....')
     //Nested fire: 
-    debugger
-    stack.fire('/do-another-thing', (err, newState, next2) => {
+    stack.fire('/do-another-thing', (err, newState) => {
       debugger //< Current command is now 'do-something-else'
       //cause do-another-thing has finished.
-      next2(null, newState)
+      next()
     })
   })
 
   stack.on('/do-another-thing', (state, next) => {
     t.ok(state, 'root level listener invoked from a nested fire')
     t.equal(state._command.path, '/do-another-thing', "state._command.path equals the path of the current 'on' listener.")       
-    next(null, state) 
+    next() 
   })
   
   //Original command: 
-  stack.fire('/do-something-else', (err, state, next) => {
-    next()
-  })
+  stack.fire('/do-something-else')
 
 })
 
-test.only("stack.fire nested within stack.on (async)", (t) => {
+test("stack.fire nested within stack.on (async)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
   stack.on('/do-something-else', (state, next) => {

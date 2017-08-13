@@ -216,7 +216,7 @@ test("stack.state integrity (and commands without listeners)", (t) => {
 
 // })
 
-test.only('Catch all wildcard listener', (t) => {
+test.skip('Catch all wildcard listener', (t) => {
   t.plan(2)
 //dont use wildcards...
   let stack = requireUncached('./stack.js')
@@ -236,7 +236,7 @@ test.only('Catch all wildcard listener', (t) => {
 
 })
 
-test("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
+test.skip("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
   let stack = requireUncached('./stack.js')
   t.plan(2)
 
@@ -260,7 +260,7 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
 })
 
 //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same. 
-test("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
+test.skip("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(2)
@@ -284,7 +284,7 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
   stack.fire('diamond')
 })
 
-test("Wildcard correctly is added to stacks and fires in the correct order)", (t) => {
+test.skip("Wildcard correctly is added to stacks and fires in the correct order)", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(3)

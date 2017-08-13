@@ -134,9 +134,8 @@ stack.fire = function(path, param2, param3) {
     //first determine if the new command is a parent or sibling... 
     if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
       //as a sibling the command will get a cell in the next column (same row):     
-      cell = gg.xy(stack.grid, [0, stack.grid.enties.length + 1] ) 
-      newCommand.parent = state._command  //< save reference to parent an child: 
-      state._command.child = newCommand
+      stack.grid = gg.populateCells(stack.grid)       
+      cell = gg.nextOpenCell(stack.grid)
     } else { //< this is a child of the current state._command:  
       //TODO: ^^ consider if better determination needed here! 
       //callers might be different but still be not a child of current command

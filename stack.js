@@ -132,7 +132,7 @@ stack.fire = function(path, param2, param3) {
     //first determine if the new command is a parent or sibling... 
     if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
       //as a sibling the command will get a cell in the next column (same row):     
-      cell = gg.xy(stack.grid, [0, stack.grid.enties.length] ) 
+      cell = gg.xy(stack.grid, [0, stack.grid.enties.length + 1] ) 
       newCommand.parent = state._command  //< save reference to parent an child: 
       state._command.child = newCommand
     } else { //< this is a child of the current state._command:  
@@ -140,8 +140,11 @@ stack.fire = function(path, param2, param3) {
       //callers might be different but still be not a child of current command
       //(though perhaps this logic is sound; just seems like it needs to be examined/tested more closely)
 
+      stack.grid = gg.populateCells(stack.grid) 
+
       //search the next row down:  
-      cell = state._command.cell + stack.grid.width
+      cell = gg.nextOpenCellDown(stack.grid, state._command.cell)
+
       //also make note of parent...  
       newCommand.parent = state._command 
       //give the command reference to it's new child too:  
@@ -160,20 +163,34 @@ stack.fire = function(path, param2, param3) {
     //If child, short-circuit the parent's in-progress middlestack waterfall
     //by sending the new command as first param (typically an err)
     //stack.state._command.shortCircuited = true
-    return stack.state._command.next(newCommand)
-  }
- 
-  //Otherwise, if no command active, we assume it is root level... 
-  var existingCommands = _.clone(stack.grid.enties) 
-  stack.grid = gg.createGrid(3,3)  
-  stack.grid.enties = existingCommands //< restore original commands, then add this new one... 
-  stack.grid = gg.populateCells(stack.grid) 
-  newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
-  stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
-  stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
+    console.log('### CALL NEXT ####')
+    console.log('state._command.path:')
+    console.log(stack.state._command.path)    
+    console.log('state._command:')
+    console.log(stack.state._command)       
+    console.log('state._command.child:')   
+    console.log(stack.state._command.child)
+    console.log('state._command.parent:')       
+    console.log(stack.state._command.parent)   
+    console.log('--------------------------')    
+    debugger
+    //_.defer(() => {
+    stack.state._command.next(newCommand)
+    //possibly use a different command like 'resume' - this calls a similar function as what happens in waterfall but instead of queing up a brand new commands we remove the first couple (2 for every middleware index) functions and then initiate a new waterfall with the existing middleware stack.
+    //})
+  } else {
+    //Otherwise, if no command active, we assume it is root level... 
+    var existingCommands = _.clone(stack.grid.enties) 
+    stack.grid = gg.createGrid(3,3)  
+    stack.grid.enties = existingCommands //< restore original commands, then add this new one... 
+    stack.grid = gg.populateCells(stack.grid) 
+    newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
+    stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
+    stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
 
-  if(window.renderGrid) window.renderGrid()      
-  waterfall(newCommand) //< finally, run the middleware waterfall! 
+    if(window.renderGrid) window.renderGrid()      
+    waterfall(newCommand) //< finally, run the middleware waterfall! 
+  }
 }
 
 var waterfall = (command) => {
@@ -212,14 +229,15 @@ var waterfall = (command) => {
           middlewareToRun.push(middlewareFunc)
           var bufferFunction = (state, next) => {
             console.log(`run a buffer func for ${state._command.path}`)
-            stack.fire('/_buffer', (err, state, nextFire) => {
+            stack.fire('/_buffer', (err, state) => {
               console.log('buffer func complete')
+              stack.state._command.current_middleware_index++               
               return next(null, state)
             })
           }
           //Only push the buffer function/fire if A) we are not already running
           //a buffer and B) we have reached the end of the middleware.
-          if(state._command.path != '/_buffer' && index != matchingRoute.middleware.length -1) return middlewareToRun.push(bufferFunction)
+          if(state._command.path != '/_buffer' && index != matchingRoute.middleware.length -1) return middlewareToRun.push(bufferFunction)          
           return
         })
         async.waterfall(middlewareToRun, function(err, state) {
@@ -233,26 +251,62 @@ var waterfall = (command) => {
       }
     }
   ], 
-  function(newCommand) { //End of waterfall: 
-    if(newCommand) {
-      state._command.done = false  
-      return waterfall(newCommand)
-    }
-    state._command.done = true  
-    if(window.renderGrid) window.renderGrid()
+  endWaterfall)
+}
 
-    //Determine next fire...
+var endWaterfall = (newCommand) => { //End of waterfall: 
+  var state = stack.state
+  if(newCommand) {
+    state._command.done = false  
+    return waterfall(newCommand)
+  }
+  state._command.done = true  
+  if(window.renderGrid) window.renderGrid()
 
-    //otherwise, if there is a parent - return and continue where it left off:
-    if(state._command.parent) {
-      //Make a copy and then overwrite the state._command with the parent command.       
-      var oldCommand = _.clone(state._command)
-      state._command = state._command.parent 
-      if(oldCommand.callback) return oldCommand.callback(null, stack.state, state._command.next)
-      else return state._command.parent.next(null, stack.state)
+  //otherwise, if there is a parent - return and continue where it left off:
+  if(state._command.parent) {
+    //Make a copy and then overwrite the state._command with the parent command.       
+    var oldCommand = _.clone(state._command)
+    state._command = state._command.parent 
+    //Make sure we run the callback before switching context to the parent command: 
+    if(oldCommand.callback) return oldCommand.callback(null, stack.state, () => {
+      return resumeWaterfall(state._command.parent)
+    })
+    else return state._command.parent.next(null, stack.state)        
+  }
+  //Otherwise, just run the callback...
+  //TODO: determine next fire (if any;ie- grid queieuing logic) to run after callback
+  if(state._command.callback) {
+    state._command.callback(null, state) 
+  }
+  console.log('all done') 
+}
+
+var resumeWaterfall = (command) => {
+
+  var matchingRoute = command.matching_route, 
+      state = stack.state
+
+  state._command = command   
+
+  //If we already at the end of the middleware - just end it: 
+  if(command.current_middleware_index == command.matching_route.middleware.length) endWaterfall()
+
+  async.series([
+    function(seriesCallback) {
+
+      var middlewareToRun = [function(next) { 
+        //stack.state._command.current_middleware_index = 0 
+        next(null, state) 
+      }]
+      //No need to add buffers, they already in there.
+
+      //Create a copy of the command's middleware, removing the functions
+      //already run...
+      command.callback()
     }
-    console.log('all done')
-  })
+  ], 
+  endWaterfall)
 }
 
 stack.on('/_buffer', (state, next) => {

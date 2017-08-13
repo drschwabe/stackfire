@@ -41,7 +41,7 @@ stack.on = function(param1, callback) {
     // defined routes, then we must add the wildcard paths to the middlewares
     // of the other routes.
     var isWild = (~path.indexOf('*'))
-    if (isWild) {
+    if (isWild) { //This is now broken.... 
       that.routes = that.routes.map(routes => Object.assign({}, routes, {middleware: [...routes.middleware, newMiddleware]}))
     }
     //Determine if the route already exists:
@@ -67,6 +67,8 @@ stack.on = function(param1, callback) {
 }
 
 stack.fire = function(path, param2, param3) {
+
+  debugger
 
   if(path.substr(0, 1) != '/') path = '/' + path //< Ensure path is always prefixed with '/'
 

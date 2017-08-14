@@ -321,10 +321,10 @@ test.skip("Wildcard correctly is added to stacks and fires in the correct order)
 })
 
 
-test("Commands are agnostic to stating with a slash or not", (t) => {
+test.only("Commands are agnostic to stating with a slash or not", (t) => {
 
   let stack = requireUncached('./stack.js')
-  t.plan(4)
+  t.plan(5)
 
   stack.on('party', (state, next) => {
     t.pass("It's a party!")
@@ -336,7 +336,9 @@ test("Commands are agnostic to stating with a slash or not", (t) => {
     next(null, state)
   })  
 
-  stack.fire('party')
+  stack.fire('party', (err, state, next) => {
+    next()
+  })
 
   stack.on('/earthquake', (state, next) => {
     t.pass('earthquake!')
@@ -345,9 +347,13 @@ test("Commands are agnostic to stating with a slash or not", (t) => {
 
   stack.on('earthquake', (state, next) => {
     t.pass('earthquake!!!!')
+    next(null, state)
   })
 
-  stack.fire('/earthquake')
+  stack.fire('/earthquake', (err, state, next) => {
+    t.pass('finished earthquake')
+    next()
+  })
 
 })
 
@@ -363,10 +369,10 @@ test('berries', (t) => {
     next(null, state)
   })
 
-  stack.fire('berry', (err, state, next) => {  
+  stack.fire('berry', (err, state) => {  
     //now the fire has completed: 
     t.ok(stack.grid.enties[0].command.done)
-    next(null, state)    
+    //next(null, state)    
   })  
 
   stack.fire('vegetable', (err, state) => { 

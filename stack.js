@@ -123,7 +123,7 @@ stack.fire = function(path, param2, param3) {
   //At this point if there is already a stack._command it means there is
   //a parent fire already in progress.  Therefore, it must be queued.
   //We use a grid based queing model (leveraging gg library). 
-  if(state._command) {
+  if(state._command && !state._command.done) {
     var existingCommands = _.clone(stack.grid.enties) //< Clone a copy of all existing commands.
     stack.grid = gg.createGrid(3,3) //< Create a new grid (overwriting any previous one)
     //^ Grid fixed at 3x3 for now until gg supports dynamic grid resizing from top-left to bottom-left). 
@@ -274,7 +274,6 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   }
   if(siblingCommand) waterfall(siblingCommand)
   console.log('all done') 
-  //if(window.renderGrid) window.renderGrid()
 }
 
 var resumeWaterfall = (command) => {

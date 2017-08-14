@@ -39,10 +39,14 @@ stack.on = function(param1, callback) {
     // instead other paths are added to wildcard routes only after they
     // are defined.  Because we want wildcard paths to also work with prior
     // defined routes, then we must add the wildcard paths to the middlewares
-    // of the other routes.
+    // of the other routes...
     var isWild = (~path.indexOf('*'))
-    if (isWild) { //This is now broken.... 
-      that.routes = that.routes.map(routes => Object.assign({}, routes, {middleware: [...routes.middleware, newMiddleware]}))
+    if (isWild) { 
+      that.routes = _.map(that.routes, (route) => {
+        //except for /_buffer routes: 
+        if(route.route.spec == '/_buffer') return route
+        return Object.assign({}, route, {middleware: [...route.middleware, newMiddleware]})
+      })
     }
     //Determine if the route already exists:
     if(!existingRoute) {

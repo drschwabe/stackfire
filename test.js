@@ -216,23 +216,23 @@ test("stack.state integrity (and commands without listeners)", (t) => {
 
 // })
 
-test.skip('Catch all wildcard listener', (t) => {
-  t.plan(2)
-//dont use wildcards...
+test('Catch all wildcard listener', (t) => {
+  t.plan(4)
   let stack = requireUncached('./stack.js')
 
   stack.on('*wild', (state, next) => {
-    t.pass('listener ran')
+    t.pass('wildcard listener ran')
     next(null, state)
   })
 
-  stack.fire('anything', (err, state) => {
+  stack.fire('anything', (err, state, next) => {
     t.pass('anything fired')
+    next()
   })
   
-  // stack.fire('anything/else', (err, state) => {
-  //   t.pass('anything else fired too')
-  // })
+  stack.fire('anything/else', (err, state) => {
+    t.pass('anything else fired too')
+  })
 
 })
 

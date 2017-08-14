@@ -185,6 +185,7 @@ var waterfall = (command) => {
       state = stack.state
 
   state._command = command   
+  if(window.renderGrid) window.renderGrid()  
 
   async.series([
     function(seriesCallback) {
@@ -313,7 +314,7 @@ var resumeWaterfall = (command) => {
 
 stack.on('/_buffer', (state, next) => {
   console.log('test')
-  next()
+  next(null, state)
 })
 
 module.exports = stack

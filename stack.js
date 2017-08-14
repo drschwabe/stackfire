@@ -72,8 +72,6 @@ stack.on = function(param1, callback) {
 
 stack.fire = function(path, param2, param3) {
 
-  debugger
-
   if(path.substr(0, 1) != '/') path = '/' + path //< Ensure path is always prefixed with '/'
 
   var state, callback
@@ -246,7 +244,6 @@ var waterfall = (command) => {
 }
 
 var endWaterfall = (newCommand) => { //End of waterfall: 
-  debugger
   var state = stack.state
   if(newCommand) {
     state._command.done = false  

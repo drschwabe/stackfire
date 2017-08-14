@@ -236,7 +236,7 @@ test('Catch all wildcard listener', (t) => {
 
 })
 
-test.skip("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
+test("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
   let stack = requireUncached('./stack.js')
   t.plan(2)
 
@@ -260,7 +260,7 @@ test.skip("Wildcard plays nicely with other listeners (wildcard listener establi
 })
 
 //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same. 
-test.skip("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
+test("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(2)
@@ -284,7 +284,7 @@ test.skip("Wildcard plays nicely with other listeners (wildcard listener establi
   stack.fire('diamond')
 })
 
-test.skip("Wildcard correctly is added to stacks and fires in the correct order)", (t) => {
+test("Wildcard correctly is added to stacks and fires in the correct order)", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(3)
@@ -312,12 +312,17 @@ test.skip("Wildcard correctly is added to stacks and fires in the correct order)
     next(null, state)
   })
 
-  stack.fire('ten')
-  t.equal(stack.state.counter, 1000, 'multiply called twice on ten')
-  stack.fire('zero')
-  t.equal(stack.state.counter, 0, 'zero canned with multiply is zero')
-  stack.fire('one')
-  t.equal(stack.state.counter, 100, 'one begets 100')
+  stack.fire('ten', (err, state, next) => {
+    t.equal(stack.state.counter, 1000, 'multiply called twice on ten') 
+    next()   
+  })
+  stack.fire('zero', (err, state, next) => {
+    t.equal(stack.state.counter, 0, 'zero canned with multiply is zero')
+    next()
+  })
+  stack.fire('one', (err, state, next) => {
+    t.equal(stack.state.counter, 100, 'one begets 100')
+  })
 })
 
 
@@ -420,7 +425,7 @@ test("A subsequent fire waits until the current stack is finished before becomin
 })
 
 
-test.skip("Commands not issued should not fire (using wildcard commands)", (t) => {
+test("Commands not issued should not fire (using wildcard commands)", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')

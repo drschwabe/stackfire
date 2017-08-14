@@ -321,7 +321,7 @@ test.skip("Wildcard correctly is added to stacks and fires in the correct order)
 })
 
 
-test.only("Commands are agnostic to stating with a slash or not", (t) => {
+test("Commands are agnostic to stating with a slash or not", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(5)

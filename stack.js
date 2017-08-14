@@ -257,22 +257,30 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     state._command = state._command.parent 
     //Make sure we run the callback before switching context to the parent command: 
     if(oldCommand.callback) return oldCommand.callback(null, stack.state, () => {
-      return resumeWaterfall(state._command.parent)
+      return resumeWaterfall(stack.state._command)
     })
     else return state._command.parent.next(null, stack.state)        
   }
+
   var siblingCommand
   //Determine if there is a sibling: 
   stack.grid = gg.populateCells(stack.grid)
-  if(gg.examine(stack.grid, stack.state._command.cell + 1)) siblingCommand = _.findWhere(stack.grid.enties, { cell: stack.state._command.cell + 1 }).command
+  if(gg.examine(stack.grid, stack.state._command.cell + 1)) {
+    siblingCommand = _.findWhere(stack.grid.enties, { cell: stack.state._command.cell + 1 }).command
+    siblingCommand = _.clone(siblingCommand)
+  }
+  var commandCallback = state._command.callback 
+  state._command = null
   //Otherwise, just run the callback...
-  if(state._command.callback) {
+  if(commandCallback) {
     var nextCommand
     if(siblingCommand) nextCommand = () => { return waterfall(siblingCommand) }
     else nextCommand = () => null 
-    return state._command.callback(null, state, nextCommand)      
+    if(window.renderGrid) window.renderGrid()
+    return commandCallback(null, state, nextCommand)      
   }
   if(siblingCommand) waterfall(siblingCommand)
+  if(window.renderGrid) window.renderGrid()
   console.log('all done') 
 }
 
@@ -297,7 +305,7 @@ var resumeWaterfall = (command) => {
 
       //Create a copy of the command's middleware, removing the functions
       //already run...
-      command.callback()
+      seriesCallback()
     }
   ], 
   endWaterfall)

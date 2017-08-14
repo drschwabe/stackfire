@@ -223,7 +223,7 @@ test.skip('Catch all wildcard listener', (t) => {
 
   stack.on('*wild', (state, next) => {
     t.pass('listener ran')
-    next()
+    next(null, state)
   })
 
   stack.fire('anything', (err, state) => {
@@ -420,7 +420,7 @@ test("A subsequent fire waits until the current stack is finished before becomin
 })
 
 
-test("Commands not issued should not fire (using wildcard commands)", (t) => {
+test.skip("Commands not issued should not fire (using wildcard commands)", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')
@@ -607,33 +607,3 @@ test('command nulls after fire', (t) => {
   })
 })
 
-test('stack.next works just like the supplied next param', (t) => {
-  t.plan(2)
-  let stack = requireUncached('./stack.js')
-
-  //Using supplied next param: 
-  stack.on('fruit', (state, next) => {
-    state.fruit = 'apple'
-    next()
-  })
-  stack.on('fruit', (state, next) => {
-    state.fruit = 'strawberry'
-    next()
-  })
-  stack.fire('fruit', (state, next) => {
-    t.ok(state.fruit, 'strawberry')
-  })
-
-  //Using stack.next: 
-  stack.on('vegetable', () => {
-    stack.state.fruit = 'potatoe'
-    stack.next()
-  })
-  stack.on('vegetable', () => {
-    state.state.carrot = 'carrot'
-    stack.next()
-  })
-  stack.fire('vegetable', () => {
-    t.ok(state.vegetable, 'carrot')
-  })
-})

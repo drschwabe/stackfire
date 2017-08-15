@@ -41,7 +41,7 @@ test("stack.fire nested within stack.on", (t) => {
 
 })
 
-test("stack.fire nested within stack.on (async)", (t) => {
+test.only("stack.fire nested within stack.on (async)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
   stack.on('/do-something-else', (state, next) => {
@@ -194,27 +194,6 @@ test("stack.state integrity (and commands without listeners)", (t) => {
     })    
   })
 })
-
-//Test that wildcards work: 
-// test.only('Catch all wildcard listener', (t) => {
-//   t.plan(4)
-
-//   let stack = requireUncached('./stack.js')
-
-//   stack.on('*wild', (state, next) => {
-//     t.pass('wildcard listener ran')
-//     next()
-//   })
-
-//   stack.fire('anything', (err, state) => {
-//     t.pass('anything fired')
-//   })
-  
-//   // stack.fire('anything/else', (err, state) => {
-//   //   t.pass('anything else fired too')
-//   // })
-
-// })
 
 test('Catch all wildcard listener', (t) => {
   t.plan(4)
@@ -612,3 +591,38 @@ test('command nulls after fire', (t) => {
   })
 })
 
+
+test('buffer fires every fire', (t) => {
+  t.plan(4)
+  let stack = requireUncached('./stack.js')  
+  stack.on('apples', (state, next) => {
+    t.pass('apples on!')
+    next(null, state)
+  })
+  stack.on('/_buffer', (state, next) => {
+    t.pass('/_buffer on!')
+    next(null, state)
+  })
+  stack.fire('apples', (state, next) => {
+    t.pass('apples fire ran OK')
+  })
+})
+
+test('buffer fires every fire (complex)', (t) => {
+  t.plan(5)
+  let stack = requireUncached('./stack.js')  
+  stack.on('apples', (state, next) => {
+    t.pass('apples on!')
+    stack.fire('oranges', (err, state) => {
+      t.pass('oranges fire ran OK')
+      next(null, state)
+    })
+  })
+  stack.on('/_buffer', (state, next) => {
+    t.pass('/_buffer on!') //< Should run twice
+    next(null, state)
+  })
+  stack.fire('apples', (state, next) => {
+    t.pass('apples fire ran OK')
+  })
+})

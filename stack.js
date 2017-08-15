@@ -12,7 +12,7 @@ if (!isNode) browser = true
 var stack = { 
   routes : [], 
   state : {}, 
-  grid : gg.createGrid(3,3) 
+  grid : gg.createGrid(6,6) 
 }
 stack.grid = gg.populateCells(stack.grid)
 
@@ -127,7 +127,7 @@ stack.fire = function(path, param2, param3) {
   //We use a grid based queing model (leveraging gg library). 
   if(state._command && !state._command.done) {
     var existingCommands = _.clone(stack.grid.enties) //< Clone a copy of all existing commands.
-    stack.grid = gg.createGrid(3,3) //< Create a new grid (overwriting any previous one)
+    stack.grid = gg.createGrid(6,6) //< Create a new grid (overwriting any previous one)
     //^ Grid fixed at 3x3 for now until gg supports dynamic grid resizing from top-left to bottom-left). 
     stack.grid.enties = existingCommands //< Restore original commands to the new grid.  
 
@@ -169,7 +169,7 @@ stack.fire = function(path, param2, param3) {
   } else {
     //Otherwise, if no command active, we assume it is root level... 
     var existingCommands = _.clone(stack.grid.enties) 
-    stack.grid = gg.createGrid(3,3)  
+    stack.grid = gg.createGrid(6,6)  
     stack.grid.enties = existingCommands //< restore original commands, then add this new one... 
     stack.grid = gg.populateCells(stack.grid) 
     newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
@@ -217,16 +217,17 @@ var waterfall = (command) => {
           })
           middlewareToRun.push(middlewareFunc)
           var bufferFunction = (state, next) => {
-            console.log(`run a buffer func for ${state._command.path}`)
+            console.log(`run a buffer func for ${stack.state._command.path}`)
             stack.fire('/_buffer', (err, state) => {
               console.log('buffer func complete')
               stack.state._command.current_middleware_index++               
-              return next(null, state)
+              return stack.state._command.next(null, state)
             })
           }
           //Only push the buffer function/fire if A) we are not already running
           //a buffer and B) we have reached the end of the middleware.
-          if(state._command.path != '/_buffer' && index != matchingRoute.middleware.length -1) return middlewareToRun.push(bufferFunction)          
+          //if(state._command.path != '/_buffer' && index != matchingRoute.middleware.length) return middlewareToRun.push(bufferFunction)  
+          if(stack.state._command && stack.state._command.path != '/_buffer') return middlewareToRun.push(bufferFunction)
           return
         })
         async.waterfall(middlewareToRun, function(err, state) {

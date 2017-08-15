@@ -260,6 +260,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     state._command.done = false  
     return waterfall(newCommand)
   }
+  if(!state._command) return
   state._command.done = true  
   if(window.renderGrid) window.renderGrid()
 

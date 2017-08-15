@@ -41,7 +41,7 @@ test("stack.fire nested within stack.on", (t) => {
 
 })
 
-test.only("stack.fire nested within stack.on (async)", (t) => {
+test("stack.fire nested within stack.on (async)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
   stack.on('/do-something-else', (state, next) => {

@@ -217,11 +217,21 @@ var waterfall = (command) => {
           })
           middlewareToRun.push(middlewareFunc)
           var bufferFunction = (state, next) => {
+            if(!state || !next) {
+              //return null
+              console.log('state or next missing')
+              console.log(state)
+              console.log(next)
+              debugger
+              //return
+            }
+            if(_.isFunction(state)) next = state
+            //console.log(next)
             console.log(`run a buffer func for ${stack.state._command.path}`)
             stack.fire('/_buffer', (err, state) => {
               console.log('buffer func complete')
-              stack.state._command.current_middleware_index++               
-              return stack.state._command.next(null, state)
+              state._command.current_middleware_index++
+              return next(null, state)
             })
           }
           //Only push the buffer function/fire if A) we are not already running

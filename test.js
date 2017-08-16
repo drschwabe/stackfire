@@ -217,7 +217,7 @@ test('Catch all wildcard listener', (t) => {
 
 })
 
-test.only("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
+test("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
   let stack = requireUncached('./stack.js')
   t.plan(2)
 

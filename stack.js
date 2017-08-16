@@ -69,6 +69,8 @@ stack.on = function(param1, callback) {
       that.routes = _.map(that.routes, (route) => {
         //except for /_buffer routes:  
         //if(route.route.spec == path) return route //Do not add itself.
+              //except for /_buffer routes:  
+        if(route.route.spec == '/_buffer') return route
         return Object.assign({}, route, {middleware: [...route.middleware, newMiddleware]})
       })
     }
@@ -128,7 +130,10 @@ stack.fire = function(path, param2, param3) {
 
   //Prepare the new command object: 
   var matchingRoutes = _.filter(this.routes, function(route) {
-    return route.route.match(path)
+    var match =  route.route.match(path)
+    debugger
+    if(route.route.spec.indexOf('*') > -1 && path == '/_buffer') return false
+    return match
     //^ Parses the route; organizing params into a tidy object.    
   })
 
@@ -138,7 +143,8 @@ stack.fire = function(path, param2, param3) {
     else return 
   }
 
-  matchingRoutes.forEach((matchingRoute, index) => {
+  //async.eachSeries(matchingRoutes, (matchingRoute, index) => {
+    matchingRoutes.forEach((matchingRoute, index) => {    
     var newCommand = {} 
     newCommand.matching_route = matchingRoute
     newCommand.path = path
@@ -194,7 +200,7 @@ stack.fire = function(path, param2, param3) {
 
       //If child, end the parent's in-progress middlestack waterfall: 
       endWaterfall(newCommand)
-
+      //callback()
     } else {
       //Otherwise, if no command active, we assume it is root level... 
       var existingCommands = _.clone(stack.grid.enties) 
@@ -207,6 +213,7 @@ stack.fire = function(path, param2, param3) {
 
       if(window.renderGrid) window.renderGrid()      
       waterfall(newCommand) //< finally, run the middleware waterfall! 
+      //callback()
     }
   })
 }
@@ -252,15 +259,16 @@ var waterfall = (command) => {
               console.log('state or next missing')
               console.log(state)
               console.log(next)
-              debugger
+              //debugger
               //return
             }
             if(_.isFunction(state)) next = state
             //console.log(next)
             console.log(`run a buffer func for ${stack.state._command.path}`)
+            debugger
             stack.fire('/_buffer', (err, state) => {
               console.log('buffer func complete')
-              state._command.current_middleware_index++
+              stack.state._command.current_middleware_index++
               return next(null, state)
             })
           }

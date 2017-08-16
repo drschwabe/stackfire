@@ -593,18 +593,27 @@ test('command nulls after fire', (t) => {
 
 
 test('buffer fires every fire', (t) => {
-  t.plan(4)
+  t.plan(6)
   let stack = requireUncached('./stack.js')  
   stack.on('apples', (state, next) => {
     t.pass('apples on!')
     next(null, state)
   })
+  stack.on('oranges', (state, next) => {
+    t.pass('oranges on!')
+    next(null, state)
+  })  
   stack.on('/_buffer', (state, next) => {
-    t.pass('/_buffer on!')
+    console.log('/buffer')
+    t.pass('/_buffer on!') //< Should run twice.
     next(null, state)
   })
-  stack.fire('apples', (state, next) => {
+  stack.fire('apples', (err, state, next) => {
     t.pass('apples fire ran OK')
+    next()
+  })
+  stack.fire('oranges', (err, state, next) => {
+    t.pass('oranges fire ran OK')
   })
 })
 
@@ -620,6 +629,10 @@ test('buffer fires every fire (complex)', (t) => {
   })
   stack.on('/_buffer', (state, next) => {
     t.pass('/_buffer on!') //< Should run twice
+    next(null, state)
+  })
+  stack.on('oranges', (state, next) => {
+    console.log('oranges on!')
     next(null, state)
   })
   stack.fire('apples', (state, next) => {

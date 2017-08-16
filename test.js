@@ -45,6 +45,7 @@ test("stack.fire nested within stack.on (async)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
   stack.on('/do-something-else', (state, next) => {
+    debugger
     //Nested async fire: 
     setTimeout(() => {
       stack.fire('/do-another-thing', (err, newState) => {

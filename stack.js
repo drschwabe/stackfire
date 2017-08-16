@@ -34,7 +34,6 @@ stack.on = function(param1, callback) {
 
    // if(existingRoute && existingRoute.route.spec.indexOf('*') > -1 && path.indexOf('*') == -1) existingRoute = false
 
-    debugger
 
     existingRoute = existingRoute[0]
 
@@ -65,7 +64,7 @@ stack.on = function(param1, callback) {
     // defined routes, then we must add the wildcard paths to the middlewares
     // of the other routes...
     if (isWild) { 
-      debugger
+
       that.routes = _.map(that.routes, (route) => {
         //except for /_buffer routes:  
         //if(route.route.spec == path) return route //Do not add itself.
@@ -85,7 +84,7 @@ stack.on = function(param1, callback) {
       existingRoute.middleware.push(newMiddleware)
     }
     return
-    //debugger
+
     //the other startegy here is to operate on the routes heres / middleware here: 
     that.routes = _.map(that.routes, (route) => {
       //if(route.route.spec == '/_buffer' || route.route.spec.indexOf('*') > -1) return null
@@ -131,7 +130,6 @@ stack.fire = function(path, param2, param3) {
   //Prepare the new command object: 
   var matchingRoutes = _.filter(this.routes, function(route) {
     var match =  route.route.match(path)
-    debugger
     if(route.route.spec.indexOf('*') > -1 && path == '/_buffer') return false
     return match
     //^ Parses the route; organizing params into a tidy object.    
@@ -143,13 +141,12 @@ stack.fire = function(path, param2, param3) {
     else return 
   }
 
-  //async.eachSeries(matchingRoutes, (matchingRoute, index) => {
-    matchingRoutes.forEach((matchingRoute, index) => {    
+  matchingRoutes.forEach((matchingRoute, index) => {    
     var newCommand = {} 
     newCommand.matching_route = matchingRoute
     newCommand.path = path
     //put the callback on the last matching route:  
-    if(callback && index == matchingRoutes.length) newCommand.callback = callback
+    if(callback && index == matchingRoutes.length -1) newCommand.callback = callback
     //Store callee and caller for upcoming logic: 
     var callee = arguments.callee, 
         caller
@@ -259,13 +256,13 @@ var waterfall = (command) => {
               console.log('state or next missing')
               console.log(state)
               console.log(next)
-              //debugger
+          
               //return
             }
             if(_.isFunction(state)) next = state
             //console.log(next)
             console.log(`run a buffer func for ${stack.state._command.path}`)
-            debugger
+      
             stack.fire('/_buffer', (err, state) => {
               console.log('buffer func complete')
               stack.state._command.current_middleware_index++
@@ -302,10 +299,13 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   state._command.done = true  
   if(window.renderGrid) window.renderGrid()
 
+  debugger
+
   //otherwise, if there is a parent - return and continue where it left off:
   if(state._command.parent) {
     //Make a copy and then overwrite the state._command with the parent command.       
     var oldCommand = _.clone(state._command)
+    debugger
     state._command = state._command.parent 
     //Make sure we run the callback before switching context to the parent command: 
     if(oldCommand.callback) {
@@ -313,7 +313,9 @@ var endWaterfall = (newCommand) => { //End of waterfall:
         return resumeWaterfall(stack.state._command)
       })
     } else {
-      return state._command.next(null, stack.state)
+      debugger
+      //return stack.state._command.next(null, stack.state)
+      return resumeWaterfall(stack.state._command)      
     }    
   }
 
@@ -347,23 +349,25 @@ var resumeWaterfall = (command) => {
   state._command = command   
 
   //If we already at the end of the middleware - just end it: 
-  if(command.current_middleware_index == command.matching_route.middleware.length) endWaterfall()
+  if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()
 
-  async.series([
-    function(seriesCallback) {
+  debugger
 
-      var middlewareToRun = [function(next) { 
-        //stack.state._command.current_middleware_index = 0 
-        next(null, state) 
-      }]
-      //No need to add buffers, they already in there.
+  // async.series([
+  //   function(seriesCallback) {
 
-      //Create a copy of the command's middleware, removing the functions
-      //already run...
-      seriesCallback()
-    }
-  ], 
-  endWaterfall)
+  //     var middlewareToRun = [function(next) { 
+  //       //stack.state._command.current_middleware_index = 0 
+  //       next(null, state) 
+  //     }]
+  //     //No need to add buffers, they already in there.
+
+  //     //Create a copy of the command's middleware, removing the functions
+  //     //already run...
+  //     seriesCallback()
+  //   }
+  // ], 
+  //endWaterfall
 }
 
 module.exports = stack

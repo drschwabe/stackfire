@@ -217,7 +217,7 @@ test('Catch all wildcard listener', (t) => {
 
 })
 
-test("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
+test.only("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
   let stack = requireUncached('./stack.js')
   t.plan(2)
 
@@ -228,12 +228,14 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
 
   //Establish wildcard before diamond: 
   stack.on('*wild', (state, next) => {
+    console.log(state._command.path)
     if(state._command.path == '/_buffer') return next(null, state)    
     t.pass('*wild listener invoked')
     next(null, state)
   })
 
   stack.on('diamond', (state, next) => {
+    //if(state._command.path != '/diamond') return next(null, state)        
     t.pass('diamond listener invoked')    
     next(null, state) 
   })
@@ -412,7 +414,7 @@ test("A subsequent fire waits until the current stack is finished before becomin
 })
 
 
-test.only("Commands not issued should not fire (using wildcard commands)", (t) => {
+test("Commands not issued should not fire (using wildcard commands)", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')

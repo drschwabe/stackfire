@@ -28,9 +28,33 @@ stack.on = function(param1, callback) {
     if(path.substr(0, 1) != '/') path = '/' + path
 
     var route = new routeParser(path)
-    var existingRoute = _.find(that.routes, function(existingRoute) {
-      return existingRoute.route.match(path)      
+    var existingRoute = _.filter(that.routes, function(existingRoute) {
+      return existingRoute.route.match(path)
     })
+
+   // if(existingRoute && existingRoute.route.spec.indexOf('*') > -1 && path.indexOf('*') == -1) existingRoute = false
+
+    debugger
+
+    existingRoute = existingRoute[0]
+
+    var isWild = (~path.indexOf('*'))
+    if(!isWild && existingRoute && existingRoute.route.spec.indexOf('*') > -1) existingRoute = false
+
+    //Wildcards will be included in the matches, but we dont want them 
+    //unless they are the only route: 
+    // if(existingRoute.length > 1) {
+    //   existingRoute = _.find(that.routes, function(existingRoute) {
+    //     return existingRoute.route.spec.indexOf('*') == -1
+    //   })
+    // } else if(existingRoute.length == 1) {
+    //   existingRoute = existingRoute[0]
+    // } else {
+    //   existingRoute = false 
+    // }
+
+
+    //if(existingRoute && existingRoute.route.spec.indexOf('*') > -1) existingRoute = false
 
     //The newMiddleware contains two properties; one is the callback
     //the other is the full path so we can later target/override this. 
@@ -40,11 +64,11 @@ stack.on = function(param1, callback) {
     // are defined.  Because we want wildcard paths to also work with prior
     // defined routes, then we must add the wildcard paths to the middlewares
     // of the other routes...
-    var isWild = (~path.indexOf('*'))
     if (isWild) { 
+      debugger
       that.routes = _.map(that.routes, (route) => {
         //except for /_buffer routes:  
-        if(route.route.spec == '/_buffer') return route
+        //if(route.route.spec == path) return route //Do not add itself.
         return Object.assign({}, route, {middleware: [...route.middleware, newMiddleware]})
       })
     }
@@ -58,6 +82,16 @@ stack.on = function(param1, callback) {
       //existing stack: 
       existingRoute.middleware.push(newMiddleware)
     }
+    return
+    //debugger
+    //the other startegy here is to operate on the routes heres / middleware here: 
+    that.routes = _.map(that.routes, (route) => {
+      //if(route.route.spec == '/_buffer' || route.route.spec.indexOf('*') > -1) return null
+      //if(route.route.spec == '/_buffer') return null       
+      if(route.route.spec.indexOf('*') > -1) return null       
+      return route
+    })
+    that.routes = _.compact(that.routes)
   }
 
   //If an array was not supplied, create an array anyway: 
@@ -93,92 +127,88 @@ stack.fire = function(path, param2, param3) {
   }
 
   //Prepare the new command object: 
-  var matchingRoute, newCommand
-  matchingRoute = _.find(this.routes, function(route) {
-    var result = route.route.match(path)
+  var matchingRoutes = _.filter(this.routes, function(route) {
+    return route.route.match(path)
     //^ Parses the route; organizing params into a tidy object.    
-    if(result) {
-      newCommand = result
-    } else if(!result || _.isUndefined(result)) {
-      newCommand = {} //< If there was no matching route, create an obj anyway.       
-    }
-    newCommand.path = path
-    return result
   })
 
-  if(!newCommand) {
+  if(!matchingRoutes.length) {
     if(callback) return callback(null, stack.state) 
     //^ No matching routes, but as a courtesy we will execute your callback anyway.
     else return 
   }
 
-  if(matchingRoute) newCommand.matching_route = matchingRoute
-  if(callback) newCommand.callback = callback
+  matchingRoutes.forEach((matchingRoute, index) => {
+    var newCommand = {} 
+    newCommand.matching_route = matchingRoute
+    newCommand.path = path
+    //put the callback on the last matching route:  
+    if(callback && index == matchingRoutes.length) newCommand.callback = callback
+    //Store callee and caller for upcoming logic: 
+    var callee = arguments.callee, 
+        caller
+        
+    if(arguments.callee.caller) caller = arguments.callee.caller.toString()    
+    newCommand.caller = caller 
 
-  //Store callee and caller for upcoming logic: 
-  var callee = arguments.callee, 
-      caller
-      
-  if(arguments.callee.caller) caller = arguments.callee.caller.toString()    
-  newCommand.caller = caller 
+    //At this point if there is already a stack._command it means there is
+    //a parent fire already in progress.  Therefore, it must be queued.
+    //We use a grid based queing model (leveraging gg library). 
+    if(state._command && !state._command.done) {
+      var existingCommands = _.clone(stack.grid.enties) //< Clone a copy of all existing commands.
+      stack.grid = gg.createGrid(12,12) //< Create a new grid (overwriting any previous one)
+      //^ Grid fixed at 3x3 for now until gg supports dynamic grid resizing from top-left to bottom-left). 
+      stack.grid.enties = existingCommands //< Restore original commands to the new grid.  
 
-  //At this point if there is already a stack._command it means there is
-  //a parent fire already in progress.  Therefore, it must be queued.
-  //We use a grid based queing model (leveraging gg library). 
-  if(state._command && !state._command.done) {
-    var existingCommands = _.clone(stack.grid.enties) //< Clone a copy of all existing commands.
-    stack.grid = gg.createGrid(12,12) //< Create a new grid (overwriting any previous one)
-    //^ Grid fixed at 3x3 for now until gg supports dynamic grid resizing from top-left to bottom-left). 
-    stack.grid.enties = existingCommands //< Restore original commands to the new grid.  
+      //Determine the cell; position on the grid the new command will be placed... 
+      var cell 
+      //first determine if the new command is a parent or sibling... 
+      if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
+        //as a sibling the command will get a cell in the next column (same row):     
+        stack.grid = gg.populateCells(stack.grid)       
+        cell = gg.nextOpenCell(stack.grid)
+      } else { //< this is a child of the current state._command:  
+        //TODO: ^^ consider if better determination needed here! 
+        //callers might be different but still be not a child of current command
+        //(though perhaps this logic is sound; just seems like it needs to be examined/tested more closely)
 
-    //Determine the cell; position on the grid the new command will be placed... 
-    var cell 
-    //first determine if the new command is a parent or sibling... 
-    if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
-      //as a sibling the command will get a cell in the next column (same row):     
-      stack.grid = gg.populateCells(stack.grid)       
-      cell = gg.nextOpenCell(stack.grid)
-    } else { //< this is a child of the current state._command:  
-      //TODO: ^^ consider if better determination needed here! 
-      //callers might be different but still be not a child of current command
-      //(though perhaps this logic is sound; just seems like it needs to be examined/tested more closely)
+        stack.grid = gg.populateCells(stack.grid) 
 
+        //search the next row down:  
+        cell = gg.nextOpenCellDown(stack.grid, state._command.cell)
+
+        //also make note of parent...  
+        newCommand.parent = state._command 
+        //give the command reference to it's new child too:  
+        state._command.child = newCommand 
+      }
+
+      newCommand.cell = cell  //< finally assign the cell, then insert it into grid: 
+      stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })     
       stack.grid = gg.populateCells(stack.grid) 
+   
+      if(window.renderGrid) window.renderGrid()  
 
-      //search the next row down:  
-      cell = gg.nextOpenCellDown(stack.grid, state._command.cell)
+      if(!newCommand.parent) return  //< We return if sibling because the current command  
+      //should finish first (stack will now call it upon completion; we just queued it) 
 
-      //also make note of parent...  
-      newCommand.parent = state._command 
-      //give the command reference to it's new child too:  
-      state._command.child = newCommand 
+      //If child, end the parent's in-progress middlestack waterfall: 
+      endWaterfall(newCommand)
+
+    } else {
+      //Otherwise, if no command active, we assume it is root level... 
+      var existingCommands = _.clone(stack.grid.enties) 
+      stack.grid = gg.createGrid(12,12)  
+      stack.grid.enties = existingCommands //< restore original commands, then add this new one... 
+      stack.grid = gg.populateCells(stack.grid) 
+      newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
+      stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
+      stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
+
+      if(window.renderGrid) window.renderGrid()      
+      waterfall(newCommand) //< finally, run the middleware waterfall! 
     }
-
-    newCommand.cell = cell  //< finally assign the cell, then insert it into grid: 
-    stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })     
-    stack.grid = gg.populateCells(stack.grid) 
- 
-    if(window.renderGrid) window.renderGrid()  
-
-    if(!newCommand.parent) return  //< We return if sibling because the current command  
-    //should finish first (stack will now call it upon completion; we just queued it) 
-
-    //If child, end the parent's in-progress middlestack waterfall: 
-    endWaterfall(newCommand)
-
-  } else {
-    //Otherwise, if no command active, we assume it is root level... 
-    var existingCommands = _.clone(stack.grid.enties) 
-    stack.grid = gg.createGrid(12,12)  
-    stack.grid.enties = existingCommands //< restore original commands, then add this new one... 
-    stack.grid = gg.populateCells(stack.grid) 
-    newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
-    stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
-    stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
-
-    if(window.renderGrid) window.renderGrid()      
-    waterfall(newCommand) //< finally, run the middleware waterfall! 
-  }
+  })
 }
 
 var waterfall = (command) => {
@@ -228,7 +258,6 @@ var waterfall = (command) => {
             if(_.isFunction(state)) next = state
             //console.log(next)
             console.log(`run a buffer func for ${stack.state._command.path}`)
-            //if(stack.state._command.path.indexOf('*') > -1) return next(null, stack.state)
             stack.fire('/_buffer', (err, state) => {
               console.log('buffer func complete')
               state._command.current_middleware_index++
@@ -271,10 +300,13 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     var oldCommand = _.clone(state._command)
     state._command = state._command.parent 
     //Make sure we run the callback before switching context to the parent command: 
-    if(oldCommand.callback) return oldCommand.callback(null, stack.state, () => {
-      return resumeWaterfall(stack.state._command)
-    })
-    else return state._command.parent.next(null, stack.state)        
+    if(oldCommand.callback) {
+      return oldCommand.callback(null, stack.state, () => {
+        return resumeWaterfall(stack.state._command)
+      })
+    } else {
+      return state._command.next(null, stack.state)
+    }    
   }
 
   var siblingCommand

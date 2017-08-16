@@ -228,6 +228,7 @@ var waterfall = (command) => {
             if(_.isFunction(state)) next = state
             //console.log(next)
             console.log(`run a buffer func for ${stack.state._command.path}`)
+            //if(stack.state._command.path.indexOf('*') > -1) return next(null, stack.state)
             stack.fire('/_buffer', (err, state) => {
               console.log('buffer func complete')
               state._command.current_middleware_index++

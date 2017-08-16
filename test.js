@@ -200,7 +200,9 @@ test('Catch all wildcard listener', (t) => {
   let stack = requireUncached('./stack.js')
 
   stack.on('*wild', (state, next) => {
+    if(state._command.path == '/_buffer') return next(null, state)
     t.pass('wildcard listener ran')
+    console.log(state._command.path)
     next(null, state)
   })
 
@@ -226,6 +228,7 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
 
   //Establish wildcard before diamond: 
   stack.on('*wild', (state, next) => {
+    if(state._command.path == '/_buffer') return next(null, state)    
     t.pass('*wild listener invoked')
     next(null, state)
   })
@@ -256,6 +259,7 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
 
   //Establish wildcard after diamond: 
   stack.on('*wild', (state, next) => {
+    if(state._command.path == '/_buffer') return next(null, state)    
     t.pass('*wild listener invoked')
     next(null, state)
   })  
@@ -282,11 +286,15 @@ test("Wildcard correctly is added to stacks and fires in the correct order)", (t
   })
 
   stack.on('*multiply', (state, next) => {
+    if(state._command.path == '/_buffer') return next(null, state)
+    console.log('*multiply')
     state.counter *= 10
     next(null, state)
   })
 
   stack.on('*multiply', (state, next) => {
+    if(state._command.path == '/_buffer') return next(null, state)    
+    console.log('*multiply')
     state.counter *= 10
     next(null, state)
   })
@@ -404,7 +412,7 @@ test("A subsequent fire waits until the current stack is finished before becomin
 })
 
 
-test("Commands not issued should not fire (using wildcard commands)", (t) => {
+test.only("Commands not issued should not fire (using wildcard commands)", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')
@@ -413,6 +421,7 @@ test("Commands not issued should not fire (using wildcard commands)", (t) => {
   //subsequent listeners being fired even though their command was not issued...
 
   stack.on('*wildcard', (state, next) => {
+    if(state._command.path == '/_buffer') return next(null, state)    
     t.pass('this should invoke on every fire')
     next(null, state)    
   })

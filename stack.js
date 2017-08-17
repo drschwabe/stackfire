@@ -216,8 +216,6 @@ var waterfall = (command) => {
   var matchingRoute = command.matching_route, 
       state = stack.state
 
-    debugger
-
   state._command = command   
   if(window.renderGrid) window.renderGrid()  
 
@@ -288,7 +286,6 @@ var waterfall = (command) => {
 }
 
 var endWaterfall = (newCommand) => { //End of waterfall: 
-  debugger
   var state = stack.state
   if(newCommand) {
     state._command.done = false  
@@ -322,6 +319,9 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     siblingCommand = _.clone(siblingCommand)
   }
   var commandCallback = state._command.callback 
+  //Before nulling command, update the grid enties (cause we cloned earlier and now properties have 
+  //deviated :/ ) 
+  _.findWhere(stack.grid.enties, { cell: state._command.cell }).command = state._command
   state._command = null
   //Otherwise, just run the callback...
   if(commandCallback) {

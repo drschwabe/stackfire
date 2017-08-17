@@ -382,8 +382,8 @@ test('berries', (t) => {
 })
 
 
-test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
-  t.plan(3)
+test.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+  t.plan(4)
 
   let stack = requireUncached('./stack.js')  
 
@@ -404,6 +404,7 @@ test("A subsequent fire waits until the current stack is finished before becomin
     //The following should apply to state 
     //only AFTER warning alarm completes: 
     state.firing_turret = true
+    t.ok(stack.grid.enties[2].command.done, true, 'Fire turret command is done.')
     debugger
     //next()
   })

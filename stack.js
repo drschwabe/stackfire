@@ -32,28 +32,14 @@ stack.on = function(param1, callback) {
       return existingRoute.route.match(path)
     })
 
-   // if(existingRoute && existingRoute.route.spec.indexOf('*') > -1 && path.indexOf('*') == -1) existingRoute = false
-
-
     existingRoute = existingRoute[0]
 
     var isWild = (~path.indexOf('*'))
     if(!isWild && existingRoute && existingRoute.route.spec.indexOf('*') > -1) existingRoute = false
 
-    //Wildcards will be included in the matches, but we dont want them 
-    //unless they are the only route: 
-    // if(existingRoute.length > 1) {
-    //   existingRoute = _.find(that.routes, function(existingRoute) {
-    //     return existingRoute.route.spec.indexOf('*') == -1
-    //   })
-    // } else if(existingRoute.length == 1) {
-    //   existingRoute = existingRoute[0]
-    // } else {
-    //   existingRoute = false 
-    // }
 
-
-    //if(existingRoute && existingRoute.route.spec.indexOf('*') > -1) existingRoute = false
+    //there is another scenario to consider... to ensure the wildcard doesnt run twice
+    //take aclose look at the stack object (routes and middleware specficailly) and determine the difference in the BEFORE and AFTER example; if I have to clone separate repos just to get two Inspector window opens to compare this.
 
     //The newMiddleware contains two properties; one is the callback
     //the other is the full path so we can later target/override this. 
@@ -64,12 +50,10 @@ stack.on = function(param1, callback) {
     // defined routes, then we must add the wildcard paths to the middlewares
     // of the other routes...
     if (isWild) { 
-
       that.routes = _.map(that.routes, (route) => {
-        //except for /_buffer routes:  
-        //if(route.route.spec == path) return route //Do not add itself.
-              //except for /_buffer routes:  
+        //except for /_buffer routes:          
         if(route.route.spec == '/_buffer') return route
+        //if(route.route.spec == path) return route //Do not add itself.          
         return Object.assign({}, route, {middleware: [...route.middleware, newMiddleware]})
       })
     }
@@ -84,12 +68,13 @@ stack.on = function(param1, callback) {
       existingRoute.middleware.push(newMiddleware)
     }
     return
-
     //the other startegy here is to operate on the routes heres / middleware here: 
-    that.routes = _.map(that.routes, (route) => {
+    that.routes = _.map(that.routes, (route, index) => {
       //if(route.route.spec == '/_buffer' || route.route.spec.indexOf('*') > -1) return null
       //if(route.route.spec == '/_buffer') return null       
-      if(route.route.spec.indexOf('*') > -1) return null       
+      //if(route.route.spec.indexOf('*') > -1) return null   
+      //if(route.route.spec ) 
+      //if(route.middleware[0].path.indexOf('*') > -1) return null   
       return route
     })
     that.routes = _.compact(that.routes)
@@ -130,16 +115,33 @@ stack.fire = function(path, param2, param3) {
   //Prepare the new command object: 
   var matchingRoutes = _.filter(this.routes, function(route) {
     var match =  route.route.match(path)
+    //Ignore buffers and wildcards: 
     if(route.route.spec.indexOf('*') > -1 && path == '/_buffer') return false
+    if(route.route.spec.indexOf('*') > -1 && path.indexOf('*') > -1) return false  
+    if(path.indexOf('*') > -1) return false  
     return match
     //^ Parses the route; organizing params into a tidy object.    
   })
 
   if(!matchingRoutes.length) {
+    //No matching routes, but as a courtesy we will execute your callback anyway:     
     if(callback) return callback(null, stack.state) 
-    //^ No matching routes, but as a courtesy we will execute your callback anyway.
-    else return 
+    else return
   }
+
+  //If the only match is a wildcard, do not make a new command: 
+  //(this prevents wildcard listeners established after existing listeners not to run twice): 
+  matchingRoutes = _.chain(matchingRoutes).map((route) => {
+    debugger 
+    if(route.route.spec.indexOf('*') > -1  && route.middleware[0].path && route.middleware[0].path.indexOf('*') > -1) {
+      route.wildcard = true
+    }
+    return route
+  }).compact().value()
+
+  debugger
+  if(matchingRoutes.length == 2 && matchingRoutes[1].wildcard) matchingRoutes[1] = false 
+  matchingRoutes = _.compact(matchingRoutes)
 
   matchingRoutes.forEach((matchingRoute, index) => {    
     var newCommand = {} 
@@ -299,13 +301,10 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   state._command.done = true  
   if(window.renderGrid) window.renderGrid()
 
-  debugger
-
   //otherwise, if there is a parent - return and continue where it left off:
   if(state._command.parent) {
     //Make a copy and then overwrite the state._command with the parent command.       
     var oldCommand = _.clone(state._command)
-    debugger
     state._command = state._command.parent 
     //Make sure we run the callback before switching context to the parent command: 
     if(oldCommand.callback) {
@@ -313,7 +312,6 @@ var endWaterfall = (newCommand) => { //End of waterfall:
         return resumeWaterfall(stack.state._command)
       })
     } else {
-      debugger
       //return stack.state._command.next(null, stack.state)
       return resumeWaterfall(stack.state._command)      
     }    

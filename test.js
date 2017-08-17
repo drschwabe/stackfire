@@ -263,6 +263,8 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
   //Establish wildcard after diamond: 
   stack.on('*wild', (state, next) => {
     if(state._command.path == '/_buffer') return next(null, state)    
+    //console.log(state._command.path)    
+    debugger  
     t.pass('*wild listener invoked')
     next(null, state)
   })  

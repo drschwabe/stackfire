@@ -123,27 +123,21 @@ stack.fire = function(path, param2, param3) {
     //^ Parses the route; organizing params into a tidy object.    
   })
 
-  if(!matchingRoutes.length) {
-    //No matching routes, but as a courtesy we will execute your callback anyway:     
-    if(callback) return callback(null, stack.state) 
-    else return
-  }
-
   //If the only match is a wildcard, do not make a new command: 
   //(this prevents wildcard listeners established after existing listeners not to run twice): 
   matchingRoutes = _.chain(matchingRoutes).map((route) => {
-    debugger 
     if(route.route.spec.indexOf('*') > -1  && route.middleware[0].path && route.middleware[0].path.indexOf('*') > -1) {
       route.wildcard = true
     }
     return route
   }).compact().value()
 
-  debugger
   if(matchingRoutes.length == 2 && matchingRoutes[1].wildcard) matchingRoutes[1] = false 
   matchingRoutes = _.compact(matchingRoutes)
 
-  matchingRoutes.forEach((matchingRoute, index) => {    
+  if(!matchingRoutes.length) matchingRoutes[0] = {} //< Create a command obj anyway. 
+
+  matchingRoutes.forEach((matchingRoute, index) => {  
     var newCommand = {} 
     newCommand.matching_route = matchingRoute
     newCommand.path = path
@@ -222,6 +216,8 @@ var waterfall = (command) => {
   var matchingRoute = command.matching_route, 
       state = stack.state
 
+    debugger
+
   state._command = command   
   if(window.renderGrid) window.renderGrid()  
 
@@ -231,7 +227,7 @@ var waterfall = (command) => {
         stack.state._command.current_middleware_index = 0 
         next(null, state) 
       }
-      if(matchingRoute) {      
+      if(matchingRoute && matchingRoute.middleware) {      
         //Give the waterfall a seed function with null error, parsed/matched route (req), and state: 
         if(!matchingRoute.seeded) { //but only if we haven't already done it: 
           matchingRoute.middleware.unshift({func: seedFunction })      
@@ -292,6 +288,7 @@ var waterfall = (command) => {
 }
 
 var endWaterfall = (newCommand) => { //End of waterfall: 
+  debugger
   var state = stack.state
   if(newCommand) {
     state._command.done = false  
@@ -348,8 +345,6 @@ var resumeWaterfall = (command) => {
 
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()
-
-  debugger
 
   // async.series([
   //   function(seriesCallback) {

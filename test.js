@@ -374,15 +374,15 @@ test('berries', (t) => {
 
   stack.fire('vegetable', (err, state) => { 
     //Even though no middleware, ensure this enty still exists on the grid: 
-    //t.ok(stack.grid.enties[1].command.done)  
+    t.ok(stack.grid.enties[1].command.done)  
     //fuck it, this feature can come later.   
-    t.pass('blank command fired OK')   
+    //t.pass('blank command fired OK')   
   }) 
 
 })
 
 
-test.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')  

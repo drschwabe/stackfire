@@ -658,3 +658,36 @@ test('buffer fires every fire (complex)', (t) => {
     t.pass('apples fire ran OK')
   })
 })
+
+
+// test.only('ensure buffers dont fire more than they need too', (t) => {
+//   t.plan(3)
+//   let stack = requireUncached('./stack.js')  
+
+//   stack.on('/_buffer', (state, next) => {
+//     console.log('buffer fired')
+//     t.pass()
+//     next()
+//   })
+
+//   stack.on('a', (state, next) => {
+
+//     stack.fire('1', (err, state) => {
+//       next(null, state)
+//     })
+
+//   })
+
+//   stack.on('a', (state, next) => {   
+
+//     stack.fire('2', () => {
+//       next(null, state)
+//     })
+
+//   })
+
+//   stack.fire('a', () => {
+//     t.pass('Test finished')
+//   })
+
+// })

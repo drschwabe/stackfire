@@ -12,7 +12,7 @@ if (!isNode) browser = true
 var stack = { 
   routes : [], 
   state : {}, 
-  grid : gg.createGrid(12,12) 
+  grid : gg.createGrid(64,64) 
 }
 stack.grid = gg.populateCells(stack.grid)
 
@@ -157,7 +157,7 @@ stack.fire = function(path, param2, param3) {
     //We use a grid based queing model (leveraging gg library). 
     if(state._command && !state._command.done) {
       var existingCommands = _.clone(stack.grid.enties) //< Clone a copy of all existing commands.
-      stack.grid = gg.createGrid(12,12) //< Create a new grid (overwriting any previous one)
+      stack.grid = gg.createGrid(96,96) //< Create a new grid (overwriting any previous one)
       //^ Grid fixed at 3x3 for now until gg supports dynamic grid resizing from top-left to bottom-left). 
       stack.grid.enties = existingCommands //< Restore original commands to the new grid.  
 
@@ -199,7 +199,7 @@ stack.fire = function(path, param2, param3) {
     } else {
       //Otherwise, if no command active, we assume it is root level... 
       var existingCommands = _.clone(stack.grid.enties) 
-      stack.grid = gg.createGrid(12,12)  
+      stack.grid = gg.createGrid(96,96)  
       stack.grid.enties = existingCommands //< restore original commands, then add this new one... 
       stack.grid = gg.populateCells(stack.grid) 
       newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
@@ -259,10 +259,13 @@ var waterfall = (command) => {
             }
             if(_.isFunction(state)) next = state
             //console.log(next)
-            console.log(`run a buffer func for ${stack.state._command.path}`)
-      
+            //console.log(`run a buffer func for ${stack.state._command.path}`)
+             
+            stack.state._command.current_middleware_index++
+            return next(null, state)
+            
             stack.fire('/_buffer', (err, state) => {
-              console.log('buffer func complete')
+              //console.log('buffer func complete')
               stack.state._command.current_middleware_index++
               return next(null, state)
             })

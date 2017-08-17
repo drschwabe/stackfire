@@ -140,6 +140,8 @@ stack.fire = function(path, param2, param3) {
   matchingRoutes.forEach((matchingRoute, index) => {  
     var newCommand = {} 
     newCommand.matching_route = matchingRoute
+    //Make a property to store parameters (ie inventory/:widget <--)
+    if(matchingRoute.route) newCommand.params = matchingRoute.route.match(path)
     newCommand.path = path
     //put the callback on the last matching route:  
     if(callback && index == matchingRoutes.length -1) newCommand.callback = callback

@@ -141,16 +141,17 @@ test("(same as above, but more complex route)", (t) => {
 
 
 test("(same as above, but even more complex routes using a parameter)", (t) => {
-
+  t.plan(3)
   let stack = requireUncached('./stack.js')
   stack.on('/inventory/:item/deliver', (state, next) => {
     t.ok(state, 'expected listener invoked')
+    t.ok(state._command.params.item, 'parameter is included on the command')
     next(null, state)
   })
 
   //This should not run: 
   stack.on('/inventory/:item/destroy', (state, next) => {
-    t.fail('listener invoked when it should not have')
+    t.fail('listener invoked when it should not have')    
     next(null, state)
   })
 
@@ -382,7 +383,7 @@ test('berries', (t) => {
 })
 
 
-test.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')  

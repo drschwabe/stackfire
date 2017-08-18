@@ -691,3 +691,41 @@ test.skip('buffer fires every fire (complex)', (t) => {
 //   })
 
 // })
+
+
+//This isnt working: 
+    //  stack.fire('element/mf-docs/rendered', next)
+//but this does: 
+//       stack.fire('element/mf-docs/rendered', (err, state) => {
+//         next(null, state)
+//       })
+
+// So need a test to expose this issue, and to fix it. 
+
+
+test.only('stuff', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js')  
+
+  stack.on('juice', (state, next) => {
+    t.pass()
+    console.log('we made apple juice')
+  })
+
+  stack.on('shake', (state, next) => {
+    t.pass()
+    console.log('we made a milk shake')
+  })  
+
+  //Demonstrate two ways of calling next
+  stack.fire('apple', (err, state, nextFire) => {
+    stack.fire('juice', nextFire)
+  })
+
+  stack.fire('milk', (err, state, nextFire) => {
+    stack.fire('shake', (err, state, nextFire) => {
+      //nextFire()
+    })
+  })
+
+})

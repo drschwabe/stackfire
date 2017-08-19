@@ -12,7 +12,7 @@ if (!isNode) browser = true
 var stack = { 
   routes : [], 
   state : {}, 
-  grid : gg.createGrid(64,64) 
+  grid : gg.createGrid(3,3) 
 }
 stack.grid = gg.populateCells(stack.grid)
 
@@ -155,28 +155,34 @@ stack.fire = function(path, param2, param3) {
     //At this point if there is already a stack._command it means there is
     //a parent fire already in progress.  Therefore, it must be queued.
     //We use a grid based queing model (leveraging gg library). 
+    debugger
     if(state._command && !state._command.done) {
-      var existingCommands = _.clone(stack.grid.enties) //< Clone a copy of all existing commands.
-      stack.grid = gg.createGrid(96,96) //< Create a new grid (overwriting any previous one)
-      //^ Grid fixed at 3x3 for now until gg supports dynamic grid resizing from top-left to bottom-left). 
-      stack.grid.enties = existingCommands //< Restore original commands to the new grid.  
-
       //Determine the cell; position on the grid the new command will be placed... 
       var cell 
       //first determine if the new command is a parent or sibling... 
       if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
-        //as a sibling the command will get a cell in the next column (same row):     
-        stack.grid = gg.populateCells(stack.grid)       
+        //as a sibling the command will get a cell in the next column (same row): 
+
+        //Expand grid size if necessary: 
+        if( _.last(stack.grid.enties.length > stack.grid.cells.length - 3)) {
+          stack.grid = gg.expandGrid(stack.grid) 
+          stack.grid = gg.populateCells(stack.grid)                 
+        }
         cell = gg.nextOpenCell(stack.grid)
+
       } else { //< this is a child of the current state._command:  
         //TODO: ^^ consider if better determination needed here! 
         //callers might be different but still be not a child of current command
         //(though perhaps this logic is sound; just seems like it needs to be examined/tested more closely)
 
-        stack.grid = gg.populateCells(stack.grid) 
-
         //search the next row down:  
         cell = gg.nextOpenCellDown(stack.grid, state._command.cell)
+
+        //Expand grid size if necessary: 
+        if( _.find(stack.grid.enties, (enty) => enty.cell > stack.grid.height - 3)) {
+          stack.grid = gg.expandGrid(stack.grid)
+          stack.grid = gg.populateCells(stack.grid)
+        }                 
 
         //also make note of parent...  
         newCommand.parent = state._command 
@@ -184,7 +190,8 @@ stack.fire = function(path, param2, param3) {
         state._command.child = newCommand 
       }
 
-      newCommand.cell = cell  //< finally assign the cell, then insert it into grid: 
+      newCommand.cell = cell  //< finally assign the cell, then insert it into grid....
+
       stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })     
       stack.grid = gg.populateCells(stack.grid) 
    
@@ -198,10 +205,10 @@ stack.fire = function(path, param2, param3) {
       //callback()
     } else {
       //Otherwise, if no command active, we assume it is root level... 
-      var existingCommands = _.clone(stack.grid.enties) 
-      stack.grid = gg.createGrid(96,96)  
-      stack.grid.enties = existingCommands //< restore original commands, then add this new one... 
-      stack.grid = gg.populateCells(stack.grid) 
+      if( _.last(stack.grid.enties.length > stack.grid.cells.length -3)) {
+        stack.grid = gg.expandGrid(stack.grid)
+        stack.grid = gg.populateCells(stack.grid)        
+      }
       newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
       stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
       stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
@@ -350,6 +357,8 @@ var resumeWaterfall = (command) => {
 
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()
+
+  console.log('resume water fall end (shoudl not run)')   
 
   // async.series([
   //   function(seriesCallback) {

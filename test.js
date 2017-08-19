@@ -703,7 +703,7 @@ test.skip('buffer fires every fire (complex)', (t) => {
 // So need a test to expose this issue, and to fix it. 
 
 
-test.only('stuff', (t) => {
+test('Demonstrate multiple ways of calling next (WIP)', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')  
 
@@ -724,8 +724,50 @@ test.only('stuff', (t) => {
 
   stack.fire('milk', (err, state, nextFire) => {
     stack.fire('shake', (err, state, nextFire) => {
-      //nextFire()
+      nextFire()
     })
   })
 
+  //TODO: make another thing where you just pass an 'on' next (above only shows passing of nextFire)
+
 })
+
+
+test.only('Multi command stress test', (t) => {
+  t.plan(6)
+  let stack = requireUncached('./stack.js')  
+
+  stack.on('shake', (state, next) => {
+    //The shake command is not done yet: 
+    t.notOk( _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').done)
+    console.log('we are making a milk shake')
+  })  
+
+  stack.fire('milk', (err, state, nextFire) => {
+    //The milk command is done: 
+    debugger
+    t.ok( _.find(stack.grid.enties, (enty) => enty.command.path == '/milk').done)    
+    stack.fire('shake', (err, state, nextFire) => {
+      //milk command is still done: 
+      t.ok( _.find(stack.grid.enties, (enty) => enty.command.path == '/milk').done)           
+      //and now shake is done too:      
+      t.ok( _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').done)  
+      console.log('we made a milk shake')              
+    })
+  })
+
+  stack.on('beer', (state, next) => {
+    //The beer command is not done yet: 
+    t.notOk( _.find(stack.grid.enties, (enty) => enty.command.path == '/beer').done)
+    console.log('pour a beer')
+  })  
+
+  stack.fire('beer', (err, state, next) => {
+    t.ok( _.find(stack.grid.enties, (enty) => enty.command.path == '/beer').done)
+    console.log('poured a beer.')
+  })
+
+
+})
+
+

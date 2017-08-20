@@ -703,36 +703,7 @@ test.skip('buffer fires every fire (complex)', (t) => {
 // So need a test to expose this issue, and to fix it. 
 
 
-// test('stuff', (t) => {
-//   t.plan(2)
-//   let stack = requireUncached('./stack.js')  
-
-//   stack.on('juice', (state, next) => {
-//     t.pass()
-//     console.log('we made apple juice')
-//   })
-
-//   stack.on('shake', (state, next) => {
-//     t.pass()
-//     console.log('we made a milk shake')
-//   })  
-
-//   //Demonstrate two ways of calling next
-//   stack.fire('apple', (err, state, nextFire) => {
-//     stack.fire('juice', nextFire)
-//   })
-
-//   stack.fire('milk', (err, state, nextFire) => {
-//     stack.fire('shake', (err, state, nextFire) => {
-//       //nextFire()
-//     })
-//   })
-
-// })
-
-
-
-test('stuff', (t) => {
+test('Demonstrate multiple ways of calling next (WIP)', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')  
 
@@ -746,13 +717,61 @@ test('stuff', (t) => {
     //The milk command is done: 
     t.ok( _.find(stack.grid.enties, (enty) => enty.command.path == 'milk').done)    
     stack.fire('shake', (err, state, nextFire) => {
+      nextFire()
+    })
+  })
+
+  //TODO: make another thing where you just pass an 'on' next (above only shows passing of nextFire)
+
+})
+
+
+test.only('Multi command stress test', (t) => {
+  t.plan(10)
+  let stack = requireUncached('./stack.js')  
+
+  stack.on('shake', (state, next) => {
+    //The shake command is not done yet: 
+    var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').command    
+    t.notOk(shakeCommand.done, 'shake command not done')
+    t.equals(shakeCommand.cell, 0, 'shake command inserted to cell 0')  
+
+    console.log('we are making a milk shake')
+    next(null, state)
+  })  
+
+  stack.fire('milk', (err, state, nextFire) => {
+    //The milk command is done: 
+    debugger
+    var milkCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/milk').command
+    t.ok(milkCommand.done, 'milk command done') 
+    t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0')  
+    stack.fire('shake', (err, state, nextFire) => {
+      var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').command
       //milk command is still done: 
-      t.ok( _.find(stack.grid.enties, (enty) => enty.command.path == 'milk').done)           
-      //and now shake is done too:      
-      t.ok( _.find(stack.grid.enties, (enty) => enty.command.path == 'shake').done)  
+      t.ok(milkCommand.done, 'milk command still done')     
+      //and now shake is done too:                  
+      t.ok(shakeCommand.done, 'shake command done')                 
       console.log('we made a milk shake')              
     })
   })
 
+  stack.on('beer', (state, next) => {
+    var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/beer').command
+    //The beer command is not done yet:     
+    t.notOk(beerCommand.done, 'beer command done') 
+    t.equals(beerCommand.cell, 1, 'beer command inserted to cell 1')  //Inserted into cell 1; next one right of cell 0
+    console.log('pour a beer')
+    next(null, state)
+  })  
+
+  stack.fire('beer', (err, state, next) => {
+    var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/beer')    
+    t.notOk(beerCommand.done, 'beer command still done') 
+    t.equals(beerCommand.cell, 1, 'beer command still at cell 1')  
+    console.log('poured a beer.')
+  })
+
 })
+
 

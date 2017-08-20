@@ -12,7 +12,7 @@ if (!isNode) browser = true
 var stack = { 
   routes : [], 
   state : {}, 
-  grid : gg.createGrid(3,3) 
+  grid : gg.createGrid(1,1) 
 }
 stack.grid = gg.populateCells(stack.grid)
 
@@ -164,7 +164,7 @@ stack.fire = function(path, param2, param3) {
         //as a sibling the command will get a cell in the next column (same row): 
 
         //Expand grid size if necessary: 
-        if( _.last(stack.grid.enties.length > stack.grid.cells.length - 3)) {
+        if(stack.grid.enties.length >= stack.grid.cells.length - 1) {
           stack.grid = gg.expandGrid(stack.grid) 
           stack.grid = gg.populateCells(stack.grid)                 
         }
@@ -175,14 +175,15 @@ stack.fire = function(path, param2, param3) {
         //callers might be different but still be not a child of current command
         //(though perhaps this logic is sound; just seems like it needs to be examined/tested more closely)
 
-        //search the next row down:  
-        cell = gg.nextOpenCellDown(stack.grid, state._command.cell)
-
         //Expand grid size if necessary: 
-        if( _.find(stack.grid.enties, (enty) => enty.cell > stack.grid.height - 3)) {
+        if(stack.grid.enties.length >= stack.grid.height - 1) { 
+          //^ Use height instead of grid.cells.length for vertical placement. 
           stack.grid = gg.expandGrid(stack.grid)
           stack.grid = gg.populateCells(stack.grid)
         }                 
+
+        //search the next row down:  
+        cell = gg.nextOpenCellDown(stack.grid, state._command.cell)        
 
         //also make note of parent...  
         newCommand.parent = state._command 
@@ -205,7 +206,7 @@ stack.fire = function(path, param2, param3) {
       //callback()
     } else {
       //Otherwise, if no command active, we assume it is root level... 
-      if( _.last(stack.grid.enties.length > stack.grid.cells.length -3)) {
+      if(stack.grid.enties.length >= stack.grid.width -1) {
         stack.grid = gg.expandGrid(stack.grid)
         stack.grid = gg.populateCells(stack.grid)        
       }

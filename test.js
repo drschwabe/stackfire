@@ -2,7 +2,7 @@ const test = require('tape-catch'),
       requireUncached = require('require-uncached'), 
       //^ ensures a clean slate for stack for each test. 
       _ = require('underscore')
-  
+
 test("stack.fire invokes stack.on", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
@@ -703,8 +703,8 @@ test.skip('buffer fires every fire (complex)', (t) => {
 // So need a test to expose this issue, and to fix it. 
 
 
-test('Demonstrate multiple ways of calling next (WIP)', (t) => {
-  t.plan(2)
+test.skip('Demonstrate multiple ways of calling next (WIP)', (t) => {
+  t.plan(5)
   let stack = requireUncached('./stack.js')  
 
   stack.on('shake', (state, next) => {
@@ -721,12 +721,25 @@ test('Demonstrate multiple ways of calling next (WIP)', (t) => {
     })
   })
 
-  //TODO: make another thing where you just pass an 'on' next (above only shows passing of nextFire)
+  stack.on('tonic', (state, next) => {
+    //The shake command is not done yet: 
+    t.notOk( _.find(stack.grid.enties, (enty) => enty.command.path == 'shake').done)
+    console.log('we are making a milk shake')
+  })  
 
+  stack.fire('gin', (err, state, nextFire) => {
+    //The milk command is done: 
+    t.ok( _.find(stack.grid.enties, (enty) => enty.command.path == 'milk').done)    
+    stack.fire('tonic', next)
+  })
+
+  stack.fire('drink', (err, state) => {
+    t.ok('drinking drink')
+  })
+  //TODO: make another thing where you just pass an 'on' next (above only shows passing of nextFire)
 })
 
-
-test.only('Multi command stress test', (t) => {
+test('Multi command stress test', (t) => {
   t.plan(10)
   let stack = requireUncached('./stack.js')  
 
@@ -734,7 +747,9 @@ test.only('Multi command stress test', (t) => {
     //The shake command is not done yet: 
     var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').command    
     t.notOk(shakeCommand.done, 'shake command not done')
-    t.equals(shakeCommand.cell, 0, 'shake command inserted to cell 0')  
+
+    //gg.examine(stack.grid, [0, 1]) //< should be shake
+    t.equals(shakeCommand.cell, 1, 'shake command inserted to cell 1')  //Sibling next to shake. 
 
     console.log('we are making a milk shake')
     next(null, state)
@@ -760,7 +775,7 @@ test.only('Multi command stress test', (t) => {
     var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/beer').command
     //The beer command is not done yet:     
     t.notOk(beerCommand.done, 'beer command done') 
-    t.equals(beerCommand.cell, 1, 'beer command inserted to cell 1')  //Inserted into cell 1; next one right of cell 0
+    t.equals(beerCommand.cell, 2, 'beer command inserted to cell 3') 
     console.log('pour a beer')
     next(null, state)
   })  
@@ -768,10 +783,8 @@ test.only('Multi command stress test', (t) => {
   stack.fire('beer', (err, state, next) => {
     var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/beer')    
     t.notOk(beerCommand.done, 'beer command still done') 
-    t.equals(beerCommand.cell, 1, 'beer command still at cell 1')  
+    t.equals(beerCommand.cell, 2, 'beer command still at cell 3')  //< Sibling next to beer.
     console.log('poured a beer.')
   })
 
 })
-
-

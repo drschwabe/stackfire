@@ -819,7 +819,7 @@ test.skip('Strawberry milkshake', (t) => {
 })
 
 test.only('Empty goldmine', (t) => {
-  t.plan(2)
+  t.plan(6)
   let stack = requireUncached('./stack.js')  
   let gg = require('gg') 
 
@@ -830,14 +830,24 @@ test.only('Empty goldmine', (t) => {
 
     stack.fire('shovel', (err, state, nextFire) => {
       console.log('shovel for gold...')
+
       var shovelCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shovel').command
+
       //Parent cell should equal 0 (first cell): 
       t.equals(shovelCommand.parent.cell, 0, "shovel command's parent is at the first cell of the grid")
+
       //Shovel command's cell should be directly below: 
-      var expectedCell = gg.xy(stack.grid, [0, 1])
+      var expectedCell = gg.xyToIndex(stack.grid, [1, 0])
+
       t.equals(shovelCommand.cell, expectedCell, 'shovel command is directly below the parent command')
+
+      //This will never be true; there should be no advancement to 'cart' fire.
       if(state.gold = true) return nextFire()
     })  
+
+    //technically stack.fire above is done... as such, we may need to use a different metric for stack.fire
+    //OR we should not mark as done
+    //perhaps we will say middlware_done and then command_done - command_done false until callback completed ie; nextFire called. 
 
     stack.fire('cart', (err, state, nextFire) => {
       //Should not run...
@@ -851,5 +861,11 @@ test.only('Empty goldmine', (t) => {
     //Should not run: 
     t.fail('mining will never finish!')
   })
+
+  setTimeout(() => {
+    t.equals( stack.grid.cells[0].enties[0].command.path, '/mine', 'first cell is /mine') 
+    t.equals ( stack.grid.cells[gg.xyToIndex(stack.grid, [1,0])].enties[0].command.path, '/shovel', 'next row down, same column is /shovel' )
+    t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [2,0])].enties[0].command.path, '/cart', 'next row after that, same column is /cart')       
+  }, 100)
 
 })

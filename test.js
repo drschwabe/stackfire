@@ -755,12 +755,13 @@ test('Multi command stress test', (t) => {
     next(null, state)
   })  
 
-  stack.fire('milk', (err, state, nextFire) => {
+  stack.fire('milkshake', (err, state, nextFire) => {
     //The milk command is done: 
     debugger
     var milkCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/milk').command
     t.ok(milkCommand.done, 'milk command done') 
     t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0')  
+    stack.fire('')
     stack.fire('shake', (err, state, nextFire) => {
       var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').command
       //milk command is still done: 
@@ -785,6 +786,70 @@ test('Multi command stress test', (t) => {
     t.notOk(beerCommand.done, 'beer command still done') 
     t.equals(beerCommand.cell, 2, 'beer command still at cell 3')  //< Sibling next to beer.
     console.log('poured a beer.')
+  })
+
+})
+
+
+
+test.skip('Strawberry milkshake', (t) => {
+  t.plan(10)
+  let stack = requireUncached('./stack.js')  
+
+  stack.on('milkshake', (state, next) => {
+  
+    stack.fire('milk', (err, state, nextFire) => {
+      console.log('add some milk')
+      //nextFire()      
+    })  
+
+    stack.fire('strawberries', (err, state, nextFire) => {
+      console.log('add some strawberries')
+      //wow should not run! 
+      //next(null, state)       
+    })
+
+  })  
+
+  stack.fire('milkshake', (err, state) => {
+    //The milk command is done: 
+    console.log('finished milkshake!')
+  })
+
+})
+
+test.only('Empty goldmine', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js')  
+  let gg = require('gg') 
+
+  stack.state.gold = false
+
+
+  stack.on('mine', (state, next) => {
+
+    stack.fire('shovel', (err, state, nextFire) => {
+      console.log('shovel for gold...')
+      var shovelCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shovel').command
+      //Parent cell should equal 0 (first cell): 
+      t.equals(shovelCommand.parent.cell, 0, "shovel command's parent is at the first cell of the grid")
+      //Shovel command's cell should be directly below: 
+      var expectedCell = gg.xy(stack.grid, [0, 1])
+      t.equals(shovelCommand.cell, expectedCell, 'shovel command is directly below the parent command')
+      if(state.gold = true) return nextFire()
+    })  
+
+    stack.fire('cart', (err, state, nextFire) => {
+      //Should not run...
+      console.log('fill cart...')           
+      t.fail('there will never be any gold!')
+    })
+
+  })  
+
+  stack.fire('mine', (err, state) => {
+    //Should not run: 
+    t.fail('mining will never finish!')
   })
 
 })

@@ -1,7 +1,8 @@
 const test = require('tape-catch'), 
       requireUncached = require('require-uncached'), 
       //^ ensures a clean slate for stack for each test. 
-      _ = require('underscore')
+      _ = require('underscore'), 
+      log = console.log
 
 test("stack.fire invokes stack.on", (t) => {
   t.plan(2)
@@ -818,13 +819,12 @@ test.skip('Strawberry milkshake', (t) => {
 
 })
 
-test.only('Empty goldmine', (t) => {
+test('Empty goldmine', (t) => {
   t.plan(6)
   let stack = requireUncached('./stack.js')  
   let gg = require('gg') 
 
   stack.state.gold = false
-
 
   stack.on('mine', (state, next) => {
 
@@ -867,5 +867,63 @@ test.only('Empty goldmine', (t) => {
     t.equals ( stack.grid.cells[gg.xyToIndex(stack.grid, [1,0])].enties[0].command.path, '/shovel', 'next row down, same column is /shovel' )
     t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [2,0])].enties[0].command.path, '/cart', 'next row after that, same column is /cart')       
   }, 100)
+
+})
+
+
+test('Incomplete garden', (t) => {
+  t.plan(1)
+  let stack = requireUncached('./stack.js')  
+
+  stack.fire('dig', (err, state, nextFire) => {
+    log('dug')
+    t.pass('dig complete, we done for the day')
+    //nextFire is not called, so no other commands should run.
+  })
+
+  stack.fire('plant', (err, state, nextFire) => {
+    log('planted')
+    t.fail('there are no plants!')
+  })
+
+  stack.fire('water', (err, state, nextFire) => {
+    log('watered')
+    t.fail('there is no water!')
+  })
+
+  //Future shorthand: 
+  //stack.chain().fire('dig').fire('plant').fire('water') 
+  //normally you would have to call 'nextFire' but when in a chain they fire automatically
+  //possibly could rename to stack.autoFire()
+  //or stack.auto('')
+  //stack.parallel()
+  //maybe I should remove callbacks from fires... 
+  //that way ... nah... or how about remove nested ... nah
+
+})
+
+
+test('Complete garden', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js')  
+
+  stack.fire('dig', (err, state, nextFire) => {
+    log('dug')
+    t.pass('dig complete, we done for the day')
+    //nextFire()
+    nextFire(null, state)
+    //nextFire called, so the next command runs: 
+  })
+
+  stack.fire('plant', (err, state, nextFire) => {
+    log('planted')
+    t.pass('today we have plants!')
+    nextFire()
+  })
+
+  stack.fire('water', (err, state, nextFire) => {
+    log('watered')
+    t.pass('and water!')
+  })
 
 })

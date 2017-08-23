@@ -155,7 +155,6 @@ stack.fire = function(path, param2, param3) {
     //At this point if there is already a stack._command it means there is
     //a parent fire already in progress.  Therefore, it must be queued.
     //We use a grid based queing model (leveraging gg library). 
-    debugger
     if(state._command && !state._command.done) {
       //Determine the cell; position on the grid the new command will be placed... 
       var cell 
@@ -305,54 +304,68 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     return waterfall(newCommand)
   }
   if(!state._command) return
-  state._command.done = true  
+  //state._command.done = true  
+  state._command.middleware_done = true 
   if(window.renderGrid) window.renderGrid()
 
-  //otherwise, if there is a parent - return and continue where it left off:
-  if(state._command.parent) {
+  //If there is a parent - return and continue where it left off:
+  if(state._command.parent && !state._command.parent.done ) {
     //Make a copy and then overwrite the state._command with the parent command.       
-    var oldCommand = _.clone(state._command)
-    state._command = state._command.parent 
+    //var newCommand = _.clone(state._command.parent)
+    //state._command = state._command.parent 
     //Make sure we run the callback before switching context to the parent command: 
-    if(oldCommand.callback) {
-      return oldCommand.callback(null, stack.state, () => {
-        return resumeWaterfall(stack.state._command)
+    if(state._command.callback) {
+      return state._command.callback(null, stack.state, () => {
+        return resumeWaterfall(state._command.parent)
       })
     } else {
       //return stack.state._command.next(null, stack.state)
-      return resumeWaterfall(stack.state._command)      
+      return resumeWaterfall(state._command.parent)      
     }    
   }
-
-  var siblingCommand
+  
   //Determine if there is a sibling: 
+  var siblingCommand
   stack.grid = gg.populateCells(stack.grid)
-  if(gg.examine(stack.grid, stack.state._command.cell + 1)) {
-    siblingCommand = _.findWhere(stack.grid.enties, { cell: stack.state._command.cell + 1 }).command
-    siblingCommand = _.clone(siblingCommand)
+  var nextCol = gg.nextCol(stack.grid, stack.state._command.cell)
+  if(nextCol) {
+    siblingCommand = nextCol[0].command
   }
-  var commandCallback = state._command.callback 
+  // var commandCallback = state._command.callback 
   //Before nulling command, update the grid enties (cause we cloned earlier and now properties have 
   //deviated :/ ) 
-  _.findWhere(stack.grid.enties, { cell: state._command.cell }).command = state._command
-  state._command = null
+  //_.findWhere(stack.grid.enties, { cell: state._command.cell }).command = state._command
+  //state._command = null
   //Otherwise, just run the callback...
-  if(commandCallback) {
-    var nextCommand
-    if(siblingCommand) nextCommand = () => { return waterfall(siblingCommand) }
-    else nextCommand = () => null 
-    if(window.renderGrid) window.renderGrid()
-    return commandCallback(null, state, nextCommand)      
+
+  if(state._command.callback) {
+    var nextFire = () => {
+      console.log('all done (with callback)')  
+      state._command.done = true       
+      if(window.renderGrid) window.renderGrid()  
+      if(siblingCommand) {
+        console.log('run sibling command...')
+        return waterfall(siblingCommand)
+      }
+    }
+    return state._command.callback(null, stack.state, nextFire)
+  } else {
+    state._command.done = true      
+    console.log('all done (no callback)') 
+    if(window.renderGrid) window.renderGrid()    
+    if(siblingCommand) {
+      console.log('run sibling command...')
+      return waterfall(siblingCommand)  
+    }    
   }
-  if(siblingCommand) waterfall(siblingCommand)
-  if(window.renderGrid) window.renderGrid()
-  console.log('all done') 
 }
 
 var resumeWaterfall = (command) => {
 
   var matchingRoute = command.matching_route, 
       state = stack.state
+
+  //If the incoming command has a parent
 
   state._command = command   
 

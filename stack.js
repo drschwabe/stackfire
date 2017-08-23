@@ -153,9 +153,10 @@ stack.fire = function(path, param2, param3) {
     newCommand.caller = caller 
 
     //At this point if there is already a stack._command it means there is
-    //a parent fire already in progress.  Therefore, it must be queued.
+    //another fire already in progress.  Therefore, it must be queued.
     //We use a grid based queing model (leveraging gg library). 
     if(state._command && !state._command.done) {
+      debugger
       //Determine the cell; position on the grid the new command will be placed... 
       var cell 
       //first determine if the new command is a parent or sibling... 
@@ -163,7 +164,7 @@ stack.fire = function(path, param2, param3) {
         //as a sibling the command will get a cell in the next column (same row): 
 
         //Expand grid size if necessary: 
-        if(stack.grid.enties.length >= stack.grid.cells.length - 1) {
+        if(stack.grid.enties.length >= stack.grid.width - 1) {
           stack.grid = gg.expandGrid(stack.grid) 
           stack.grid = gg.populateCells(stack.grid)                 
         }
@@ -227,7 +228,7 @@ var waterfall = (command) => {
 
   state._command = command   
   if(window.renderGrid) window.renderGrid()  
-
+debugger
   async.series([
     function(seriesCallback) {
       var seedFunction = function(next) { 
@@ -299,6 +300,7 @@ var waterfall = (command) => {
 
 var endWaterfall = (newCommand) => { //End of waterfall: 
   var state = stack.state
+  debugger
   if(newCommand) {
     state._command.done = false  
     return waterfall(newCommand)
@@ -341,7 +343,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   if(state._command.callback) {
     var nextFire = () => {
       console.log('all done (with callback)')  
-      state._command.done = true       
+      stack.state._command.done = true
+      debugger
       if(window.renderGrid) window.renderGrid()  
       if(siblingCommand) {
         console.log('run sibling command...')
@@ -364,6 +367,8 @@ var resumeWaterfall = (command) => {
 
   var matchingRoute = command.matching_route, 
       state = stack.state
+
+debugger
 
   //If the incoming command has a parent
 

@@ -822,7 +822,7 @@ test.skip('Strawberry milkshake', (t) => {
 test('Empty goldmine', (t) => {
   t.plan(6)
   let stack = requireUncached('./stack.js')  
-  let gg = require('gg') 
+  let gg = requireUncached('gg') 
 
   stack.state.gold = false
 
@@ -872,8 +872,9 @@ test('Empty goldmine', (t) => {
 
 
 test('Incomplete garden', (t) => {
-  t.plan(1)
-  let stack = requireUncached('./stack.js')  
+  t.plan(4)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')    
 
   stack.fire('dig', (err, state, nextFire) => {
     log('dug')
@@ -891,6 +892,12 @@ test('Incomplete garden', (t) => {
     t.fail('there is no water!')
   })
 
+  setTimeout(() => { //Ensure each of the commands exist on the first row: 
+    t.equals( stack.grid.cells[0].enties[0].command.path, '/dig', 'first cell is /dig') 
+    t.equals ( stack.grid.cells[gg.xyToIndex(stack.grid, [0,1])].enties[0].command.path, '/plant', 'next column over is /plant' )
+    t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [0,2])].enties[0].command.path, '/water', 'next column after that is /water')         
+  }, 100)
+
   //Future shorthand: 
   //stack.chain().fire('dig').fire('plant').fire('water') 
   //normally you would have to call 'nextFire' but when in a chain they fire automatically
@@ -903,7 +910,7 @@ test('Incomplete garden', (t) => {
 })
 
 
-test('Complete garden', (t) => {
+test.only('Complete garden', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
 

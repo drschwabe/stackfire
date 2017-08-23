@@ -268,15 +268,15 @@ debugger
             if(_.isFunction(state)) next = state
             //console.log(next)
             //console.log(`run a buffer func for ${stack.state._command.path}`)
-             
+            debugger
             stack.state._command.current_middleware_index++
             return next(null, state)
             
-            stack.fire('/_buffer', (err, state) => {
-              //console.log('buffer func complete')
-              stack.state._command.current_middleware_index++
-              return next(null, state)
-            })
+            // stack.fire('/_buffer', (err, state) => {
+            //   //console.log('buffer func complete')
+            //   stack.state._command.current_middleware_index++
+            //   return next(null, state)
+            // })
           }
           //Only push the buffer function/fire if A) we are not already running
           //a buffer and B) we have reached the end of the middleware.
@@ -318,10 +318,12 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     //Make sure we run the callback before switching context to the parent command: 
     if(state._command.callback) {
       return state._command.callback(null, stack.state, () => {
+        stack.state._command.done = true
         return resumeWaterfall(state._command.parent)
       })
     } else {
       //return stack.state._command.next(null, stack.state)
+      stack.state._command.done = true
       return resumeWaterfall(state._command.parent)      
     }    
   }
@@ -373,6 +375,8 @@ debugger
   //If the incoming command has a parent
 
   state._command = command   
+
+  //getting a length issue here
 
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()

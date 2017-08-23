@@ -24,10 +24,10 @@ test("stack.fire nested within stack.on", (t) => {
   stack.on('/do-something-else', (state, next) => {
     console.log('do something....')
     //Nested fire: 
-    stack.fire('/do-another-thing', (err, newState) => {
+    stack.fire('/do-another-thing', (err, newState, nextFire) => {
       debugger //< Current command is now 'do-something-else'
       //cause do-another-thing has finished.
-      next()
+      nextFire()
     })
   })
 
@@ -49,8 +49,9 @@ test("stack.fire nested within stack.on (async)", (t) => {
     debugger
     //Nested async fire: 
     setTimeout(() => {
-      stack.fire('/do-another-thing', (err, newState) => {
-        next()
+      stack.fire('/do-another-thing', (err, newState, nextFire) => {
+        //next()
+        nextFire()
       }, 1000)
     })
   })
@@ -67,7 +68,7 @@ test("stack.fire nested within stack.on (async)", (t) => {
 })
 
 
-test("fire 3 nested commands and verify state consistency along the way", (t) => {
+test.only("fire 3 nested commands and verify state consistency along the way", (t) => {
   t.plan(6) //This will be the next major engineering hurdle; 
   //to ensure that commands that are children of children fire and return back to the 
   //root command; will wnat to make a visualization of this. 
@@ -77,16 +78,16 @@ test("fire 3 nested commands and verify state consistency along the way", (t) =>
     state.landed = true
     t.ok(state.landed, 'landed on moon') 
     //Second command fired: 
-    stack.fire('/plant-flag', state, (err, newState) => {
+    stack.fire('/plant-flag', state, (err, newState, nextFire) => {
       t.ok(newState.landed, 'still landed')
       state.flagPlanted = true
       t.ok(state.flagPlanted, 'planted flag')      
       //Third command fired: 
-      stack.fire('/take-picture', (err, newState) => {
+      stack.fire('/take-picture', (err, newState, nextFire2) => {
         t.ok(newState.landed && newState.flagPlanted, 'still landed and flag remains planted')
         state.tookPicture = true 
         t.ok(state.tookPicture, 'took picture')
-        next(null, state)
+        nextFire2(null, state)
       })
     })
   })
@@ -94,7 +95,6 @@ test("fire 3 nested commands and verify state consistency along the way", (t) =>
   //First command fired: 
   stack.fire('/land-on-moon', (err, finalState) => 
     t.ok(finalState.landed && finalState.flagPlanted && finalState.tookPicture, 'mission complete'))
-
 })
 
 
@@ -910,7 +910,7 @@ test('Incomplete garden', (t) => {
 })
 
 
-test.only('Complete garden', (t) => {
+test('Complete garden', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
 

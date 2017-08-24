@@ -156,17 +156,21 @@ stack.fire = function(path, param2, param3) {
     //another fire already in progress.  Therefore, it must be queued.
     //We use a grid based queing model (leveraging gg library). 
     if(state._command && !state._command.done) {
-      debugger
       //Determine the cell; position on the grid the new command will be placed... 
       var cell 
-      //first determine if the new command is a parent or sibling... 
+      //first determine if the new command is a child or sibling... 
       if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
         //as a sibling the command will get a cell in the next column (same row): 
 
         //Expand grid size if necessary: 
-        if(stack.grid.enties.length >= stack.grid.width - 1) {
+        if(gg.isEastEdge(stack.grid, state._command.cell)){
           stack.grid = gg.expandGrid(stack.grid) 
-          stack.grid = gg.populateCells(stack.grid)                 
+          stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+            enty.command.cell = enty.cell 
+            return enty
+          })          
+          stack.grid = gg.populateCells(stack.grid)
+          if(window.renderGrid) window.renderGrid()                       
         }
         cell = gg.nextOpenCell(stack.grid)
 
@@ -176,14 +180,18 @@ stack.fire = function(path, param2, param3) {
         //(though perhaps this logic is sound; just seems like it needs to be examined/tested more closely)
 
         //Expand grid size if necessary: 
-        if(stack.grid.enties.length >= stack.grid.height - 1) { 
-          //^ Use height instead of grid.cells.length for vertical placement. 
+        if(gg.isSouthEdge(stack.grid, state._command.cell)){
           stack.grid = gg.expandGrid(stack.grid)
-          stack.grid = gg.populateCells(stack.grid)
-        }                 
-
+          stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+            enty.command.cell = enty.cell 
+            return enty
+          })          
+          stack.grid = gg.populateCells(stack.grid)     
+          if(window.renderGrid) window.renderGrid()                   
+        }
+    
         //search the next row down:  
-        cell = gg.nextOpenCellDown(stack.grid, state._command.cell)        
+        cell = gg.nextOpenCellSouth(stack.grid, state._command.cell)        
 
         //also make note of parent...  
         newCommand.parent = state._command 
@@ -194,8 +202,7 @@ stack.fire = function(path, param2, param3) {
       newCommand.cell = cell  //< finally assign the cell, then insert it into grid....
 
       stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })     
-      stack.grid = gg.populateCells(stack.grid) 
-   
+      stack.grid = gg.populateCells(stack.grid)
       if(window.renderGrid) window.renderGrid()  
 
       if(!newCommand.parent) return  //< We return if sibling because the current command  
@@ -206,10 +213,15 @@ stack.fire = function(path, param2, param3) {
       //callback()
     } else {
       //Otherwise, if no command active, we assume it is root level... 
-      if(stack.grid.enties.length >= stack.grid.width -1) {
-        stack.grid = gg.expandGrid(stack.grid)
-        stack.grid = gg.populateCells(stack.grid)        
-      }
+      stack.grid = gg.expandGrid(stack.grid)
+      //We have to manually update cell nums on the command property of each enty: 
+      stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+        enty.command.cell = enty.cell 
+        return enty
+      })
+      stack.grid = gg.populateCells(stack.grid) 
+      if(window.renderGrid) window.renderGrid()            
+
       newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
       stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
       stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
@@ -228,7 +240,6 @@ var waterfall = (command) => {
 
   state._command = command   
   if(window.renderGrid) window.renderGrid()  
-debugger
   async.series([
     function(seriesCallback) {
       var seedFunction = function(next) { 
@@ -268,7 +279,6 @@ debugger
             if(_.isFunction(state)) next = state
             //console.log(next)
             //console.log(`run a buffer func for ${stack.state._command.path}`)
-            debugger
             stack.state._command.current_middleware_index++
             return next(null, state)
             
@@ -300,7 +310,6 @@ debugger
 
 var endWaterfall = (newCommand) => { //End of waterfall: 
   var state = stack.state
-  debugger
   if(newCommand) {
     state._command.done = false  
     return waterfall(newCommand)
@@ -346,7 +355,6 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     var nextFire = () => {
       console.log('all done (with callback)')  
       stack.state._command.done = true
-      debugger
       if(window.renderGrid) window.renderGrid()  
       if(siblingCommand) {
         console.log('run sibling command...')
@@ -370,14 +378,19 @@ var resumeWaterfall = (command) => {
   var matchingRoute = command.matching_route, 
       state = stack.state
 
-debugger
-
   //If the incoming command has a parent
 
   state._command = command   
 
   //getting a length issue here
 
+  if(!command.matching_route.middleware) {
+    console.log('no more matching_route middleware...')
+    //end the current command?.. 
+    debugger
+    return
+    //return endWaterfall()
+  }
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()
 

@@ -387,8 +387,9 @@ test('berries', (t) => {
 })
 
 
+
 test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
-  t.plan(4)
+  t.plan(5)
 
   let stack = requireUncached('./stack.js')  
 
@@ -399,29 +400,32 @@ test("A subsequent fire waits until the current stack is finished before becomin
     }, 2000)  
   })
 
-  stack.fire('warning-alarm', (err, state, next) => {
+  stack.fire('warning-alarm', (err, state, nextFire) => {
     t.pass('warning alarm finished')
-    next() 
+    debugger
+    nextFire() 
   }) 
 
-  stack.fire('fire-turret', (err, state) => {
+  stack.fire('fire-turret', (err, state, nextFire) => {
     console.log('fire turret!') 
     //The following should apply to state 
     //only AFTER warning alarm completes: 
     state.firing_turret = true
-    t.ok(stack.grid.enties[1].command.done, true, 'Fire turret command is done.')
-    debugger
-    //next()
+    t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
+    //nextFire() < We don't call nextFire()
   })
 
-  //Wait one second and check: 
+  //Wait one second and check state: 
   setTimeout( () => {
     t.notOk(stack.state.firing_turret, 'Turret is not firing yet')
   }, 500 )
 
+  //Wait 2.5 seconds and check state: 
   setTimeout( () => {
     t.ok(stack.state.firing_turret, 'Turret is now firing!')    
+    t.notOk(stack.grid.enties[1].command.done, 'Fire turret command is not done cause we never called nextFire()') 
   }, 2500)
+
 
 })
 

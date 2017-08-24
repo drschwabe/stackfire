@@ -319,6 +319,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   state._command.middleware_done = true 
   if(window.renderGrid) window.renderGrid()
 
+  debugger
+
   //If there is a parent - return and continue where it left off:
   if(state._command.parent && !state._command.parent.done ) {
     //Make a copy and then overwrite the state._command with the parent command.       
@@ -393,8 +395,11 @@ var resumeWaterfall = (command) => {
     debugger
     //command.done = true 
     if(window.renderGrid) renderGrid()
-    return endWaterfall(command) //< This should hopefully run the callback. 
-    //return nextCommand() //< Determine the nextCommand! 
+    if(command.done && command.callback) {
+      return resumeWaterfall(command)
+    } 
+    //return endWaterfall(command) //< This should hopefully run the callback. 
+    else return nextCommand() //< Determine the nextCommand! 
   }
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()

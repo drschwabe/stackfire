@@ -357,6 +357,7 @@ test("Commands are agnostic to stating with a slash or not", (t) => {
 
 })
 
+
 test('berries', (t) => {
   t.plan(4)
 
@@ -369,18 +370,19 @@ test('berries', (t) => {
     next(null, state)
   })
 
-  stack.fire('berry', (err, state) => {  
+  stack.fire('berry', (err, state, nextFire) => {  
     //now the fire has completed: 
-    t.ok(stack.grid.enties[0].command.done)
-    //next(null, state)    
+    t.ok(stack.grid.enties[0].command.middleware_done)
+    nextFire()    
   })  
 
-  stack.fire('vegetable', (err, state) => { 
+  stack.fire('vegetable', (err, state, nextFire) => { 
     //Even though no middleware, ensure this enty still exists on the grid: 
-    t.ok(stack.grid.enties[1].command.done)  
-    //fuck it, this feature can come later.   
-    //t.pass('blank command fired OK')   
+    nextFire() //< The command is not done until we call nextFire
+    //(even though there are no further commands to fire)
   }) 
+
+  t.ok(stack.grid.enties[1].command.done)    
 
 })
 

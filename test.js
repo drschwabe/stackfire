@@ -68,7 +68,7 @@ test("stack.fire nested within stack.on (async)", (t) => {
 })
 
 
-test.only("fire 3 nested commands and verify state consistency along the way", (t) => {
+test("fire three nested commands and verify state consistency along the way", (t) => {
   t.plan(6) //This will be the next major engineering hurdle; 
   //to ensure that commands that are children of children fire and return back to the 
   //root command; will wnat to make a visualization of this. 
@@ -78,7 +78,7 @@ test.only("fire 3 nested commands and verify state consistency along the way", (
     state.landed = true
     t.ok(state.landed, 'landed on moon') 
     //Second command fired: 
-    stack.fire('/plant-flag', state, (err, newState, nextFire) => {
+    stack.fire('/plant-flag', (err, newState, nextFire) => {
       t.ok(newState.landed, 'still landed')
       state.flagPlanted = true
       t.ok(state.flagPlanted, 'planted flag')      
@@ -93,8 +93,9 @@ test.only("fire 3 nested commands and verify state consistency along the way", (
   })
 
   //First command fired: 
-  stack.fire('/land-on-moon', (err, finalState) => 
-    t.ok(finalState.landed && finalState.flagPlanted && finalState.tookPicture, 'mission complete'))
+  stack.fire('/land-on-moon', (err, finalState) => {
+    t.ok(finalState.landed && finalState.flagPlanted && finalState.tookPicture, 'mission complete')
+  })
 })
 
 

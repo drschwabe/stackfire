@@ -375,6 +375,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
 
 var resumeWaterfall = (command) => {
 
+  debugger
+
   var matchingRoute = command.matching_route, 
       state = stack.state
 
@@ -386,15 +388,17 @@ var resumeWaterfall = (command) => {
 
   if(!command.matching_route.middleware) {
     console.log('no more matching_route middleware...')
-    //end the current command?.. 
-    debugger
-    return
-    //return endWaterfall()
+    command.done = true 
+    if(window.renderGrid) renderGrid()
+    return nextCommand() //< Determine the nextCommand! 
   }
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()
 
   console.log('resume water fall end (shoudl not run)')   
+
+  console.log('all done everything!')
+  return 
 
   // async.series([
   //   function(seriesCallback) {
@@ -411,6 +415,14 @@ var resumeWaterfall = (command) => {
   //   }
   // ], 
   //endWaterfall
+}
+
+var nextCommand = () => {
+  //Determine the next command to run.... 
+  var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done && !enty.command.middleware_done)
+  //start with the last one... 
+  var lastIncompleteCommand = _.last(incompleteCommands).command
+  return resumeWaterfall( lastIncompleteCommand )
 }
 
 module.exports = stack

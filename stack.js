@@ -318,8 +318,6 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   state._command.middleware_done = true 
   if(window.renderGrid) window.renderGrid()
 
-  debugger
-
   //If there is a parent - return and continue where it left off:
   if(state._command.parent && !state._command.parent.done ) {
     //Make a copy and then overwrite the state._command with the parent command.       
@@ -383,22 +381,21 @@ var resumeWaterfall = (command) => {
   var matchingRoute = command.matching_route, 
       state = stack.state
 
-  //If the incoming command has a parent
-
   state._command = command   
 
   //getting a length issue here
 
   if(!command.matching_route.middleware) {
     console.log('no more matching_route middleware...')
+    //check if the command ... 
     debugger
     //command.done = true 
     if(window.renderGrid) renderGrid()
-    if(command.done && command.callback) {
-      return resumeWaterfall(command)
-    } 
-    //return endWaterfall(command) //< This should hopefully run the callback. 
-    else return nextCommand() //< Determine the nextCommand! 
+    if(!command.done && command.callback) {
+      return endWaterfall()
+    } else {
+      return nextCommand()
+    }
   }
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()

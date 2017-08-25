@@ -494,7 +494,7 @@ test("Commands not issued should not fire (using commands that use URL param)", 
   })  
 })
 
-test.only('Robot assembly line', (t) => {
+test('Robot assembly line', (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')
@@ -531,28 +531,49 @@ test.only('Robot assembly line', (t) => {
 })
 
 
-test('Async element initialization', (t) => {
-  t.plan(1)
+test.only('Async element initialization', (t) => {
+  t.plan(2)
   let stack = requireUncached('./stack.js')
   let async = requireUncached('async')
 
   stack.on('element/init/:prefix', (state, next) => {
     var elems = ['a', 'b', 'c']
-    var nextFires = []
-    async.eachSeries(elems, (elem, callback) => {
+    //var nextFires = []
+    // async.eachSeries(elems, (elem, callback) => {
+    //   stack.fire('element/' + elem,  stack.state, (err, state, nextFire) => {
+    //     //nextFires.push(nextFire)
+    //     //callback(null)
+    //     //nextFire()
+    //     callback()
+    //   })
+    // }, (err) => {
+    //   //nextFires[0]()
+    //   console.log('done eachSeries')
+    // })
+    elems.forEach((elem) => {
       stack.fire('element/' + elem,  stack.state, (err, state, nextFire) => {
-        nextFires.push(nextFire)
-        callback(null)
+        //nextFires.push(nextFire)
+        //callback(null)
+        //nextFire()
+        nextFire()    
       })
-    }, (err) => {
-      nextFires[0]()
     })
   })
 
   stack.on('element/:elementName', (state, next) => { 
+    console.log('on: ' + state._command.path)
     stack.fire('element/' + state._command.elementName + '/connected', function(err, newState, fireNext) {
-      next(null, newState)
+      //next(null, newState) //< If you call next here we get a failure. 
+      //TODO: should be some brakes when the next() command fires; some extra logic to prevent max callback.
+      console.log('connected')
+      fireNext()
     })
+  })
+
+  //Problem here, nothing happens..
+  stack.on('element/c', (state, next) => {
+    t.pass('element/c fired OK!')
+    next(null, state)
   })
 
   stack.fire('element/init/my-element', (err, state, nextFire) => {

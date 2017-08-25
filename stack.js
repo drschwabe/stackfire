@@ -401,9 +401,8 @@ var resumeWaterfall = (command) => {
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()
 
-  console.log('resume water fall end (shoudl not run)')   
-
   console.log('all done everything!')
+  state._command = null 
   return 
 
   // async.series([

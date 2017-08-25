@@ -494,8 +494,8 @@ test("Commands not issued should not fire (using commands that use URL param)", 
   })  
 })
 
-test('Robot assembly line', (t) => {
-  t.plan(3)
+test.only('Robot assembly line', (t) => {
+  t.plan(4)
 
   let stack = requireUncached('./stack.js')
 
@@ -519,10 +519,14 @@ test('Robot assembly line', (t) => {
     next(null, state)   
   })
 
-  stack.fire('robot/assemble/box', (err, state) => {
+  stack.fire('robot/assemble/box', (err, state, nextFire) => {
     console.log('"robot/assemble/box" fire complete')
-    t.equals(null, state._command)
+    debugger
+    t.equals(state._command.path, '/robot/assemble/box')
+    nextFire()
   })
+
+  t.equals(stack.state._command, null)
 
 })
 

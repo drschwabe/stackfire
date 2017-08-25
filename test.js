@@ -68,7 +68,7 @@ test("stack.fire nested within stack.on (async)", (t) => {
 })
 
 
-test.only("fire three nested commands and verify state consistency along the way", (t) => {
+test("fire three nested commands and verify state consistency along the way", (t) => {
   t.plan(6) //This will be the next major engineering hurdle; 
   //to ensure that commands that are children of children fire and return back to the 
   //root command; will wnat to make a visualization of this. 

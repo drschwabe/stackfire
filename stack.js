@@ -392,9 +392,10 @@ var resumeWaterfall = (command) => {
     //command.done = true 
     if(window.renderGrid) renderGrid()
     if(!command.done && command.callback) {
-      return endWaterfall()
+      if(command.parent && !command.parent.done) return nextCommand()
+      else return endWaterfall()
     } else {
-      return nextCommand()
+      return console.log('okay maybe nothing else left to do!')
     }
   }
   //If we already at the end of the middleware - just end it: 

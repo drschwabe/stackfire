@@ -1,7 +1,6 @@
 var async = require('async'), 
     _ = require('underscore'), 
     routeParser = require('route-parser'), 
-    createHtmlElem = require('create-html-element'), 
     gg = require('gg'),    
     isNode = require('detect-node'), 
     _l = require('lodash')

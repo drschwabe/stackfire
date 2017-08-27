@@ -537,47 +537,59 @@ test.only('Async element initialization', (t) => {
   let async = requireUncached('async')
 
   stack.on('element/init/:prefix', (state, next) => {
-    var elems = ['a', 'b', 'c']
+    var elems = ['my-elem-a', 'my-elem-b', 'my-elem-c']
     //var nextFires = []
-    // async.eachSeries(elems, (elem, callback) => {
+    console.log('on: ' + state._command.path)    
+    async.eachSeries(elems, (elem, callback) => {
+      //callback(null)
+      stack.fire('element/' + elem,  stack.state, (err, state, nextFire) => {
+        //nextFires.push(nextFire)
+        //nextFire(null, callback)
+        console.log('fired: ' + state._command.path)        
+        debugger
+        nextFire(callback)    
+      })
+    }, (err) => {
+      //nextFires[0]()
+      t.pass('done eachSeries')
+      next(null, state)
+    })
+    // elems.forEach((elem) => {
     //   stack.fire('element/' + elem,  stack.state, (err, state, nextFire) => {
     //     //nextFires.push(nextFire)
     //     //callback(null)
     //     //nextFire()
-    //     callback()
+    //     nextFire()    
     //   })
-    // }, (err) => {
-    //   //nextFires[0]()
-    //   console.log('done eachSeries')
     // })
-    elems.forEach((elem) => {
-      stack.fire('element/' + elem,  stack.state, (err, state, nextFire) => {
-        //nextFires.push(nextFire)
-        //callback(null)
-        //nextFire()
-        nextFire()    
-      })
-    })
+    //next(null, state)
   })
 
   stack.on('element/:elementName', (state, next) => { 
-    console.log('on: ' + state._command.path)
-    stack.fire('element/' + state._command.elementName + '/connected', function(err, newState, fireNext) {
+    log('on: ' + state._command.path)        
+    //Got a problem with this matching "/element/init/my-element"
+    //temporary workaround: 
+    //if(!state._command.elementName) return next(null, state)
+    //console.log('on: ' + state._command.path)
+    stack.fire('element/' + state._command.params.elementName + '/connected', function(err, newState, nextFire) {
       //next(null, newState) //< If you call next here we get a failure. 
       //TODO: should be some brakes when the next() command fires; some extra logic to prevent max callback.
-      console.log('connected')
-      fireNext()
+      console.log('fired: ' + state._command.path)
+      nextFire()
+      //next(null, newState)
     })
   })
 
   //Problem here, nothing happens..
-  stack.on('element/c', (state, next) => {
-    t.pass('element/c fired OK!')
-    next(null, state)
-  })
+  // stack.on('element/c', (state, next) => {
+  //   t.pass('element/c fired OK!')
+  //   next(null, state)
+  // })
 
   stack.fire('element/init/my-element', (err, state, nextFire) => {
+    log('fired: ' + state._command.path)    
     t.pass('Finished')
+    //nextFire()
   })
 })
 

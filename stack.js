@@ -317,6 +317,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   //state._command.done = true  
   state._command.middleware_done = true 
   if(window.renderGrid) window.renderGrid()
+  debugger
 
   //If there is a parent - return and continue where it left off:
   if(state._command.parent && !state._command.parent.done ) {
@@ -325,10 +326,16 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     //state._command = state._command.parent 
     //Make sure we run the callback before switching context to the parent command: 
     if(state._command.callback) {
-      return state._command.callback(null, stack.state, () => {
+      var nextFire = (callback) => {  
         stack.state._command.done = true
+        debugger
+        if(callback) callback() //< This type of callback must be a synchronous function!
+        //(cause we are not returning it; we are proceeding to resume waterfall..
+        //we are lazy and want only sync functions for now
+        //(presumably async func support can be added here later)
         return resumeWaterfall(state._command.parent)
-      })
+      }    
+      return state._command.callback(null, stack.state, nextFire)
     } else {
       //return stack.state._command.next(null, stack.state)
       stack.state._command.done = true
@@ -351,9 +358,14 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   //Otherwise, just run the callback...
 
   if(state._command.callback) {
-    var nextFire = () => {
+    var nextFire = (callback) => {
+      //if(callback) stack(callback) //This queues a given function to the middleware of the
+        //current running command: 
+        //I think it should be non destructive... ie- run it after the command... is done. 
+      debugger
       console.log('all done (with callback)')  
       stack.state._command.done = true
+      if(callback) callback() //< This type of callback must be synchronous!
       if(window.renderGrid) window.renderGrid()  
       if(siblingCommand) {
         console.log('run sibling command...')
@@ -383,8 +395,6 @@ var resumeWaterfall = (command) => {
 
   state._command = command   
 
-  //getting a length issue here
-
   if(!command.matching_route.middleware) {
     console.log('no more matching_route middleware...')
     //check if the command ... 
@@ -401,7 +411,14 @@ var resumeWaterfall = (command) => {
   //If we already at the end of the middleware - just end it: 
   if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()
 
+  //is there still a callback to run? 
+  //if(command.callback)
+
+  //end waterfall, which will finish any callback: 
+  return endWaterfall()
+
   console.log('all done everything!')
+  debugger
   state._command = null 
   return 
 

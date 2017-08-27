@@ -546,12 +546,12 @@ test.only('Async element initialization', (t) => {
         //nextFires.push(nextFire)
         //nextFire(null, callback)
         console.log('fired: ' + state._command.path)        
-        debugger
         nextFire(callback)    
       })
     }, (err) => {
       //nextFires[0]()
       t.pass('done eachSeries')
+     //debugger
       next(null, state)
     })
     // elems.forEach((elem) => {
@@ -589,7 +589,7 @@ test.only('Async element initialization', (t) => {
   stack.fire('element/init/my-element', (err, state, nextFire) => {
     log('fired: ' + state._command.path)    
     t.pass('Finished')
-    //nextFire()
+    nextFire()
   })
 })
 

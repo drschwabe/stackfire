@@ -263,6 +263,7 @@ var waterfall = (command) => {
             if(!_.isFunction(stateOrNext)) return stateOrNext
             //If it's not a function, it is the state object: 
             if(stack.state._command) stack.state._command.next = stateOrNext 
+            //Possibly here we need to add something to mark a command as done...
             return stateOrNext          
           })
           middlewareToRun.push(middlewareFunc)
@@ -317,7 +318,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   //state._command.done = true  
   state._command.middleware_done = true 
   if(window.renderGrid) window.renderGrid()
-  debugger
+
+  if(state._command.done) return nextCommand()
 
   //If there is a parent - return and continue where it left off:
   if(state._command.parent && !state._command.parent.done ) {
@@ -328,7 +330,6 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     if(state._command.callback) {
       var nextFire = (callback) => {  
         stack.state._command.done = true
-        debugger
         if(callback) callback() //< This type of callback must be a synchronous function!
         //(cause we are not returning it; we are proceeding to resume waterfall..
         //we are lazy and want only sync functions for now
@@ -362,7 +363,6 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       //if(callback) stack(callback) //This queues a given function to the middleware of the
         //current running command: 
         //I think it should be non destructive... ie- run it after the command... is done. 
-      debugger
       console.log('all done (with callback)')  
       stack.state._command.done = true
       if(callback) callback() //< This type of callback must be synchronous!
@@ -390,6 +390,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
 
 var resumeWaterfall = (command) => {
 
+  if(!command) return console.log('no command supplied ')
+
   var matchingRoute = command.matching_route, 
       state = stack.state
 
@@ -398,7 +400,6 @@ var resumeWaterfall = (command) => {
   if(!command.matching_route.middleware) {
     console.log('no more matching_route middleware...')
     //check if the command ... 
-    debugger
     //command.done = true 
     if(window.renderGrid) renderGrid()
     if(!command.done && command.callback) {
@@ -418,7 +419,6 @@ var resumeWaterfall = (command) => {
   return endWaterfall()
 
   console.log('all done everything!')
-  debugger
   state._command = null 
   return 
 
@@ -444,8 +444,13 @@ var nextCommand = () => {
   var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done && !enty.command.middleware_done)
   //start with the last one... 
   if(!incompleteCommands || _.isEmpty(incompleteCommands)) return ('okay really all done now')
+  debugger
   var lastIncompleteCommand = _.last(incompleteCommands).command
+
+  if(!lastIncompleteCommand) return log('like really really really all done now')
+  debugger
   return resumeWaterfall( lastIncompleteCommand )
+  //this is causing loop I think 
 }
 
 module.exports = stack

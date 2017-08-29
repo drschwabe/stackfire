@@ -42,15 +42,16 @@ test("stack.fire nested within stack.on", (t) => {
 
 })
 
-test("stack.fire nested within stack.on (async)", (t) => {
+test.only("stack.fire nested within stack.on (async)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
-  stack.on('/do-something-else', (state, next) => {
+  stack.on('/do-something', (state, next) => {
     debugger
     //Nested async fire: 
     setTimeout(() => {
       stack.fire('/do-another-thing', (err, newState, nextFire) => {
         //next()
+        debugger
         nextFire()
       }, 1000)
     })
@@ -60,12 +61,16 @@ test("stack.fire nested within stack.on (async)", (t) => {
     t.equal(state._command.path, '/do-another-thing', "state._command.path equals the path of the current 'on' listener.")       
     next(null, state) 
   })
-  stack.fire('/do-something-else', (err, state) => {
+  stack.fire('/do-something', (err, state, nextFire) => {
+    debugger
     setTimeout(() => {
+      debugger
       t.pass('reached end of the original fire')
+      nextFire()
     }, 500)
   })
 })
+
 
 
 test("fire three nested commands and verify state consistency along the way", (t) => {
@@ -531,7 +536,7 @@ test('Robot assembly line', (t) => {
 })
 
 
-test.only('Async element initialization', (t) => {
+test('Async element initialization', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
   let async = requireUncached('async')

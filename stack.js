@@ -311,32 +311,41 @@ var waterfall = (command) => {
 var endWaterfall = (newCommand) => { //End of waterfall: 
   var state = stack.state
   if(newCommand) {
-    state._command.done = false  
+    stack.state._command.done = false  
     return waterfall(newCommand)
   }
-  if(!state._command) return
+  if(!stack.state._command) return
   //state._command.done = true  
-  state._command.middleware_done = true 
+  stack.state._command.middleware_done = true 
   if(window.renderGrid) window.renderGrid()
 
-  if(state._command.done) return nextCommand()
+//possily here is calling nextCommand but not making note that 
+  debugger
+  if(stack.state._command.done) return nextCommand()
 
   //If there is a parent - return and continue where it left off:
-  if(state._command.parent && !state._command.parent.done ) {
+  if(stack.state._command.parent && !stack.state._command.parent.done ) {
     //Make a copy and then overwrite the state._command with the parent command.       
     //var newCommand = _.clone(state._command.parent)
     //state._command = state._command.parent 
     //Make sure we run the callback before switching context to the parent command: 
-    if(state._command.callback) {
-      var nextFire = (callback) => {  
-        stack.state._command.done = true
-        if(callback) callback() //< This type of callback must be a synchronous function!
-        //(cause we are not returning it; we are proceeding to resume waterfall..
-        //we are lazy and want only sync functions for now
-        //(presumably async func support can be added here later)
-        return resumeWaterfall(state._command.parent)
-      }    
-      return state._command.callback(null, stack.state, nextFire)
+    if(stack.state._command.callback && !stack.state._command.callback_underway) {
+      var nextFire = (callback) => { 
+        //_.defer(() => {
+          debugger
+          //determine if the current command's callback has already been run...
+          if(stack.state._command.done) return //< This should never happen...
+          stack.state._command.callback_underway = false
+          stack.state._command.done = true
+          if(callback) callback() //< This type of callback must be a synchronous function!
+          //(cause we are not returning it; we are proceeding to resume waterfall..
+          //we are lazy and want only sync functions for now
+          //(presumably async func support can be added here later)
+          return resumeWaterfall(state._command.parent)          
+        //}, 100)
+      }
+      stack.state._command.callback_underway = true 
+      return stack.state._command.callback(null, stack.state, nextFire)
     } else {
       //return stack.state._command.next(null, stack.state)
       stack.state._command.done = true
@@ -359,10 +368,12 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   //Otherwise, just run the callback...
 
   if(state._command.callback) {
+      //if(state._command.done) return nextCommand()
     var nextFire = (callback) => {
       //if(callback) stack(callback) //This queues a given function to the middleware of the
         //current running command: 
         //I think it should be non destructive... ie- run it after the command... is done. 
+      if(stack.state._command.done) return //< This should never happen...
       console.log('all done (with callback)')  
       stack.state._command.done = true
       if(callback) callback() //< This type of callback must be synchronous!
@@ -443,11 +454,11 @@ var nextCommand = () => {
   //Determine the next command to run.... 
   var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done && !enty.command.middleware_done)
   //start with the last one... 
-  if(!incompleteCommands || _.isEmpty(incompleteCommands)) return ('okay really all done now')
+  if(!incompleteCommands || _.isEmpty(incompleteCommands)) return console.log('okay really all done now')
   debugger
   var lastIncompleteCommand = _.last(incompleteCommands).command
 
-  if(!lastIncompleteCommand) return log('like really really really all done now')
+  if(!lastIncompleteCommand) return console.log('like really really really all done now')
   debugger
   return resumeWaterfall( lastIncompleteCommand )
   //this is causing loop I think 

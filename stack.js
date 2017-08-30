@@ -321,7 +321,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
 
 //possily here is calling nextCommand but not making note that 
   
-  if(stack.state._command.done) return nextCommand()
+  if(stack.state._command.done) return stack.next()
 
   //If there is a parent - return and continue where it left off:
   if(stack.state._command.parent && !stack.state._command.parent.done ) {
@@ -329,7 +329,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     //var newCommand = _.clone(state._command.parent)
     //state._command = state._command.parent 
     //Make sure we run the callback before switching context to the parent command: 
-    if(stack.state._command.callback && !stack.state._command.callback_underway) {
+    if(stack.state._command.callback && !stack.state._command.callback_invoked) {
       var nextFire = (callback) => { 
         //_.defer(() => {
           
@@ -344,7 +344,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
           return resumeWaterfall(state._command.parent)          
         //}, 100)
       }
-      stack.state._command.callback_underway = true 
+      stack.state._command.callback_invoked = true
+      //stack.state._command.callback_underway = true 
       return stack.state._command.callback(null, stack.state, nextFire)
     } else {
       //return stack.state._command.next(null, stack.state)
@@ -384,7 +385,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       } else { //Even if no sibling from before, it is possible a new sibling 
         //has occurred so we run nextCommand() it should figure it out: 
         console.log('no siblings found, try nextCommand()')
-        return nextCommand()
+        return stack.next()
       }
     }
     return state._command.callback(null, stack.state, nextFire)
@@ -414,7 +415,7 @@ var resumeWaterfall = (command) => {
     //command.done = true 
     if(window.renderGrid) renderGrid()
     if(!command.done && command.callback) {
-      if(command.parent && !command.parent.done) return nextCommand()
+      if(command.parent && !command.parent.done) return stack.next()
       else return endWaterfall()
     } else {
       return console.log('okay maybe nothing else left to do!')
@@ -450,7 +451,23 @@ var resumeWaterfall = (command) => {
   //endWaterfall
 }
 
-var nextCommand = () => {
+stack.next = (syncFunc) => {
+  debugger  
+
+  if(stack.state._command.middleware_done) {
+    //We are now likely running the command's callback...
+    if(!stack.state._command.callback_invoked) {
+      //invoke the command's callback (by running endWaterffall) 
+      endWaterfall()
+    } else {
+      //the command's callback has already been invoked, so the command is over
+      //(however, to guard against this executing multiple times additional logic may be necessary)
+      stack.state._command.done = true  
+    }
+  }
+  //Otherwise, current command already done 
+
+
   //Determine the next command to run.... 
   var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done && !enty.command.middleware_done)
   //start with the last one... 
@@ -462,6 +479,10 @@ var nextCommand = () => {
   
   return resumeWaterfall( lastIncompleteCommand )
   //this is causing loop I think 
+}
+
+stack.nextFire = (syncFunc) => {
+
 }
 
 module.exports = stack

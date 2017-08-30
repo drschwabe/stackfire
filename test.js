@@ -57,7 +57,7 @@ test.only("stack.fire nested within stack.on (async)", (t) => {
         console.log(stack.state._command.path)     
         console.log("/bannana's callback will immediately call nextFire()")   
         debugger
-        nextFire() //Maybe can solve this with calling stack.nextFire()
+        stack.next() //Maybe can solve this with calling stack.nextFire()
       })
     }, 5000)
   })
@@ -68,8 +68,8 @@ test.only("stack.fire nested within stack.on (async)", (t) => {
     console.log('(should note execute until after 5 seconds)')  
     t.ok(state, 'root level listener invoked from a nested fire')
     t.equal(stack.state._command.path, '/bannana', "state._command.path equals the path of the current 'on' listener.")       
-    console.log('/bannana middleware will now call next(null, state)')
-    next(null, state) 
+    console.log('/bannana middleware will now call stack.next()')
+    stack.next() 
   })
 
   console.log('about to fire /apple')
@@ -79,10 +79,10 @@ test.only("stack.fire nested within stack.on (async)", (t) => {
     // _.command.callback = _.once()  ?        
     console.log('/apple fired (its final callback in progress). _command.path:')
     console.log(stack.state._command.path)    
-    console.log('about to run 10 second timeout before calling nextFire)')
+    console.log('about to run 10 second timeout before calling stack.next)')
     setTimeout(() => {
       t.pass('reached end of the original fire (/apple)')
-      nextFire()
+      stack.next()
     }, 10000)
   })
 })

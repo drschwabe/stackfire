@@ -208,7 +208,7 @@ stack.fire = function(path, param2, param3) {
       //should finish first (stack will now call it upon completion; we just queued it) 
 
       //If child, end the parent's in-progress middlestack waterfall: 
-      endWaterfall(newCommand)
+      return endWaterfall(newCommand)
       //callback()
     } else {
       //Otherwise, if no command active, we assume it is root level... 
@@ -383,7 +383,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
         console.log('run sibling command...')
         return waterfall(siblingCommand)
       } else { //Even if no sibling from before, it is possible a new sibling 
-        //has occurred so we run nextCommand() it should figure it out: 
+        //has occurred so we run fand() it should figure it out: 
         console.log('no siblings found, try nextCommand()')
         return stack.next()
       }
@@ -428,11 +428,11 @@ var resumeWaterfall = (command) => {
   //if(command.callback)
 
   //end waterfall, which will finish any callback: 
+  console.log('all done everything!')  
   return endWaterfall()
 
-  console.log('all done everything!')
-  state._command = null 
-  return 
+  //state._command = null 
+   
 
   // async.series([
   //   function(seriesCallback) {
@@ -458,11 +458,12 @@ stack.next = (syncFunc) => {
     //We are now likely running the command's callback...
     if(!stack.state._command.callback_invoked) {
       //invoke the command's callback (by running endWaterffall) 
-      endWaterfall()
+      return endWaterfall()
     } else {
       //the command's callback has already been invoked, so the command is over
       //(however, to guard against this executing multiple times additional logic may be necessary)
       stack.state._command.done = true  
+      if(window.renderGrid) renderGrid()
     }
   }
   //Otherwise, current command already done 
@@ -477,6 +478,7 @@ stack.next = (syncFunc) => {
 
   if(!lastIncompleteCommand) return console.log('like really really really all done now')
   
+  console.log('resumeWaterfall (lastIncompleteCommand)')
   return resumeWaterfall( lastIncompleteCommand )
   //this is causing loop I think 
 }

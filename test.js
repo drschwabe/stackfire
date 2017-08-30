@@ -49,9 +49,10 @@ test.only("stack.fire nested within stack.on (async)", (t) => {
   stack.on('/apple', (state, next) => {
     console.log('/apple "on" (middleware in progress). _command.path:')
     console.log(stack.state._command.path)    
-    console.log('about to run 5 second timeout before firing /bannana...')
+    console.log('about to run 3 second timeout before firing /bannana...')
     //Nested async fire: 
     setTimeout(() => {
+      debugger
       stack.fire('/bannana', (err, newState, nextFire) => {
         console.log('/bannana fired (its final callback in progress)')
         console.log(stack.state._command.path)     
@@ -59,13 +60,13 @@ test.only("stack.fire nested within stack.on (async)", (t) => {
         debugger
         stack.next() //Maybe can solve this with calling stack.nextFire()
       })
-    }, 5000)
+    }, 3000)
   })
 
   stack.on('/bannana', (state, next) => {         
     console.log('/bannana "on" middleware in progress. _command.path:')
     console.log(stack.state._command.path) 
-    console.log('(should note execute until after 5 seconds)')  
+    console.log('(this should not execute until after 3 seconds)')  
     t.ok(state, 'root level listener invoked from a nested fire')
     t.equal(stack.state._command.path, '/bannana', "state._command.path equals the path of the current 'on' listener.")       
     console.log('/bannana middleware will now call stack.next()')
@@ -79,11 +80,12 @@ test.only("stack.fire nested within stack.on (async)", (t) => {
     // _.command.callback = _.once()  ?        
     console.log('/apple fired (its final callback in progress). _command.path:')
     console.log(stack.state._command.path)    
-    console.log('about to run 10 second timeout before calling stack.next)')
+    console.log('about to run 6 second timeout before calling stack.next)')
     setTimeout(() => {
       t.pass('reached end of the original fire (/apple)')
+      console.log('(this should not execute until after 6 seconds)')
       stack.next()
-    }, 10000)
+    }, 6000)
   })
 })
 

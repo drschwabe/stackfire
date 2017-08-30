@@ -678,16 +678,17 @@ test('Fire shorthand + multi commands', (t) => {
 
 })
 
-test('command nulls after fire', (t) => {
+test.only('command nulls after fire', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')  
-  stack.on('bake-cookie', (state, next) => {
+  stack.on('bake-cookie', (state) => {
     t.ok(state._command, 'bake-cookie')
-    next()
+    stack.next()
   })
-  stack.fire('bake-cookie', (err, state, nextFire) => {
-    t.equals(null, state._command, 'command finished/is null')
+  stack.fire('bake-cookie', (err, state) => {
+    stack.next()
   })
+  t.equals(null, stack.state._command, 'command finished/is null')
 })
 
 

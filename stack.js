@@ -455,6 +455,10 @@ var resumeWaterfall = (command) => {
 stack.next = (syncFunc) => {
   debugger  
 
+  if(syncFunc) syncFunc()
+
+  if(!stack.state._command) return
+
   if(stack.state._command.middleware_done) {
     //We are now likely running the command's callback...
     if(!stack.state._command.callback_invoked) {
@@ -488,8 +492,5 @@ stack.next = (syncFunc) => {
   //this is causing loop I think 
 }
 
-stack.nextFire = (syncFunc) => {
-
-}
 
 module.exports = stack

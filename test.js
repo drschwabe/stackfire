@@ -528,7 +528,7 @@ test("Commands not issued should not fire (using commands that use URL param)", 
   })  
 })
 
-test.only('Robot assembly line', (t) => {
+test('Robot assembly line', (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')
@@ -570,7 +570,7 @@ test('Async element initialization', (t) => {
   let stack = requireUncached('./stack.js')
   let async = requireUncached('async')
 
-  stack.on('element/init/:prefix', (state, next) => {
+  stack.on('element/init/:prefix', (state) => {
     var elems = ['my-elem-a', 'my-elem-b', 'my-elem-c']
     //var nextFires = []
     console.log('on: ' + state._command.path)    
@@ -580,13 +580,13 @@ test('Async element initialization', (t) => {
         //nextFires.push(nextFire)
         //nextFire(null, callback)
         console.log('fired: ' + state._command.path)        
-        nextFire(callback)    
+        stack.next(callback)    
       })
     }, (err) => {
       //nextFires[0]()
       t.pass('done eachSeries')
      //debugger
-      next(null, state)
+      stack.next()
     })
     // elems.forEach((elem) => {
     //   stack.fire('element/' + elem,  stack.state, (err, state, nextFire) => {
@@ -599,17 +599,17 @@ test('Async element initialization', (t) => {
     //next(null, state)
   })
 
-  stack.on('element/:elementName', (state, next) => { 
+  stack.on('element/:elementName', (state) => { 
     log('on: ' + state._command.path)        
     //Got a problem with this matching "/element/init/my-element"
     //temporary workaround: 
     //if(!state._command.elementName) return next(null, state)
     //console.log('on: ' + state._command.path)
-    stack.fire('element/' + state._command.params.elementName + '/connected', function(err, newState, nextFire) {
+    stack.fire('element/' + state._command.params.elementName + '/connected', function(err, newState) {
       //next(null, newState) //< If you call next here we get a failure. 
       //TODO: should be some brakes when the next() command fires; some extra logic to prevent max callback.
       console.log('fired: ' + state._command.path)
-      nextFire()
+      stack.next()
       //next(null, newState)
     })
   })
@@ -620,10 +620,10 @@ test('Async element initialization', (t) => {
   //   next(null, state)
   // })
 
-  stack.fire('element/init/my-element', (err, state, nextFire) => {
-    log('fired: ' + state._command.path)    
+  stack.fire('element/init/my-element', (err, state) => {
+    log('fired: ' + state._command.path)
     t.pass('Finished')
-    nextFire()
+    stack.next()
   })
 })
 

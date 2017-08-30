@@ -17,7 +17,7 @@ test("stack.fire invokes stack.on", (t) => {
 
 })
 
-test.only("stack.fire nested within stack.on", (t) => {
+test("stack.fire nested within stack.on", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
 
@@ -61,7 +61,7 @@ test("stack.fire nested within stack.on (async)", (t) => {
   stack.on('/apple', (state, next) => {
     console.log('/apple "on" (middleware in progress). _command.path:')
     console.log(stack.state._command.path)    
-    console.log('about to run 3 second timeout before firing /bannana...')
+    console.log('about to run .5 second timeout before firing /bannana...')
     //Nested async fire: 
     setTimeout(() => {
       debugger
@@ -72,13 +72,13 @@ test("stack.fire nested within stack.on (async)", (t) => {
         debugger
         stack.next() //Maybe can solve this with calling stack.nextFire()
       })
-    }, 3000)
+    }, 500)
   })
 
   stack.on('/bannana', (state, next) => {         
     console.log('/bannana "on" middleware in progress. _command.path:')
     console.log(stack.state._command.path) 
-    console.log('(this should not execute until after 3 seconds)')  
+    console.log('(this should not execute until after 0.5 seconds)')  
     t.ok(state, 'root level listener invoked from a nested fire')
     t.equal(stack.state._command.path, '/bannana', "state._command.path equals the path of the current 'on' listener.")       
     console.log('/bannana middleware will now call stack.next()')
@@ -92,12 +92,12 @@ test("stack.fire nested within stack.on (async)", (t) => {
     // _.command.callback = _.once()  ?        
     console.log('/apple fired (its final callback in progress). _command.path:')
     console.log(stack.state._command.path)    
-    console.log('about to run 6 second timeout before calling stack.next)')
+    console.log('about to run 1 second timeout before calling stack.next)')
     setTimeout(() => {
       t.pass('reached end of the original fire (/apple)')
-      console.log('(this should not execute until after 6 seconds)')
+      console.log('(this should not execute until after 1 seconds)')
       stack.next()
-    }, 6000)
+    }, 1000)
   })
 })
 
@@ -528,36 +528,36 @@ test("Commands not issued should not fire (using commands that use URL param)", 
   })  
 })
 
-test('Robot assembly line', (t) => {
+test.only('Robot assembly line', (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')
 
-  stack.on('robot/assemble/:product', (state, next) => {
+  stack.on('robot/assemble/:product', (state) => {
     console.log('"robot/assemble/:product" on!')    
     t.equals(state._command.path, '/robot/assemble/box')    
 
-    stack.fire('robot/box', (err, state, next) => {
+    stack.fire('robot/box', (err, state) => {
       console.log('"robot/box" fire complete')
       console.log(`state._command.path is: ${state._command.path}
       `)
-      next(null, state)
+      stack.next()
     })
   })
 
-  stack.on('robot/:product', (state, next) => {
+  stack.on('robot/:product', (state) => {
     console.log('"robot/:product" on!')    
     console.log(`state._command.path is: ${state._command.path}
     `)  
     t.equals(state._command.path, '/robot/box')
-    next(null, state)   
+    stack.next()   
   })
 
-  stack.fire('robot/assemble/box', (err, state, nextFire) => {
+  stack.fire('robot/assemble/box', (err, state) => {
     console.log('"robot/assemble/box" fire complete')
     debugger
     t.equals(state._command.path, '/robot/assemble/box')
-    nextFire()
+    stack.next()
   })
 
   t.equals(stack.state._command, null)

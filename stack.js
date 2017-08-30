@@ -473,7 +473,11 @@ stack.next = (syncFunc) => {
   //Determine the next command to run.... 
   var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done && !enty.command.middleware_done)
   //start with the last one... 
-  if(!incompleteCommands || _.isEmpty(incompleteCommands)) return console.log('okay really all done now')
+  if(!incompleteCommands || _.isEmpty(incompleteCommands)) {
+    console.log('okay really all done now')
+    stack.state._command = null
+    return
+  }
   
   var lastIncompleteCommand = _.last(incompleteCommands).command
 

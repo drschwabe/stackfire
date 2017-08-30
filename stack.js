@@ -320,7 +320,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   if(window.renderGrid) window.renderGrid()
 
 //possily here is calling nextCommand but not making note that 
-  debugger
+  
   if(stack.state._command.done) return nextCommand()
 
   //If there is a parent - return and continue where it left off:
@@ -332,7 +332,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     if(stack.state._command.callback && !stack.state._command.callback_underway) {
       var nextFire = (callback) => { 
         //_.defer(() => {
-          debugger
+          
           //determine if the current command's callback has already been run...
           if(stack.state._command.done) return //< This should never happen...
           stack.state._command.callback_underway = false
@@ -455,11 +455,11 @@ var nextCommand = () => {
   var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done && !enty.command.middleware_done)
   //start with the last one... 
   if(!incompleteCommands || _.isEmpty(incompleteCommands)) return console.log('okay really all done now')
-  debugger
+  
   var lastIncompleteCommand = _.last(incompleteCommands).command
 
   if(!lastIncompleteCommand) return console.log('like really really really all done now')
-  debugger
+  
   return resumeWaterfall( lastIncompleteCommand )
   //this is causing loop I think 
 }

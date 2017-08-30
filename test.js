@@ -652,26 +652,27 @@ test('Fire shorthand + multi commands', (t) => {
   t.plan(5)
   let stack = requireUncached('./stack.js')
 
-  stack.on('green', (state, next) => {
+  stack.on('green', (state) => {
     t.pass('green light on')
-    stack.fire('go', next)
+    stack.fire('go')
   })
 
-  stack.on('go', (state, next) => {
+  stack.on('go', (state) => {
     t.pass('going')
-    next()
+    stack.next()
   })
 
-  stack.fire('green', (err, state, nextFire) => {
+  stack.fire('green', (err, state) => {
     t.pass('gone')
+    stack.next()
   })
 
-  stack.on('red', (state, next) => {
+  stack.on('red', (state) => {
     t.pass('red light on')
-    next()
+    stack.next()
   })  
 
-  stack.fire('red', (err, state, nextFire) => {
+  stack.fire('red', (err, state) => {
     t.pass('stopped')
   })
 

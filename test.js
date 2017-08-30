@@ -17,32 +17,44 @@ test("stack.fire invokes stack.on", (t) => {
 
 })
 
-test("stack.fire nested within stack.on", (t) => {
-  t.plan(2)
+test.only("stack.fire nested within stack.on", (t) => {
+  t.plan(3)
   let stack = requireUncached('./stack.js')
 
-  stack.on('/do-something-else', (state, next) => {
-    console.log('do something....')
-    //Nested fire: 
-    stack.fire('/do-another-thing', (err, newState, nextFire) => {
-      debugger //< Current command is now 'do-something-else'
-      //cause do-another-thing has finished.
-      nextFire()
+  stack.on('/apple', (state, next) => {
+    console.log('/apple "on" (middleware in progress). _command.path:')
+    console.log(stack.state._command.path)    
+    stack.fire('/bannana', (err, newState, nextFire) => {
+      console.log('/bannana fired (its final callback in progress)')
+      console.log(stack.state._command.path)     
+      console.log("/bannana's callback will immediately call stack.next()")   
+      debugger
+      stack.next() //Maybe can solve this with calling stack.nextFire()
     })
   })
 
-  stack.on('/do-another-thing', (state, next) => {
+  stack.on('/bannana', (state, next) => {         
+    console.log('/bannana "on" middleware in progress. _command.path:')
+    console.log(stack.state._command.path) 
     t.ok(state, 'root level listener invoked from a nested fire')
-    t.equal(state._command.path, '/do-another-thing', "state._command.path equals the path of the current 'on' listener.")       
-    next() 
+    t.equal(stack.state._command.path, '/bannana', "state._command.path equals the path of the current 'on' listener.")       
+    console.log('/bannana middleware will now call stack.next()')
+    stack.next() 
   })
-  
-  //Original command: 
-  stack.fire('/do-something-else')
 
+  console.log('about to fire /apple')
+
+  stack.fire('apple', (err, state, nextFire) => {
+    //something is causing the apple callback to be called twice
+    // _.command.callback = _.once()  ?        
+    console.log('/apple fired (its final callback in progress). _command.path:')
+    console.log(stack.state._command.path)    
+    t.pass('reached end of the original fire (/apple)')
+    stack.next()
+  })
 })
 
-test.only("stack.fire nested within stack.on (async)", (t) => {
+test("stack.fire nested within stack.on (async)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
 

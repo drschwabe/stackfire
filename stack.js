@@ -388,6 +388,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
         return stack.next()
       }
     }
+    stack.state._command.callback_invoked = true
     return state._command.callback(null, stack.state, nextFire)
   } else {
     state._command.done = true      
@@ -422,7 +423,7 @@ var resumeWaterfall = (command) => {
     }
   }
   //If we already at the end of the middleware - just end it: 
-  if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) endWaterfall()
+  if(command.current_middleware_index == command.matching_route.middleware.length || command.current_middleware_index + 1 == command.matching_route.middleware.length) return endWaterfall()
 
   //is there still a callback to run? 
   //if(command.callback)

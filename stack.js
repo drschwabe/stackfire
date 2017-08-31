@@ -155,12 +155,18 @@ stack.fire = function(path, param2, param3) {
     //another fire already in progress.  Therefore, it must be queued.
     //We use a grid based queing model (leveraging gg library). 
     if(state._command && !state._command.done) {
+      debugger
       //Determine the cell; position on the grid the new command will be placed... 
       var cell 
       //first determine if the new command is a child or sibling... 
-      if(state._command.caller == newCommand.caller || state._command.parent && state._command.parent.caller == newCommand.caller) { //< Sibling will share the same caller. 
-        //as a sibling the command will get a cell in the next column (same row): 
+      var sibling = false 
+      if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
+        //a sibling command needs to go into the cell in the next column (same row): 
+        if(state._command.caller.parent && state._command.caller.parent.caller != newCommand.caller) sibling = true
+      }
+      if(state._command.parent && state._command.parent.caller == newCommand.caller) sibling = true
 
+      if(sibling) { 
         //Expand grid size if necessary: 
         if(gg.isEastEdge(stack.grid, state._command.cell)){
           stack.grid = gg.expandGrid(stack.grid) 
@@ -204,6 +210,7 @@ stack.fire = function(path, param2, param3) {
       stack.grid = gg.populateCells(stack.grid)
       if(window.renderGrid) window.renderGrid()  
 
+      debugger
       if(!newCommand.parent) return  //< We return if sibling because the current command  
       //should finish first (stack will now call it upon completion; we just queued it) 
 

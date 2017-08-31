@@ -158,7 +158,7 @@ stack.fire = function(path, param2, param3) {
       //Determine the cell; position on the grid the new command will be placed... 
       var cell 
       //first determine if the new command is a child or sibling... 
-      if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
+      if(state._command.caller == newCommand.caller || state._command.parent && state._command.parent.caller == newCommand.caller) { //< Sibling will share the same caller. 
         //as a sibling the command will get a cell in the next column (same row): 
 
         //Expand grid size if necessary: 

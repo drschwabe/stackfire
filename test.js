@@ -678,7 +678,7 @@ test('Fire shorthand + multi commands', (t) => {
 
 })
 
-test.only('command nulls after fire', (t) => {
+test('command nulls after fire', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')  
   stack.on('bake-cookie', (state) => {
@@ -820,52 +820,52 @@ test.skip('Demonstrate multiple ways of calling next (WIP)', (t) => {
   //TODO: make another thing where you just pass an 'on' next (above only shows passing of nextFire)
 })
 
-test('Multi command stress test', (t) => {
+test.only('Multi command stress test', (t) => {
   t.plan(10)
   let stack = requireUncached('./stack.js')  
+  let gg = requireUncached('gg')  
 
-  stack.on('shake', (state, next) => {
+  stack.on('shake', (state) => {
     //The shake command is not done yet: 
     var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').command    
     t.notOk(shakeCommand.done, 'shake command not done')
 
-    //gg.examine(stack.grid, [0, 1]) //< should be shake
-    t.equals(shakeCommand.cell, 1, 'shake command inserted to cell 1')  //Sibling next to shake. 
+    var nextRowCell = gg.xyToIndex(stack.grid, 1, 0)
+    t.equals(shakeCommand.cell, nextRowCell, 'shake command inserted to second row, first column')  //Sibling next to shake. 
 
     console.log('we are making a milk shake')
-    next(null, state)
+    stack.next()
   })  
 
-  stack.fire('milkshake', (err, state, nextFire) => {
-    //The milk command is done: 
-    debugger
+  stack.fire('milk', (err, state) => {
+    //The milk command callback is underway: 
     var milkCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/milk').command
-    t.ok(milkCommand.done, 'milk command done') 
+    t.notOk(milkCommand.done, 'milk command not done yet (trailing callback underway)') 
     t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0')  
-    stack.fire('')
-    stack.fire('shake', (err, state, nextFire) => {
+    stack.fire('shake', (err, state) => {
       var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').command
       //milk command is still done: 
-      t.ok(milkCommand.done, 'milk command still done')     
+      t.notOk(milkCommand.done, 'milk command still not done')     
       //and now shake is done too:                  
-      t.ok(shakeCommand.done, 'shake command done')                 
-      console.log('we made a milk shake')              
+      t.notOk(shakeCommand.done, 'shake command not done (trailing callback underway)')                 
+      console.log('we made a milk shake')
+      stack.next()              
     })
   })
 
   stack.on('beer', (state, next) => {
     var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/beer').command
     //The beer command is not done yet:     
-    t.notOk(beerCommand.done, 'beer command done') 
-    t.equals(beerCommand.cell, 2, 'beer command inserted to cell 3') 
+    t.notOk(beerCommand.done, 'beer command not done') 
+    t.equals(beerCommand.cell, gg.xyToIndex(stack.grid, 0, 1), 'beer command inserted to first row, second column (sibling of the first command)') 
     console.log('pour a beer')
-    next(null, state)
+    stack.next()
   })  
 
   stack.fire('beer', (err, state, next) => {
     var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/beer')    
-    t.notOk(beerCommand.done, 'beer command still done') 
-    t.equals(beerCommand.cell, 2, 'beer command still at cell 3')  //< Sibling next to beer.
+    t.notOk(beerCommand.done, 'beer command still not done') 
+    t.equals(beerCommand.cell, gg.xyToIndex(stack.grid, 0, 1), 'beer command still at first row, second column')  //< Sibling next to milk.
     console.log('poured a beer.')
   })
 

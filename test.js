@@ -1015,3 +1015,20 @@ test('Complete garden', (t) => {
   })
 
 })
+
+test.only('Multiple .on with same name', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js')  
+
+  stack.on('water', () => {
+    t.pass('flowing...')
+    stack.next()
+  })
+
+  stack.on('water', () => {
+    t.pass('still flowing...')
+    stack.next()
+  })  
+
+  stack.fire('water')
+})

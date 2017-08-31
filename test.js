@@ -900,7 +900,8 @@ test.skip('Strawberry milkshake', (t) => {
 })
 
 
-test.only('Empty goldmine', (t) => {
+
+test('Empty goldmine', (t) => {
   t.plan(5)
   let stack = requireUncached('./stack.js')  
   let gg = requireUncached('gg') 
@@ -933,7 +934,7 @@ test.only('Empty goldmine', (t) => {
     stack.fire('cart', (err, state) => {
       //Should not run...
       console.log('fill cart...')           
-      t.pass('there will never be any gold!')
+      t.fail('there will never be any gold!')
     })
 
   })  
@@ -946,12 +947,12 @@ test.only('Empty goldmine', (t) => {
   setTimeout(() => {
     t.equals( stack.grid.cells[0].enties[0].command.path, '/mine', 'first cell is /mine') 
     t.equals ( stack.grid.cells[gg.xyToIndex(stack.grid, [1,0])].enties[0].command.path, '/shovel', 'next row down, same column is /shovel' )
-    t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [2,0])].enties[0].command.path, '/cart', 'next row after that, same column is /cart')       
+    t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [1,1])].enties[0].command.path, '/cart', 'next column over is /cart (it is sibling so shares same row)')       
   }, 100)
 
 })
 
-test('Incomplete garden', (t) => {
+test.only('Incomplete garden', (t) => {
   t.plan(4)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')    

@@ -162,7 +162,8 @@ stack.fire = function(path, param2, param3) {
       var sibling = false 
       if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
         //a sibling command needs to go into the cell in the next column (same row): 
-        if(state._command.caller.parent && state._command.caller.parent.caller != newCommand.caller) sibling = true
+        //if(state._command.caller.parent && state._command.caller.parent.caller != newCommand.caller) sibling = true
+        sibling = state._command
       }
       if(state._command.parent && state._command.parent.caller == newCommand.caller) sibling = true
 
@@ -177,7 +178,7 @@ stack.fire = function(path, param2, param3) {
           stack.grid = gg.populateCells(stack.grid)
           if(window.renderGrid) window.renderGrid()                       
         }
-        cell = gg.nextOpenCell(stack.grid)
+        cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
 
       } else { //< this is a child of the current state._command:  
         //TODO: ^^ consider if better determination needed here! 

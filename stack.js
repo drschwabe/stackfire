@@ -163,13 +163,15 @@ stack.fire = function(path, param2, param3) {
       if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
         //a sibling command needs to go into the cell in the next column (same row): 
         //if(state._command.caller.parent && state._command.caller.parent.caller != newCommand.caller) sibling = true
+        debugger
         sibling = state._command
       }
       if(state._command.parent && state._command.parent.caller == newCommand.caller) sibling = true
 
       if(sibling) { 
         //Expand grid size if necessary: 
-        if(gg.isEastEdge(stack.grid, state._command.cell)){
+        //find the easternmost command... 
+        if(gg.isEastEdge(stack.grid, gg.nextOccupiedCellEast(stack.grid, state._command.cell))){
           stack.grid = gg.expandGrid(stack.grid) 
           stack.grid.enties = _.map(stack.grid.enties, (enty) => {
             enty.command.cell = enty.cell 

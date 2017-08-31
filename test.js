@@ -952,7 +952,7 @@ test('Empty goldmine', (t) => {
 
 })
 
-test.only('Incomplete garden', (t) => {
+test('Incomplete garden', (t) => {
   t.plan(4)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')    

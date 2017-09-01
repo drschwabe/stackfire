@@ -258,6 +258,7 @@ var waterfall = (command) => {
     function(seriesCallback) {
       var seedFunction = function(next) { 
         stack.state._command.current_middleware_index = 0 
+        debugger
         next(null, state) 
       }
       if(matchingRoute && matchingRoute.middleware) {      
@@ -462,16 +463,36 @@ debugger
   var middlewareToRun = _.reject(command.matching_route.middleware, (entry) => entry.done)
 
   var seedFunction = function(next) { 
-    stack.state._command.current_middleware_index = 0 
+    //stack.state._command.current_middleware_index = 0 
     next(null, state)
   }
+  middlewareToRun.unshift({func: seedFunction})
 
-  middlewareToRun.unshift({func: seedFunction })      
+  var middlewareToReallyRun = []
+  middlewareToRun.forEach((entry, index) => {
+    //Capture next: 
+    var middlewareFunc = _l.overArgs(entry.func, (stateOrNext) => {
+      if(!_.isFunction(stateOrNext)) return stateOrNext
+      //If it's not a function, it is the state object: 
+      if(stack.state._command) stack.state._command.next = stateOrNext 
+      return stateOrNext          
+    })
+    middlewareToReallyRun.push(middlewareFunc)
+    var bufferFunction = (state, next) => {
+      if(_.isFunction(state)) next = state
+      //Mark middleware as complete: 
+    debugger
+      stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+      stack.state._command.current_middleware_index++
+      return stack.state._command.next()
+    }
+    middlewareToReallyRun.push(bufferFunction)
+    return
+  })
 
-  debugger
-  async.waterfall(middlewareToRun, (err, state) => {
+debugger
+  async.waterfall(middlewareToReallyRun, (err, state) => {
     if(err) return console.log(err)
-
     console.log('all done everything!')  
     return endWaterfall()
   })
@@ -507,6 +528,10 @@ stack.next = (syncFunc) => {
 
   if(!stack.state._command) return
 
+  //If all the middleware is complete, make note of it now: 
+  if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done)) {
+    if(!stack.state._command.middleware_done) stack.state._command.middleware_done = true
+  }
 
   if(stack.state._command.middleware_done) {
     //We are now likely running the command's callback...
@@ -521,6 +546,7 @@ stack.next = (syncFunc) => {
     }
   } else {
     //there are still remaining middleware to run: 
+    debugger
     stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
     stack.state._command.current_middleware_index++
     //^ This ensures we increment to the next middleware in the stack: 

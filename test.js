@@ -636,14 +636,14 @@ test('Fire shorthand', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
 
-  stack.on('green', (state, next) => {
+  stack.on('green', () => {
     t.pass('green light')
-    stack.fire('go', next) //< Shortand
+    stack.fire('go', stack.next) //< Shortand
   })
 
-  stack.on('go', (state, next) => {
+  stack.on('go', () => {
     t.pass('going')
-    next()
+    stack.next()
   })  
 
   stack.fire('green', (err, state, nextFire) => {
@@ -685,8 +685,8 @@ test('Fire shorthand + multi commands', (t) => {
 test('command nulls after fire', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')  
-  stack.on('bake-cookie', (state) => {
-    t.ok(state._command, 'bake-cookie')
+  stack.on('bake-cookie', () => {
+    t.ok(stack.state._command, 'bake-cookie')
     stack.next()
   })
   stack.fire('bake-cookie', (err, state) => {

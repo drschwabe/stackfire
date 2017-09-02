@@ -160,7 +160,7 @@ stack.fire = function(path, param2, param3) {
     //another fire already in progress.  Therefore, it must be queued.
     //We use a grid based queing model (leveraging gg library). 
     if(state._command && !state._command.done) {
-      
+
       //Determine the cell; position on the grid the new command will be placed... 
       var cell 
       //first determine if the new command is a child or sibling... 
@@ -341,6 +341,15 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   var state = stack.state
   if(newCommand) {
     stack.state._command.done = false  
+    //If child fire, we must take heed that the current "on" middleware function
+    //which fired the command must now be marked as complete to avoid
+    //it being called again:
+    if(newCommand.parent) {
+      debugger
+      stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+      //(TODO: consider implication of multiple fires within a middleware function;
+      //the above functionality may have unexpected implications)      
+    }
     return waterfall(newCommand)
   }
   if(!stack.state._command) return

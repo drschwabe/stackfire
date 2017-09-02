@@ -5,25 +5,27 @@ const test = require('tape-catch'),
       log = console.log
 
 test("stack.fire invokes stack.on", (t) => {
-  t.plan(2)
+  t.plan(1)
   let stack = requireUncached('./stack.js')
 
-  stack.on('/do-something', (state, next) => {
-    t.ok(state, 'listener invoked')    
-    t.equal(state._command.path, '/do-something', "state._command.path equals '/do-something'")
+  stack.on('/do-something', () => {
+    //t.ok(state, 'listener invoked')    
+    debugger
+    t.equal(stack.state._command.path, '/do-something', "state._command.path equals '/do-something'")
   })
 
   stack.fire('/do-something')
 
 })
 
-test("stack.fire nested within stack.on", (t) => {
+test.only("stack.fire nested within stack.on", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
 
-  stack.on('/apple', (state, next) => {
+  stack.on('/apple', () => {
     console.log('/apple "on" (middleware in progress). _command.path:')
-    console.log(stack.state._command.path)    
+    console.log(stack.state._command.path)
+    
     stack.fire('/bannana', (err, newState, nextFire) => {
       console.log('/bannana fired (its final callback in progress)')
       console.log(stack.state._command.path)     
@@ -33,10 +35,10 @@ test("stack.fire nested within stack.on", (t) => {
     })
   })
 
-  stack.on('/bannana', (state, next) => {         
+  stack.on('/bannana', () => {         
     console.log('/bannana "on" middleware in progress. _command.path:')
     console.log(stack.state._command.path) 
-    t.ok(state, 'root level listener invoked from a nested fire')
+    t.ok(stack.state, 'root level listener invoked from a nested fire')
     t.equal(stack.state._command.path, '/bannana', "state._command.path equals the path of the current 'on' listener.")       
     console.log('/bannana middleware will now call stack.next()')
     stack.next() 
@@ -44,7 +46,7 @@ test("stack.fire nested within stack.on", (t) => {
 
   console.log('about to fire /apple')
 
-  stack.fire('apple', (err, state, nextFire) => {
+  stack.fire('apple', (err) => {
     //something is causing the apple callback to be called twice
     // _.command.callback = _.once()  ?        
     console.log('/apple fired (its final callback in progress). _command.path:')
@@ -1016,7 +1018,7 @@ test('Complete garden', (t) => {
 
 })
 
-test.only('Multiple .on with same name', (t) => {
+test('Multiple .on with same name', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')  
 

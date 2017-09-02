@@ -493,6 +493,11 @@ debugger
       if(_.isFunction(state)) next = state
       //Mark middleware as complete: 
     debugger
+      //unless all middleware is already complete...
+      if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done)) {
+        stack.state._command.middleware_done = true
+        return stack.state._command.next()
+      }
       stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
       stack.state._command.current_middleware_index++
       return stack.state._command.next()

@@ -138,19 +138,19 @@ test("fire three nested commands and verify state consistency along the way", (t
 test("Different command listeners should not fire from a single command", (t) => {
   let stack = requireUncached('./stack.js')
 
-  stack.on('/go', (state, next) => {
-    t.ok(state, 'expected listener invoked')
-    next(null, state)
+  stack.on('/go', () => {
+    t.equals(stack.state._command.path, '/go', 'expected listener invoked')
+    stack.next()
   })
 
   //This should not run: 
-  stack.on('/stop', (state, next) => {
+  stack.on('/stop', () => {
     t.fail('listener invoked when it should not have')
-    next(null, state)
+    stack.next()
   }) 
 
-  stack.fire('/go', (err, state) => {
-    t.ok(state, 'end of stack reached')
+  stack.fire('/go', (err) => {
+    t.ok(stack.state._command.callback_invoked, 'callback invoked')
     t.end()
   })
 
@@ -159,19 +159,20 @@ test("Different command listeners should not fire from a single command", (t) =>
 test("(same as above, but more complex route)", (t) => {
 
   let stack = requireUncached('./stack.js')
-  stack.on('/go/somewhere', (state, next) => {
-    t.ok(state, 'expected listener invoked')
-    next(null, state)
+
+  stack.on('/go/somewhere', () => {
+    t.equals(stack.state._command.path, '/go/somewhere', 'expected listener invoked')
+    stack.next()
   })
 
   //This should not run: 
-  stack.on('/stop/something', (state, next) => {
+  stack.on('/stop/something', () => {
     t.fail('listener invoked when it should not have')
-    next(null, state)
+    stack.next()
   }) 
 
-  stack.fire('/go/somewhere', (err, state) => {
-    t.ok(state, 'end of stack reached')
+  stack.fire('/go/somewhere', (err) => {
+    t.ok(stack.state._command.callback_invoked, 'callback invoked')
     t.end()
   })
 
@@ -181,20 +182,20 @@ test("(same as above, but more complex route)", (t) => {
 test("(same as above, but even more complex routes using a parameter)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
-  stack.on('/inventory/:item/deliver', (state, next) => {
-    t.ok(state, 'expected listener invoked')
-    t.ok(state._command.params.item, 'parameter is included on the command')
-    next(null, state)
+  stack.on('/inventory/:item/deliver', () => {
+    t.equals(stack.state._command.path, '/inventory/widget/deliver', 'expected listener invoked')
+    t.ok(stack.state._command.params.item, 'parameter is included on the command')
+    stack.next()
   })
 
   //This should not run: 
-  stack.on('/inventory/:item/destroy', (state, next) => {
+  stack.on('/inventory/:item/destroy', () => {
     t.fail('listener invoked when it should not have')    
-    next(null, state)
+    stack.next()
   })
 
-  stack.fire('/inventory/widget/deliver', (err, state) => {
-    t.ok(state, 'end of stack reached')
+  stack.fire('/inventory/widget/deliver', () => {
+    t.ok(stack.state._command.callback_invoked, 'end of stack reached')
     t.end()
   })
 
@@ -205,18 +206,18 @@ test("(same as above, but even more complex routes using multiple parameters)", 
 
   let stack = requireUncached('./stack.js')
   stack.on('/go/:destination/:time', (state, next) => {
-    t.ok(state, 'expected listener invoked')
-    next(null, state)
+    t.equals(stack.state._command.path, '/go/Brisbane/tomorrow', 'expected listener invoked')
+    stack.next()
   })
 
   //This should not run: 
   stack.on('/some/other/route', (state, next) => {
     t.fail('listener invoked when it should not have')
-    next(null, state)
+    stack.next()
   })
 
   stack.fire('/go/Brisbane/tomorrow', (err, state) => {
-    t.ok(state, 'end of stack reached')
+    t.ok(stack.state._command.callback_invoked, 'end of stack reached')
     t.end()
   })
 
@@ -239,16 +240,16 @@ test('Catch all wildcard listener', (t) => {
   t.plan(4)
   let stack = requireUncached('./stack.js')
 
-  stack.on('*wild', (state, next) => {
-    if(state._command.path == '/_buffer') return next(null, state)
+  stack.on('*wild', () => {
+    if(stack.state._command.path == '/_buffer') return next(null, state)
     t.pass('wildcard listener ran')
-    console.log(state._command.path)
-    next(null, state)
+    console.log(stack.state._command.path)
+    stack.next()
   })
 
   stack.fire('anything', (err, state, next) => {
     t.pass('anything fired')
-    next()
+    stack.next()
   })
   
   stack.fire('anything/else', (err, state) => {
@@ -261,23 +262,23 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
   let stack = requireUncached('./stack.js')
   t.plan(2)
 
-  stack.on('heart', (state, next) => {
+  stack.on('heart', () => {
     t.fail("listener ('heart') which was never explicitly fired was invoked!")
-    next(null, state)
+    stack.next()
   })
 
   //Establish wildcard before diamond: 
-  stack.on('*wild', (state, next) => {
-    console.log(state._command.path)
-    if(state._command.path == '/_buffer') return next(null, state)    
+  stack.on('*wild', () => {
+    console.log(stack.state._command.path)
+    if(stack.state._command.path == '/_buffer') return next(null, state)    
     t.pass('*wild listener invoked')
-    next(null, state)
+    stack.next()
   })
 
-  stack.on('diamond', (state, next) => {
+  stack.on('diamond', () => {
     //if(state._command.path != '/diamond') return next(null, state)        
     t.pass('diamond listener invoked')    
-    next(null, state) 
+    stack.next()
   })
 
   stack.fire('diamond')
@@ -289,70 +290,71 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
   let stack = requireUncached('./stack.js')
   t.plan(2)
 
-  stack.on('heart', (state, next) => {
+  stack.on('heart', () => {
     t.fail("listener ('heart') which was never explicitly fired was invoked!")
-    next(null, state)
+    stack.next()
   })
 
-  stack.on('diamond', (state, next) => {
+  stack.on('diamond', () => {
     t.pass('diamond listener invoked')    
-    next(null, state) 
+    stack.next()
   })
 
   //Establish wildcard after diamond: 
-  stack.on('*wild', (state, next) => {
-    if(state._command.path == '/_buffer') return next(null, state)    
+  stack.on('*wild', () => {
+    if(stack.state._command.path == '/_buffer') return stack.next()   
     //console.log(state._command.path)    
     debugger  
     t.pass('*wild listener invoked')
-    next(null, state)
+    stack.next()
   })  
 
   stack.fire('diamond')
 })
 
-test("Wildcard correctly is added to stacks and fires in the correct order)", (t) => {
+test("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(3)
 
-  stack.on('ten', (state, next) => {
-    state.counter = 10
-    next(null, state)
+  stack.on('ten', () => {
+    stack.state.counter = 10
+    stack.next()
   })
-  stack.on('one', (state, next) => {
-    state.counter = 1
-    next(null, state)
+  stack.on('one', () => {
+    stack.state.counter = 1
+    stack.next()
   })
-  stack.on('zero', (state, next) => {
-    state.counter = 0
-    next(null, state)
+  stack.on('zero', () => {
+    stack.state.counter = 0
+    stack.next()
   })
 
-  stack.on('*multiply', (state, next) => {
-    if(state._command.path == '/_buffer') return next(null, state)
+  stack.on('*multiply', () => {
+    if(stack.state._command.path == '/_buffer') return stack.next()
     console.log('*multiply')
-    state.counter *= 10
-    next(null, state)
+    stack.state.counter *= 10
+    stack.next()
   })
 
-  stack.on('*multiply', (state, next) => {
-    if(state._command.path == '/_buffer') return next(null, state)    
+  stack.on('*multiply', () => {
+    if(stack.state._command.path == '/_buffer') return stack.next()    
     console.log('*multiply')
-    state.counter *= 10
-    next(null, state)
+    stack.state.counter *= 10
+    stack.next()
   })
 
-  stack.fire('ten', (err, state, next) => {
+  stack.fire('ten', () => {
     t.equal(stack.state.counter, 1000, 'multiply called twice on ten') 
-    next()   
+    stack.next()   
   })
-  stack.fire('zero', (err, state, next) => {
+  stack.fire('zero', () => {
     t.equal(stack.state.counter, 0, 'zero canned with multiply is zero')
-    next()
+    stack.next()
   })
-  stack.fire('one', (err, state, next) => {
+  stack.fire('one', () => {
     t.equal(stack.state.counter, 100, 'one begets 100')
+    stack.next()
   })
 })
 
@@ -362,33 +364,33 @@ test("Commands are agnostic to stating with a slash or not", (t) => {
   let stack = requireUncached('./stack.js')
   t.plan(5)
 
-  stack.on('party', (state, next) => {
+  stack.on('party', () => {
     t.pass("It's a party!")
-    next(null, state)
+    stack.next()
   })
 
-  stack.on('/party', (state, next) => {
+  stack.on('/party', () => {
     t.pass("it's the same party!")
-    next(null, state)
+    stack.next()
   })  
 
-  stack.fire('party', (err, state, next) => {
-    next()
+  stack.fire('party', () => {
+    stack.next()
   })
 
-  stack.on('/earthquake', (state, next) => {
+  stack.on('/earthquake', () => {
     t.pass('earthquake!')
-    next(null, state)
+    stack.next()
   })
 
-  stack.on('earthquake', (state, next) => {
+  stack.on('earthquake', () => {
     t.pass('earthquake!!!!')
-    next(null, state)
+    stack.next()
   })
 
-  stack.fire('/earthquake', (err, state, next) => {
+  stack.fire('/earthquake', () => {
     t.pass('finished earthquake')
-    next()
+    stack.next()
   })
 
 })
@@ -401,20 +403,20 @@ test('berries', (t) => {
 
   t.ok(_.isArray(stack.grid.cells))
 
-  stack.on('berry', (state, next) => {
+  stack.on('berry', () => {
     t.equals(stack.grid.enties[0].command.path, '/berry') 
-    next(null, state)
+    stack.next()
   })
 
-  stack.fire('berry', (err, state, nextFire) => {  
+  stack.fire('berry', () => {  
     //now the fire has completed: 
     t.ok(stack.grid.enties[0].command.middleware_done)
-    nextFire()    
+    stack.next()    
   })  
 
-  stack.fire('vegetable', (err, state, nextFire) => { 
+  stack.fire('vegetable', () => { 
     //Even though no middleware, ensure this enty still exists on the grid: 
-    nextFire() //< The command is not done until we call nextFire
+    stack.next() //< The command is not done until we call next
     //(even though there are no further commands to fire)
   }) 
 
@@ -429,24 +431,24 @@ test("A subsequent fire waits until the current stack is finished before becomin
 
   let stack = requireUncached('./stack.js')  
 
-  stack.on('warning-alarm', (state, next) => {
+  stack.on('warning-alarm', () => {
     console.log('you have 2 seconds to comply')
     setTimeout(()=> {
-      next(null, state)
+      stack.next()
     }, 2000)  
   })
 
-  stack.fire('warning-alarm', (err, state, nextFire) => {
+  stack.fire('warning-alarm', () => {
     t.pass('warning alarm finished')
     debugger
-    nextFire() 
+    stack.next() 
   }) 
 
-  stack.fire('fire-turret', (err, state, nextFire) => {
+  stack.fire('fire-turret', () => {
     console.log('fire turret!') 
     //The following should apply to state 
     //only AFTER warning alarm completes: 
-    state.firing_turret = true
+    stack.state.firing_turret = true
     t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
     //nextFire() < We don't call nextFire()
   })
@@ -474,26 +476,26 @@ test("Commands not issued should not fire (using wildcard commands)", (t) => {
   //Defining a wildcard listener atop of the stack seems to result in 
   //subsequent listeners being fired even though their command was not issued...
 
-  stack.on('*wildcard', (state, next) => {
-    if(state._command.path == '/_buffer') return next(null, state)    
+  stack.on('*wildcard', () => {
+    if(stack.state._command.path == '/_buffer') return stack.next()   
     t.pass('this should invoke on every fire')
-    next(null, state)    
+    stack.next()    
   })
 
-  stack.on('/release-prisoner', (state, next) => {
+  stack.on('/release-prisoner', () => {
     t.pass('expected listener invoked')
-    next(null, state)
+    stack.next()
   })
 
   //This should not run! 
-  stack.on('/execute-prisoner', (state, next) => {
+  stack.on('/execute-prisoner', () => {
     //workaround by manually checking: 
-    if(state._command != '/execute-prisoner') return next(null, state)
+    if(stack.state._command != '/execute-prisoner') return stack.next()
     t.fail('listener invoked when it should not have')
-    next(null, state)
+    stack.next()
   })
 
-  stack.fire('/release-prisoner', (err, state) => {
+  stack.fire('/release-prisoner', () => {
     t.pass('end of stack reached')
     t.end()
   })
@@ -506,25 +508,25 @@ test("Commands not issued should not fire (using commands that use URL param)", 
 
   let stack = requireUncached('./stack.js')
 
-  stack.on('/bomb/:anything', (state, next) => {
+  stack.on('/bomb/:anything', () => {
     t.pass('this should invoke on every fire')
-    next(null, state)    
+    stack.next()    
   })
 
-  stack.on('/bomb/disarm', (state, next) => {
+  stack.on('/bomb/disarm', () => {
     t.pass('expected listener invoked')
-    next(null, state)
+    stack.next()
   })
 
   //This should not run! 
-  stack.on('/bomb/detonate', (state, next) => {
+  stack.on('/bomb/detonate', () => {
     //workaround by manually checking: 
-    if(state._command != '/bomb-detonate') return next(null, state)    
+    if(stack.state._command != '/bomb-detonate') return stack.next()  
     t.fail('listener invoked when it should not have')
-    next(null, state)
+    stack.next()
   })
 
-  stack.fire('/bomb/disarm', (err, state) => {
+  stack.fire('/bomb/disarm', () => {
     t.pass('end of stack reached')
     t.end()
   })  
@@ -535,30 +537,30 @@ test('Robot assembly line', (t) => {
 
   let stack = requireUncached('./stack.js')
 
-  stack.on('robot/assemble/:product', (state) => {
+  stack.on('robot/assemble/:product', () => {
     console.log('"robot/assemble/:product" on!')    
-    t.equals(state._command.path, '/robot/assemble/box')    
+    t.equals(stack.state._command.path, '/robot/assemble/box')    
 
-    stack.fire('robot/box', (err, state) => {
+    stack.fire('robot/box', () => {
       console.log('"robot/box" fire complete')
-      console.log(`state._command.path is: ${state._command.path}
+      console.log(`state._command.path is: ${stack.state._command.path}
       `)
       stack.next()
     })
   })
 
-  stack.on('robot/:product', (state) => {
+  stack.on('robot/:product', () => {
     console.log('"robot/:product" on!')    
-    console.log(`state._command.path is: ${state._command.path}
+    console.log(`state._command.path is: ${stack.state._command.path}
     `)  
-    t.equals(state._command.path, '/robot/box')
+    t.equals(stack.state._command.path, '/robot/box')
     stack.next()   
   })
 
-  stack.fire('robot/assemble/box', (err, state) => {
+  stack.fire('robot/assemble/box', () => {
     console.log('"robot/assemble/box" fire complete')
     debugger
-    t.equals(state._command.path, '/robot/assemble/box')
+    t.equals(stack.state._command.path, '/robot/assemble/box')
     stack.next()
   })
 
@@ -572,16 +574,16 @@ test('Async element initialization', (t) => {
   let stack = requireUncached('./stack.js')
   let async = requireUncached('async')
 
-  stack.on('element/init/:prefix', (state) => {
+  stack.on('element/init/:prefix', () => {
     var elems = ['my-elem-a', 'my-elem-b', 'my-elem-c']
     //var nextFires = []
-    console.log('on: ' + state._command.path)    
+    console.log('on: ' + stack.state._command.path)    
     async.eachSeries(elems, (elem, callback) => {
       //callback(null)
-      stack.fire('element/' + elem,  stack.state, (err, state, nextFire) => {
+      stack.fire('element/' + elem,() => {
         //nextFires.push(nextFire)
         //nextFire(null, callback)
-        console.log('fired: ' + state._command.path)        
+        console.log('fired: ' + stack.state._command.path)        
         stack.next(callback)    
       })
     }, (err) => {
@@ -601,16 +603,16 @@ test('Async element initialization', (t) => {
     //next(null, state)
   })
 
-  stack.on('element/:elementName', (state) => { 
-    log('on: ' + state._command.path)        
+  stack.on('element/:elementName', () => { 
+    log('on: ' + stack.state._command.path)        
     //Got a problem with this matching "/element/init/my-element"
     //temporary workaround: 
     //if(!state._command.elementName) return next(null, state)
     //console.log('on: ' + state._command.path)
-    stack.fire('element/' + state._command.params.elementName + '/connected', function(err, newState) {
+    stack.fire('element/' + stack.state._command.params.elementName + '/connected', () => {
       //next(null, newState) //< If you call next here we get a failure. 
       //TODO: should be some brakes when the next() command fires; some extra logic to prevent max callback.
-      console.log('fired: ' + state._command.path)
+      console.log('fired: ' + stack.state._command.path)
       stack.next()
       //next(null, newState)
     })
@@ -623,7 +625,7 @@ test('Async element initialization', (t) => {
   // })
 
   stack.fire('element/init/my-element', (err, state) => {
-    log('fired: ' + state._command.path)
+    log('fired: ' + stack.state._command.path)
     t.pass('Finished')
     stack.next()
   })

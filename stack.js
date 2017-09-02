@@ -345,10 +345,12 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     //which fired the command must now be marked as complete to avoid
     //it being called again:
     if(newCommand.parent) {
-      debugger
-      stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
-      //(TODO: consider implication of multiple fires within a middleware function;
-      //the above functionality may have unexpected implications)      
+      debugger //only if there is actually middleware (ie- middlewareless fire): 
+      if(stack.state._command.matching_route.middleware) {
+        stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+        //(TODO: consider implication of multiple fires within a middleware function;
+        //the above functionality may have unexpected implications)  
+      }    
     }
     return waterfall(newCommand)
   }

@@ -18,14 +18,14 @@ test("stack.fire invokes stack.on", (t) => {
 
 })
 
-test.only("stack.fire nested within stack.on", (t) => {
+test("stack.fire nested within stack.on", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
 
   stack.on('/apple', () => {
     console.log('/apple "on" (middleware in progress). _command.path:')
     console.log(stack.state._command.path)
-    
+
     stack.fire('/bannana', (err, newState, nextFire) => {
       console.log('/bannana fired (its final callback in progress)')
       console.log(stack.state._command.path)     
@@ -110,27 +110,27 @@ test("fire three nested commands and verify state consistency along the way", (t
   //root command; will wnat to make a visualization of this. 
   let stack = requireUncached('./stack.js')
 
-  stack.on('/land-on-moon', (state, next) => {
-    state.landed = true
-    t.ok(state.landed, 'landed on moon') 
+  stack.on('/land-on-moon', () => {
+    stack.state.landed = true
+    t.ok(stack.state.landed, 'landed on moon') 
     //Second command fired: 
-    stack.fire('/plant-flag', (err, newState, nextFire) => {
-      t.ok(newState.landed, 'still landed')
-      state.flagPlanted = true
-      t.ok(state.flagPlanted, 'planted flag')      
+    stack.fire('/plant-flag', (err) => {
+      t.ok(stack.state.landed, 'still landed')
+      stack.state.flagPlanted = true
+      t.ok(stack.state.flagPlanted, 'planted flag')      
       //Third command fired: 
-      stack.fire('/take-picture', (err, newState, nextFire2) => {
-        t.ok(newState.landed && newState.flagPlanted, 'still landed and flag remains planted')
-        state.tookPicture = true 
-        t.ok(state.tookPicture, 'took picture')
-        nextFire2(null, state)
+      stack.fire('/take-picture', (err) => {
+        t.ok(stack.state.landed && stack.state.flagPlanted, 'still landed and flag remains planted')
+        stack.state.tookPicture = true 
+        t.ok(stack.state.tookPicture, 'took picture')
+        stack.next()
       })
     })
   })
 
   //First command fired: 
-  stack.fire('/land-on-moon', (err, finalState) => {
-    t.ok(finalState.landed && finalState.flagPlanted && finalState.tookPicture, 'mission complete')
+  stack.fire('/land-on-moon', (err) => {
+    t.ok(stack.state.landed && stack.state.flagPlanted && stack.state.tookPicture, 'mission complete')
   })
 })
 

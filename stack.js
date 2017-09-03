@@ -18,7 +18,7 @@ stack.grid = gg.populateCells(stack.grid)
 
 stack.on = function(param1, callback) {
 
-  debugger 
+   
 
   //param1: a string or an array of strings.
   //(is either a single path or array of paths)  
@@ -139,7 +139,7 @@ stack.fire = function(path, param2, param3) {
 
   if(!matchingRoutes.length) matchingRoutes[0] = {} //< Create a command obj anyway. 
 
-  debugger
+  
 
   matchingRoutes.forEach((matchingRoute, index) => {  
     var newCommand = {} 
@@ -258,7 +258,7 @@ var waterfall = (command) => {
     function(seriesCallback) {
       var seedFunction = function(next) { 
         stack.state._command.current_middleware_index = 0 
-        debugger
+        
         next(null, state) 
       }
       if(matchingRoute && matchingRoute.middleware) {      
@@ -303,7 +303,7 @@ var waterfall = (command) => {
             stack.state._command.current_middleware_index++
 
             //return next(null, state)
-            debugger
+            
             return stack.state._command.next()
             return stack.next()
             
@@ -318,11 +318,11 @@ var waterfall = (command) => {
           //if(state._command.path != '/_buffer' && index != matchingRoute.middleware.length) return middlewareToRun.push(bufferFunction)  
           //if(stack.state._command && stack.state._command.path != '/_buffer' && index != matchingRoute.middleware.length) return middlewareToRun.push(bufferFunction)
           //if(index != matchingRoute.middleware.length) middlewareToRun.push(bufferFunction)
-          debugger
+          
           middlewareToRun.push(bufferFunction)
           return
         })
-        debugger
+        
         async.waterfall(middlewareToRun, function(err, state) {
           if(err) return seriesCallback(err) //< Err for now being just used 
           //as a way to short circuit command in progress. 
@@ -345,8 +345,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     //which fired the command must now be marked as complete to avoid
     //it being called again:
     if(newCommand.parent) {
-      debugger //only if there is actually middleware (ie- middlewareless fire): 
-      if(stack.state._command.matching_route.middleware) {
+       //only if there is actually middleware (ie- middlewareless fire): 
+      if(!stack.state._command.middleware_done && stack.state._command.matching_route.middleware) {
         stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
         //(TODO: consider implication of multiple fires within a middleware function;
         //the above functionality may have unexpected implications)  
@@ -450,7 +450,7 @@ var resumeWaterfall = (command) => {
 
   state._command = command   
 
-debugger 
+ 
 
   if(!command.matching_route.middleware) {
     console.log('no more matching_route middleware...')
@@ -492,7 +492,7 @@ debugger
     var bufferFunction = (state, next) => {
       if(_.isFunction(state)) next = state
       //Mark middleware as complete: 
-    debugger
+    
       //unless all middleware is already complete...
       if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done)) {
         stack.state._command.middleware_done = true
@@ -506,7 +506,7 @@ debugger
     return
   })
 
-debugger
+
   async.waterfall(middlewareToReallyRun, (err, state) => {
     if(err) return console.log(err)
     console.log('all done everything!')  
@@ -538,7 +538,7 @@ debugger
 
 stack.next = (syncFunc) => {
   
-  debugger 
+   
 
   if(syncFunc) syncFunc()
 
@@ -562,7 +562,7 @@ stack.next = (syncFunc) => {
     }
   } else {
     //there are still remaining middleware to run: 
-    debugger
+    
     stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
     stack.state._command.current_middleware_index++
     //^ This ensures we increment to the next middleware in the stack: 

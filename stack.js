@@ -258,7 +258,11 @@ var waterfall = (command) => {
     function(seriesCallback) {
       var seedFunction = function(next) { 
         stack.state._command.current_middleware_index = 0 
-        
+        stack.state._command.middleware_done = false
+        stack.state._command.matching_route.middleware = _.map(stack.state._command.matching_route.middleware, (entry) => {
+          entry.done = false 
+          return entry 
+        })
         next(null, state) 
       }
       if(matchingRoute && matchingRoute.middleware) {      

@@ -1036,3 +1036,23 @@ test('Multiple .on with same name', (t) => {
 
   stack.fire('water')
 })
+
+test.only('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js')  
+
+  stack.on('apple', () => {
+    t.pass()
+    stack.next() 
+  })  
+
+  stack.on('bannana', () => {
+    t.pass()
+    stack.next() 
+  })
+
+  stack.fire('apple')
+  stack.fire('bannana', () => {
+    t.pass()
+  })
+})

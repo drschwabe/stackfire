@@ -532,7 +532,7 @@ test("Commands not issued should not fire (using commands that use URL param)", 
   })  
 })
 
-test('Robot assembly line', (t) => {
+test.only('Robot assembly line', (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')
@@ -564,6 +564,7 @@ test('Robot assembly line', (t) => {
     stack.next()
   })
 
+  console.log('command is nulled?')
   t.equals(stack.state._command, null)
 
 })
@@ -1037,7 +1038,7 @@ test('Multiple .on with same name', (t) => {
   stack.fire('water')
 })
 
-test.only('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t) => {
+test('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
 

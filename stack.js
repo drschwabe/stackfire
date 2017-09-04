@@ -344,7 +344,20 @@ var waterfall = (command) => {
 var endWaterfall = (newCommand) => { //End of waterfall: 
   var state = stack.state
   if(newCommand) {
-    stack.state._command.done = false  
+    //Do a check to see if the middleware is done, and mark accordingly: 
+    if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done)) {
+      stack.state._command.middleware_done = true 
+    }
+
+    //assume callback is invoked and now we done... 
+    if(stack.state._command.middleware_done && stack.state._command.callback_invoked) {
+      stack.state._command.done = true        
+    } else {
+      stack.state._command.done = false
+    }
+
+    if(window.renderGrid) renderGrid() 
+
     //If child fire, we must take heed that the current "on" middleware function
     //which fired the command must now be marked as complete to avoid
     //it being called again:
@@ -390,7 +403,10 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       }
       stack.state._command.callback_invoked = true
       //stack.state._command.callback_underway = true 
-      return stack.state._command.callback(null, stack.state, nextFire)
+      //debugger
+      //return _.defer(() => {
+        return stack.state._command.callback()
+      //})
     } else {
       //return stack.state._command.next(null, stack.state)
       stack.state._command.done = true
@@ -550,6 +566,7 @@ stack.next = (syncFunc) => {
 
   //If all the middleware is complete, make note of it now: 
   if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done)) {
+    debugger
     if(!stack.state._command.middleware_done) stack.state._command.middleware_done = true
   }
 
@@ -562,22 +579,42 @@ stack.next = (syncFunc) => {
       //the command's callback has already been invoked, so the command is over
       //(however, to guard against this executing multiple times additional logic may be necessary)
       stack.state._command.done = true  
+      //we need to wait to make sure the current stack.next() being executed 
+      //is the one from the callback and not another command.... 
       if(window.renderGrid) renderGrid()
     }
   } else {
     //there are still remaining middleware to run: 
+
+    //if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done) 
     
     stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
     stack.state._command.current_middleware_index++
+
     //^ This ensures we increment to the next middleware in the stack: 
     return resumeWaterfall(stack.state._command)
   }
 
   //Otherwise, current command already done; determine the next command to run.... 
   var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done && !enty.command.middleware_done)
+
+  //still one more command.... 
+  // var seriouslyIncompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
+  // if(seriouslyIncompleteCommands) {
+  //   debugger
+  //   if(_.filter( stack.grid.enties, (enty) => !enty.command.done)
+  //   if(seriouslyIncompleteCommand.callback_invoked) {
+  //     debugger
+  //     //wtf do we do here...
+  //     //edge case!  
+  //     //mark it as done? 
+  //   }
+  // }
+
   //start with the last one... 
   if(!incompleteCommands || _.isEmpty(incompleteCommands)) {
     console.log('okay really all done now')
+
     stack.state._command = null
     return
   }

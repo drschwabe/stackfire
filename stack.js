@@ -351,7 +351,15 @@ var endWaterfall = (newCommand) => { //End of waterfall:
 
     //assume callback is invoked and now we done... 
     if(stack.state._command.middleware_done && stack.state._command.callback_invoked) {
-      stack.state._command.done = true        
+      //.... it's not done however... IF the newCommand is a child AND the parent is 
+      //having its callback_invoked...  
+      if(newCommand.parent == stack.state._command) {
+        if(stack.state._command.callback_invoked && !stack.state._comand.done) {
+          stack.state._command.done = false //< Not done yet, not until the child fire is done...       
+        }
+      } else {
+        stack.state._command.done = true        
+      }
     } else {
       stack.state._command.done = false
     }
@@ -566,7 +574,6 @@ stack.next = (syncFunc) => {
 
   //If all the middleware is complete, make note of it now: 
   if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done)) {
-    debugger
     if(!stack.state._command.middleware_done) stack.state._command.middleware_done = true
   }
 

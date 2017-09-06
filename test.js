@@ -532,7 +532,7 @@ test("Commands not issued should not fire (using commands that use URL param)", 
   })  
 })
 
-test.only('Robot assembly line', (t) => {
+test('Robot assembly line', (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')
@@ -839,6 +839,7 @@ test.only('Multi command stress test', (t) => {
     t.equals(shakeCommand.cell, nextRowCell, 'shake command inserted to second row, first column')  //Sibling next to shake. 
 
     console.log('we are making a milk shake')
+    debugger
     stack.next()
   })  
 
@@ -846,7 +847,8 @@ test.only('Multi command stress test', (t) => {
     //The milk command callback is underway: 
     var milkCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/milk').command
     t.notOk(milkCommand.done, 'milk command not done yet (trailing callback underway)') 
-    t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0')  
+    t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0') 
+    debugger 
     stack.fire('shake', (err, state) => {
       var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').command
       //milk command is still done: 
@@ -854,6 +856,7 @@ test.only('Multi command stress test', (t) => {
       //and now shake is done too:                  
       t.notOk(shakeCommand.done, 'shake command not done (trailing callback underway)')                 
       console.log('we made a milk shake')
+      debugger
       stack.next()              
     })
   })

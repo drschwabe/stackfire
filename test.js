@@ -878,8 +878,8 @@ test.only('Multi command stress test', (t) => {
   })
 
   t.equals( stack.grid.cells[ 0 ].enties[0].command.done, true) //< Orignial command.
-  t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, 1,0) ].enties[0].command.done), true //< Child of original.
-  t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, 0,1) ].enties[0].command.done), true //< Sibling of original.
+  t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, 1,0) ].enties[0].command.done, true )//< Child of original.
+  t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, 0,1) ].enties[0].command.done, true ) //< Sibling of original.
 
 })
 

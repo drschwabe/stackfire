@@ -825,7 +825,7 @@ test.skip('Demonstrate multiple ways of calling next (WIP)', (t) => {
   //TODO: make another thing where you just pass an 'on' next (above only shows passing of nextFire)
 })
 
-test.only('Multi command stress test', (t) => {
+test('Multi command stress test', (t) => {
   t.plan(13)
   let stack = requireUncached('./stack.js')  
   let gg = requireUncached('gg')  
@@ -875,6 +875,7 @@ test.only('Multi command stress test', (t) => {
     t.notOk(beerCommand.done, 'beer command still not done') 
     t.equals(beerCommand.cell, gg.xyToIndex(stack.grid, 0, 1), 'beer command still at first row, second column')  //< Sibling next to milk.
     console.log('poured a beer.')
+    stack.next()
   })
 
   t.equals( stack.grid.cells[ 0 ].enties[0].command.done, true) //< Orignial command.

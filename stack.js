@@ -142,7 +142,9 @@ stack.fire = function(path, param2, param3) {
   
 
   matchingRoutes.forEach((matchingRoute, index) => {  
-    var newCommand = {} 
+    var newCommand = {
+      children_awaiting : 0
+    } 
     newCommand.matching_route = matchingRoute
     //Make a property to store parameters (ie inventory/:widget <--)
     if(matchingRoute.route) newCommand.params = matchingRoute.route.match(path)
@@ -357,7 +359,9 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       //having its callback_invoked...  
       if(newCommand.parent == stack.state._command) {
         if(stack.state._command.callback_invoked && !stack.state._command.done) {
-          stack.state._command.done = false //< Not done yet, not until the child fire is done...       
+          stack.state._command.done = false //< Not done yet, not until the child fire is done...  
+          stack.state._command.children_awaiting++ //Increase this so that if there are 
+          //multiple children executing we know when to mark the command as done.      
         }
       } else {
         stack.state._command.done = true        
@@ -385,6 +389,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   //state._command.done = true  
   stack.state._command.middleware_done = true 
   if(stack.renderGrid) stack.renderGrid()
+
+  if(stack.state._command.parent && stack.state._command.parent.children_awaiting) stack.state._command.parent.children_awaiting--
 
 //possily here is calling nextCommand but not making note that 
   
@@ -607,18 +613,22 @@ stack.next = (syncFunc) => {
   //Otherwise, current command already done; determine the next command to run.... 
   var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done && !enty.command.middleware_done)
 
-  //still one more command.... 
-  // var seriouslyIncompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
-  // if(seriouslyIncompleteCommands) {
-  //   debugger
-  //   if(_.filter( stack.grid.enties, (enty) => !enty.command.done)
-  //   if(seriouslyIncompleteCommand.callback_invoked) {
-  //     debugger
-  //     //wtf do we do here...
-  //     //edge case!  
-  //     //mark it as done? 
-  //   }
-  // }
+  //Still one more command:  
+  var seriouslyIncompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
+  if(seriouslyIncompleteCommands.length) {
+    debugger
+    //if(_.filter( stack.grid.enties, (enty) => !enty.command.done))
+    seriouslyIncompleteCommand = seriouslyIncompleteCommands[0].command
+    if(seriouslyIncompleteCommand.middleware_done && seriouslyIncompleteCommand.callback_invoked && seriouslyIncompleteCommand.children_awaiting == 0) {
+      debugger
+      //wtf do we do here...
+      //edge case!
+      //mark it as done?
+      seriouslyIncompleteCommand.done = true
+      if(stack.renderGrid) stack.renderGrid()
+      return 
+    }
+  }
 
   //start with the last one... 
   if(!incompleteCommands || _.isEmpty(incompleteCommands)) {

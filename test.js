@@ -921,9 +921,9 @@ test('Empty goldmine', (t) => {
 
   stack.state.gold = false
 
-  stack.on('mine', (state) => {
+  stack.on('mine', () => {
 
-    stack.fire('shovel', (err, state) => {
+    stack.fire('shovel', () => {
       console.log('shovel for gold...')
 
       var shovelCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shovel').command
@@ -937,14 +937,14 @@ test('Empty goldmine', (t) => {
       t.equals(shovelCommand.cell, expectedCell, 'shovel command is directly below the parent command')
 
       //This will never be true; there should be no advancement to 'cart' fire.
-      if(state.gold == true) return stack.next()
+      if(stack.state.gold == true) return stack.next()
     })  
 
     //technically stack.fire above is done... as such, we may need to use a different metric for stack.fire
     //OR we should not mark as done
     //perhaps we will say middlware_done and then command_done - command_done false until callback completed ie; nextFire called. 
 
-    stack.fire('cart', (err, state) => {
+    stack.fire('cart', () => {
       //Should not run...
       console.log('fill cart...')           
       t.fail('there will never be any gold!')

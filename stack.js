@@ -366,7 +366,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       stack.state._command.done = false
     }
 
-    if(window.renderGrid) renderGrid() 
+    if(stack.renderGrid) stack.renderGrid() 
 
     //If child fire, we must take heed that the current "on" middleware function
     //which fired the command must now be marked as complete to avoid
@@ -486,7 +486,7 @@ var resumeWaterfall = (command) => {
     console.log('no more matching_route middleware...')
     //check if the command ... 
     //command.done = true 
-    if(window.renderGrid) renderGrid()
+    if(stack.renderGrid) stack.renderGrid()
     if(!command.done && command.callback) {
       if(command.parent && !command.parent.done) return stack.next()
       else return endWaterfall()
@@ -590,7 +590,7 @@ stack.next = (syncFunc) => {
       stack.state._command.done = true  
       //we need to wait to make sure the current stack.next() being executed 
       //is the one from the callback and not another command.... 
-      if(window.renderGrid) renderGrid()
+      if(stack.renderGrid) stack.renderGrid()
     }
   } else {
     //there are still remaining middleware to run: 

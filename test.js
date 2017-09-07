@@ -227,11 +227,11 @@ test("(same as above, but even more complex routes using multiple parameters)", 
 test("stack.state integrity (and commands without listeners)", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
-  stack.fire('/take-off', (err, state) => {
-    t.equals(stack.state, state, 'stack.state equals the newly returned state')
-    state.flying = true 
-    stack.fire('/autopilot', (err, stateB) => {
-      t.ok(stateB.flying, 'We are flying.')
+  stack.fire('/take-off', () => {
+    t.equals(stack.state, stack.state, 'stack.state equals the newly returned state')
+    stack.state.flying = true 
+    stack.fire('/autopilot', () => {
+      t.ok(stack.state.flying, 'We are flying.')
     })    
   })
 })

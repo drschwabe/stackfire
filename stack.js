@@ -354,7 +354,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       //.... it's not done however... IF the newCommand is a child AND the parent is 
       //having its callback_invoked...  
       if(newCommand.parent == stack.state._command) {
-        if(stack.state._command.callback_invoked && !stack.state._comand.done) {
+        if(stack.state._command.callback_invoked && !stack.state._command.done) {
           stack.state._command.done = false //< Not done yet, not until the child fire is done...       
         }
       } else {

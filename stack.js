@@ -183,7 +183,9 @@ stack.fire = function(path, param2, param3) {
             return enty
           })          
           stack.grid = gg.populateCells(stack.grid)
-          if(window.renderGrid) window.renderGrid()                       
+          if(stack.renderGrid) stack.renderGrid()    
+          //TODO: replace with a general 'sync middleware hook' in whereby any module could
+          //perform a sync function here                   
         }
         cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
 
@@ -200,7 +202,7 @@ stack.fire = function(path, param2, param3) {
             return enty
           })          
           stack.grid = gg.populateCells(stack.grid)     
-          if(window.renderGrid) window.renderGrid()                   
+          if(stack.renderGrid) stack.renderGrid()                   
         }
     
         //search the next row down:  
@@ -216,7 +218,7 @@ stack.fire = function(path, param2, param3) {
 
       stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })     
       stack.grid = gg.populateCells(stack.grid)
-      if(window.renderGrid) window.renderGrid()  
+      if(stack.renderGrid) stack.renderGrid()  
 
       
       if(!newCommand.parent) return  //< We return if sibling because the current command  
@@ -234,13 +236,13 @@ stack.fire = function(path, param2, param3) {
         return enty
       })
       stack.grid = gg.populateCells(stack.grid) 
-      if(window.renderGrid) window.renderGrid()            
+      if(stack.renderGrid) stack.renderGrid()            
 
       newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
       stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
       stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
 
-      if(window.renderGrid) window.renderGrid()      
+      if(stack.renderGrid) stack.renderGrid()      
       waterfall(newCommand) //< finally, run the middleware waterfall! 
       //callback()
     }
@@ -253,7 +255,7 @@ var waterfall = (command) => {
       state = stack.state
 
   state._command = command   
-  if(window.renderGrid) window.renderGrid()  
+  if(stack.renderGrid) stack.renderGrid()  
   async.series([
     function(seriesCallback) {
       var seedFunction = function(next) { 
@@ -382,7 +384,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   if(!stack.state._command) return
   //state._command.done = true  
   stack.state._command.middleware_done = true 
-  if(window.renderGrid) window.renderGrid()
+  if(stack.renderGrid) stack.renderGrid()
 
 //possily here is calling nextCommand but not making note that 
   
@@ -446,7 +448,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       console.log('all done (with callback)')  
       stack.state._command.done = true
       if(callback) callback() //< This type of callback must be synchronous!
-      if(window.renderGrid) window.renderGrid()  
+      if(stack.renderGrid) stack.renderGrid()  
       if(siblingCommand) {
         console.log('run sibling command...')
         return waterfall(siblingCommand)
@@ -461,7 +463,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   } else {
     state._command.done = true      
     console.log('all done (no callback)') 
-    if(window.renderGrid) window.renderGrid()    
+    if(stack.renderGrid) stack.renderGrid()    
     if(siblingCommand) {
       console.log('run sibling command...')
       return waterfall(siblingCommand)  

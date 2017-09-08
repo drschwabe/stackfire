@@ -190,6 +190,7 @@ stack.fire = function(path, param2, param3) {
           //perform a sync function here                   
         }
         cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
+        if(sibling.parent) newCommand.parent = sibling.parent 
 
       } else { //< this is a child of the current state._command:  
         //TODO: ^^ consider if better determination needed here! 
@@ -493,7 +494,6 @@ var resumeWaterfall = (command) => {
     //check if the command ... 
     //command.done = true 
     if(stack.renderGrid) stack.renderGrid()
-    debugger
     if(!command.done && command.callback) {
       if(command.parent && !command.parent.done) return stack.next()
       else return endWaterfall()
@@ -575,8 +575,6 @@ var resumeWaterfall = (command) => {
 
 stack.next = (syncFunc) => {
   
-   
-
   if(syncFunc) syncFunc()
 
   if(!stack.state._command) return
@@ -617,9 +615,8 @@ stack.next = (syncFunc) => {
   //Still one more command:  
   var seriouslyIncompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
   if(seriouslyIncompleteCommands.length) {
-    debugger
     //if(_.filter( stack.grid.enties, (enty) => !enty.command.done))
-    seriouslyIncompleteCommand = seriouslyIncompleteCommands[0].command
+    var seriouslyIncompleteCommand = _.last(seriouslyIncompleteCommands).command
     if(seriouslyIncompleteCommand.middleware_done && seriouslyIncompleteCommand.callback_invoked && seriouslyIncompleteCommand.children_awaiting == 0) {
       debugger
       //wtf do we do here...
@@ -628,6 +625,14 @@ stack.next = (syncFunc) => {
       seriouslyIncompleteCommand.done = true
       if(stack.renderGrid) stack.renderGrid()
       return 
+    } else {
+      //does it have a callback? 
+      if(seriouslyIncompleteCommand.callback && !seriouslyIncompleteCommand.callback_invoked) {
+        //endWaterfall() will invoke it: 
+        return endWaterfall(seriouslyIncompleteCommand)
+      } else {
+        console.log('whoa edge case!')
+      }
     }
   }
 

@@ -225,7 +225,7 @@ stack.fire = function(path, param2, param3) {
       if(stack.renderGrid) stack.renderGrid()  
 
       
-      if(!newCommand.parent) return  //< We return if sibling because the current command  
+      if(sibling) return  //< We return if sibling because the current command  
       //should finish first (stack will now call it upon completion; we just queued it) 
 
       //If child, end the parent's in-progress middlestack waterfall: 

@@ -129,9 +129,11 @@ test("fire three nested commands and verify state consistency along the way", (t
   })
 
   //First command fired: 
-  stack.fire('/land-on-moon', (err) => {
-    t.ok(stack.state.landed && stack.state.flagPlanted && stack.state.tookPicture, 'mission complete')
+  stack.fire('/land-on-moon', () => {
+    stack.next()
   })
+
+  t.ok(stack.state.landed && stack.state.flagPlanted && stack.state.tookPicture, 'mission complete')
 })
 
 

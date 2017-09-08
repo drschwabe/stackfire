@@ -629,7 +629,8 @@ stack.next = (syncFunc) => {
       //does it have a callback? 
       if(seriouslyIncompleteCommand.callback && !seriouslyIncompleteCommand.callback_invoked) {
         //endWaterfall() will invoke it: 
-        return endWaterfall(seriouslyIncompleteCommand)
+        ///return endWaterfall(seriouslyIncompleteCommand)
+        return resumeWaterfall(seriouslyIncompleteCommand)
       } else {
         console.log('whoa edge case!')
       }

@@ -444,7 +444,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   //state._command = null
   //Otherwise, just run the callback...
 
-  if(state._command.callback) {
+  if(state._command.callback && !state._command.callback_invoked ) {
       //if(state._command.done) return nextCommand()
     var nextFire = (callback) => {
       //if(callback) stack(callback) //This queues a given function to the middleware of the
@@ -493,6 +493,7 @@ var resumeWaterfall = (command) => {
     //check if the command ... 
     //command.done = true 
     if(stack.renderGrid) stack.renderGrid()
+    debugger
     if(!command.done && command.callback) {
       if(command.parent && !command.parent.done) return stack.next()
       else return endWaterfall()

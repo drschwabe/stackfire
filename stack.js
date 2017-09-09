@@ -205,7 +205,7 @@ stack.fire = function(path, param2, param3) {
             enty.command.cell = enty.cell 
             return enty
           })          
-          stack.grid = gg.populateCells(stack.grid)     
+          stack.grid = gg.populateCells(stack.grid)  
           if(stack.renderGrid) stack.renderGrid()                   
         }
     
@@ -222,6 +222,16 @@ stack.fire = function(path, param2, param3) {
 
       stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })     
       stack.grid = gg.populateCells(stack.grid)
+
+      //update next...
+      stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+        //debugger
+        //enty.command.next = 
+        //^ determine the logic for what command to run next....
+        //this should be very similar to stack.next() itself.... 
+        return enty
+      }) 
+
       if(stack.renderGrid) stack.renderGrid()  
 
       
@@ -536,9 +546,14 @@ var resumeWaterfall = (command) => {
         stack.state._command.middleware_done = true
         return stack.state._command.next()
       }
-      stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
-      stack.state._command.current_middleware_index++
-      return stack.state._command.next()
+      //debugger
+      if(stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index]) {
+        stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true    
+        stack.state._command.current_middleware_index++
+        return stack.state._command.next()            
+      } else {
+        return console.log('edge case!')
+      }
     }
     middlewareToReallyRun.push(bufferFunction)
     return
@@ -578,6 +593,16 @@ stack.next = (syncFunc) => {
   
   if(syncFunc) syncFunc()
 
+  //Determine if the current command has a 'next' property
+  //in which case, it should invoke that... 
+  //ie- instead of stack.next() performing a live analyzation of the grid
+  //we should instead be referring to the stack.state._command 
+  //which will have a predetermined instrunction/function for what to do next
+  //(ie- what command to run next)
+
+  //the other strategy is to just re-enforce this logic to better prevent
+  //a command from executing when we are still waiting for some async something...
+
   if(!stack.state._command) return
 
   //If all the middleware is complete, make note of it now: 
@@ -593,6 +618,10 @@ stack.next = (syncFunc) => {
     } else {
       //the command's callback has already been invoked, so the command is over
       //(however, to guard against this executing multiple times additional logic may be necessary)
+      //ONLY if the function that called stack.next() is 
+      //the callback
+      //this is critical... 
+      debugger
       stack.state._command.done = true  
       //we need to wait to make sure the current stack.next() being executed 
       //is the one from the callback and not another command.... 
@@ -602,9 +631,15 @@ stack.next = (syncFunc) => {
     //there are still remaining middleware to run: 
 
     //if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done) 
-    
-    stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
-    stack.state._command.current_middleware_index++
+    if(stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index]) {
+      stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+      stack.state._command.current_middleware_index++
+    } else {
+      //may want to return here; this might mean there is nothing left to do
+      console.log('whaaa another edge case!') 
+    }
+
+    debugger
 
     //^ This ensures we increment to the next middleware in the stack: 
     return resumeWaterfall(stack.state._command)
@@ -634,6 +669,7 @@ stack.next = (syncFunc) => {
         return resumeWaterfall(seriouslyIncompleteCommand)
       } else {
         console.log('whoa edge case!')
+        debugger
       }
     }
   }

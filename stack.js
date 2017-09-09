@@ -438,6 +438,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     } else {
       //return stack.state._command.next(null, stack.state)
       stack.state._command.done = true
+      if(stack.renderGrid) stack.renderGrid()
       return resumeWaterfall(state._command.parent)      
     }    
   }
@@ -506,8 +507,23 @@ var resumeWaterfall = (command) => {
     //command.done = true 
     if(stack.renderGrid) stack.renderGrid()
     if(!command.done && command.callback) {
-      if(command.parent && !command.parent.done) return stack.next()
-      else return endWaterfall()
+      if(command.parent && !command.parent.done) {
+        //if(command.children) 
+        //invoke command for any children with incomplete middleware... 
+        debugger
+        return stack.next()
+      } else {
+        //children? find them: 
+        var child = _.find(stack.grid.enties, (enty) => enty.command.parent && enty.command.parent.path == command.path && !enty.command.done)
+        if(child) child = child.command //< (if child is undefined it would throw err)
+        //now assess the children... ie- are they done or no ? 
+        debugger
+        if(child && _.isUndefined( child.middleware_done)) {
+          return waterfall(child)
+        }
+        //otherwise just end the stack: 
+        return endWaterfall()
+      }
     } else {
       return console.log('okay maybe nothing else left to do!')
     }
@@ -654,7 +670,6 @@ stack.next = (syncFunc) => {
     //if(_.filter( stack.grid.enties, (enty) => !enty.command.done))
     var seriouslyIncompleteCommand = _.last(seriouslyIncompleteCommands).command
     if(seriouslyIncompleteCommand.middleware_done && seriouslyIncompleteCommand.callback_invoked && seriouslyIncompleteCommand.children_awaiting == 0) {
-      debugger
       //wtf do we do here...
       //edge case!
       //mark it as done?

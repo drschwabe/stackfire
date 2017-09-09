@@ -1069,7 +1069,7 @@ test('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t)
 })
 
 
-test('inadvertent next calls', (t) => {
+test.only('inadvertent next calls', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
 
@@ -1101,8 +1101,8 @@ test('inadvertent next calls', (t) => {
 
 test('inadvertent next calls pt2', (t) => {
   t.plan(3)
-  let stack = requireUncached('./stack.js')  
-  let gg = requireUncached('gg')  
+  //let stack = requireUncached('./stack.js')  
+  //let gg = requireUncached('gg')  
 
   stack.on('bannana-shake', () => {
     console.log('brrshh-zzzzzze....')
@@ -1111,23 +1111,62 @@ test('inadvertent next calls pt2', (t) => {
     }, 2000)
   })
 
+  stack.on('cherry', () => {
+    t.pass('put a cherry on top')
+    stack.next() 
+  })
+
   stack.fire('apple', () => {
     t.pass('apple fire callback reached')
     //stack.next()
+    stack.fire('bannana-shake')
+    stack.fire('cherry')
+  })
 
-    stack.fire('bannana-shake', () => {
-      t.pass('bannana-shake fire callback reached')
-    })
+  setTimeout(() => {
+    //apple command completes cause stack.fire without callback 
+    //inexplicilty advance the stack: 
+    var firstCellCommand = gg.examine(stack.grid, [0,0]).command
+    t.ok( firstCellCommand.path = '/apple' &&  gg.examine(stack.grid, [0,0]).command.done, 'First command /apple is done')
+  }, 3000)
 
+})
+
+
+
+test.only('inadvertent next calls pt3', (t) => {
+  t.plan(4)
+  //let stack = requireUncached('./stack.js')  
+  //let gg = requireUncached('gg')  
+
+  stack.on('bannana-shake', () => {
+    console.log('brrshh-zzzzzze....')
+    setTimeout(() => {
+      stack.next() 
+    }, 2000)
+  })
+
+  stack.on('cherry', () => {
+    t.pass('put a cherry on top')
+    stack.next() 
+  })
+
+  stack.fire('apple', () => {
+    t.pass('apple fire callback reached')
+    //stack.next()
+    stack.fire('bannana-shake')
     stack.fire('cherry', () => {
       t.pass('cherry fire callback reached')
+      console.log('do not finish apple') //< By invoking a callback that does not
+      //call stack.next() we block the stack; apple will never complete. 
     })
   })
 
   setTimeout(() => {
-    //apple command should not complete: 
-    var firstCellCommand = gg.examine(stack.grid, [0,0]).command
-    t.ok( firstCellCommand.path = '/apple' &&  !gg.examine(stack.grid, [0,0]).command.done, 'First command /apple is not done')
+    //apple command should not complete cause we provided a callback
+    //and did not expliclitly call stack.next() to advance the stack: 
+    var appleCommand = gg.examine(stack.grid, [0,0]).command
+    t.notOk(gg.examine(stack.grid, [0,0]).command.done, 'First command /apple is not done')
   }, 3000)
 
 })

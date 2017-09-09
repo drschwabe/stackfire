@@ -563,12 +563,23 @@ var resumeWaterfall = (command) => {
         return stack.state._command.next()
       }
       //debugger
-      if(stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index]) {
-        stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true    
-        stack.state._command.current_middleware_index++
-        return stack.state._command.next()            
+      if(stack.state._command.current_middleware_index) {
+        if(stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index]) {
+          stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true    
+          stack.state._command.current_middleware_index++
+          return stack.state._command.next()  
+        } else {
+          console.log('omg edge case!!')
+          return
+        }       
       } else {
-        return console.log('edge case!')
+        console.log('edge case!')
+        debugger
+        return
+        //means the command has not been waterfalled yet; ie- it was a sibling who 
+        //got queued - so waterfall it now: 
+        //console.log('fresh command ${stack.state._command.path} was in queue, waterfalling...')
+        //return waterfall()
       }
     }
     middlewareToReallyRun.push(bufferFunction)
@@ -681,7 +692,12 @@ stack.next = (syncFunc) => {
       if(seriouslyIncompleteCommand.callback && !seriouslyIncompleteCommand.callback_invoked) {
         //endWaterfall() will invoke it: 
         ///return endWaterfall(seriouslyIncompleteCommand)
-        return resumeWaterfall(seriouslyIncompleteCommand)
+        //it might be a fresh command...
+        if(_.isUndefined(seriouslyIncompleteCommand.current_middleware_index)) {
+          return waterfall(seriouslyIncompleteCommand)
+        } else {
+          return resumeWaterfall(seriouslyIncompleteCommand)
+        } 
       } else {
         console.log('whoa edge case!')
         debugger

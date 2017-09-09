@@ -1069,29 +1069,32 @@ test('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t)
 })
 
 
-test.only('inadvertent next calls', (t) => {
+test('inadvertent next calls', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
 
   stack.on('init', () => {
-    t.pass('initializing')
-    console.log('(takes 3 seconds)')
+    t.pass('/init on')
+    console.log('initializing... takes 3 seconds...')
     setTimeout(() => {
       stack.next()
     }, 3000)
   })
 
   stack.on('connect', () => {
+    console.log("/connect on")
     stack.next()
   })
 
   stack.fire('init', () => {
-    t.pass('done')
+    console.log('initialization complete!')
+    t.pass('/init reached callback')
     stack.next()
   })
 
   stack.fire('connect', () => {
-    t.pass('connected')
+    console.log('connected! (should happen last')
+    t.pass('/connect reached callback')
   })
 
 
@@ -1101,8 +1104,8 @@ test.only('inadvertent next calls', (t) => {
 
 test('inadvertent next calls pt2', (t) => {
   t.plan(3)
-  //let stack = requireUncached('./stack.js')  
-  //let gg = requireUncached('gg')  
+  let stack = requireUncached('./stack.js')  
+  let gg = requireUncached('gg')  
 
   stack.on('bannana-shake', () => {
     console.log('brrshh-zzzzzze....')
@@ -1134,10 +1137,10 @@ test('inadvertent next calls pt2', (t) => {
 
 
 
-test.only('inadvertent next calls pt3', (t) => {
+test('inadvertent next calls pt3', (t) => {
   t.plan(4)
-  //let stack = requireUncached('./stack.js')  
-  //let gg = requireUncached('gg')  
+  let stack = requireUncached('./stack.js')  
+  let gg = requireUncached('gg')  
 
   stack.on('bannana-shake', () => {
     console.log('brrshh-zzzzzze....')

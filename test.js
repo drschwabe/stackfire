@@ -1067,3 +1067,67 @@ test('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t)
     t.pass()
   })
 })
+
+
+test('inadvertent next calls', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js')  
+
+  stack.on('init', () => {
+    t.pass('initializing')
+    console.log('(takes 3 seconds)')
+    setTimeout(() => {
+      stack.next()
+    }, 3000)
+  })
+
+  stack.on('connect', () => {
+    stack.next()
+  })
+
+  stack.fire('init', () => {
+    t.pass('done')
+    stack.next()
+  })
+
+  stack.fire('connect', () => {
+    t.pass('connected')
+  })
+
+
+})
+
+
+
+test('inadvertent next calls pt2', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js')  
+  let gg = requireUncached('gg')  
+
+  stack.on('bannana-shake', () => {
+    console.log('brrshh-zzzzzze....')
+    setTimeout(() => {
+      stack.next() 
+    }, 2000)
+  })
+
+  stack.fire('apple', () => {
+    t.pass('apple fire callback reached')
+    //stack.next()
+
+    stack.fire('bannana-shake', () => {
+      t.pass('bannana-shake fire callback reached')
+    })
+
+    stack.fire('cherry', () => {
+      t.pass('cherry fire callback reached')
+    })
+  })
+
+  setTimeout(() => {
+    //apple command should not complete: 
+    var firstCellCommand = gg.examine(stack.grid, [0,0]).command
+    t.ok( firstCellCommand.path = '/apple' &&  !gg.examine(stack.grid, [0,0]).command.done, 'First command /apple is not done')
+  }, 3000)
+
+})

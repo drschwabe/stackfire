@@ -439,7 +439,9 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       //return stack.state._command.next(null, stack.state)
       stack.state._command.done = true
       if(stack.renderGrid) stack.renderGrid()
-      return resumeWaterfall(state._command.parent)      
+      //we dont resume the parent, instead we wait for next... 
+      //return resumeWaterfall(state._command.parent) 
+      return //< do nothing (wait for stack.next() from parent)     
     }    
   }
   
@@ -618,6 +620,11 @@ var resumeWaterfall = (command) => {
 
 stack.next = (syncFunc) => {
   
+  var callee = arguments.callee
+  var caller = arguments.callee.caller
+
+  debugger
+
   if(syncFunc) syncFunc()
 
   //Determine if the current command has a 'next' property
@@ -684,7 +691,18 @@ stack.next = (syncFunc) => {
       //wtf do we do here...
       //edge case!
       //mark it as done?
-      seriouslyIncompleteCommand.done = true
+      //no, its not done - but we can make it the active command... 
+      //only if this 
+      if(stack.state._command != seriouslyIncompleteCommand) {
+        stack.state._command = seriouslyIncompleteCommand
+        //also typically this would be a
+        //stack.awaitNext() <- somehow just sort of queues and waits for 'next' 
+        //to be called.
+        console.log('incomplete command - but next was not called from it') 
+        debugger
+      } else {
+        seriouslyIncompleteCommand.done = true
+      }
       if(stack.renderGrid) stack.renderGrid()
       return 
     } else {

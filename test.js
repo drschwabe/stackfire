@@ -1175,8 +1175,8 @@ test('inadvertent next calls pt3', (t) => {
 })
 
 
-test.only('rows of siblings', (t) => {
-  t.plan(7)
+test('rows of siblings', (t) => {
+  t.plan(8)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')     
   stack.fire('fruits', () => {
@@ -1186,6 +1186,8 @@ test.only('rows of siblings', (t) => {
     stack.fire('pineapple')
     stack.fire('kiwi')
     stack.fire('watermellon')
+    //stack.next() //< we do not call, 
+    //therefore the fruits command should never complete
   })
 
   //1 parent, and row of 6 siblings: 
@@ -1193,10 +1195,38 @@ test.only('rows of siblings', (t) => {
   //apple | bannana | cherry | pineapple | kiwi | watermellon 
 
   t.equals(gg.examine(stack.grid, 0).command.path, '/fruits' )
+  t.notOk(gg.examine(stack.grid, 0).command.done)
   t.equals(gg.examine(stack.grid, [1,0]).command.path, '/apple' )
   t.equals(gg.examine(stack.grid, [1,1]).command.path, '/bannana' )  
   t.equals(gg.examine(stack.grid, [1,2]).command.path, '/cherry' )  
   t.equals(gg.examine(stack.grid, [1,3]).command.path, '/pineapple' )  
   t.equals(gg.examine(stack.grid, [1,4]).command.path, '/kiwi' )  
   t.equals(gg.examine(stack.grid, [1,5]).command.path, '/watermellon' )  
+})
+
+
+test('stack.next() caller check', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')       
+
+  stack.fire('stone', () => {
+    stack.next()
+  })
+
+  stack.fire('wood', () => {
+    //stack.next()
+    stack.fire('paper', () => {
+      stack.next() 
+    })
+  })
+
+  //  stone | wood 
+  //          paper
+
+  t.ok(gg.examine(stack.grid, 0).command.done)
+  t.notOk(gg.examine(stack.grid, [0, 1]).command.done)
+  t.ok(gg.examine(stack.grid, [1, 1]).command.done)
+  //Wood is not done cause it never calls stack.next()
+  //Stone and paper are both done cause their callbacks both call stack.next() 
 })

@@ -250,9 +250,20 @@ stack.fire = function(path, param2, param3) {
         return enty
       })
       stack.grid = gg.populateCells(stack.grid) 
-      if(stack.renderGrid) stack.renderGrid()            
+      if(stack.renderGrid) stack.renderGrid()           
 
-      newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
+
+
+      var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
+
+      if(incompleteCommands.length) {
+        //This will be a sibling of the incomplet ecommand: 
+        newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
+        //may need to improve it and look for last child or make child 'children' (an array of childs)
+      } else {
+        //otherwise there are no incomplete commands; we can put this on root level:
+        newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
+      }
       stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
       stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
 

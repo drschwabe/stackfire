@@ -856,7 +856,7 @@ test('Multi command stress test', (t) => {
     t.notOk(milkCommand.done, 'milk command not done yet (trailing callback underway)') 
     t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0') 
     debugger 
-    stack.fire('shake', (err, state) => {
+    stack.fire('shake', () => {
       var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.path == '/shake').command
       //milk command is still done: 
       t.notOk(milkCommand.done, 'milk command still not done')     
@@ -866,6 +866,7 @@ test('Multi command stress test', (t) => {
       debugger
       stack.next()              
     })
+    stack.next()
   })
 
   stack.on('beer', (state, next) => {

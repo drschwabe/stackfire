@@ -191,20 +191,24 @@ stack.fire = function(path, param2, param3) {
           //TODO: replace with a general 'sync middleware hook' in whereby any module could
           //perform a sync function here                   
         }
-        var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
-        if(incompleteCommands.length) {
-          //This will be a sibling of the incomplete command (or its child if it has one) 
-          if (_.last(incompleteCommands).command.child) {
-            cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell) 
-          } else {
-            cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
-          }
+        if(sibling) {
+          cell = gg.nextOpenCellEast(stack.grid, sibling.cell)
+          debugger
         } else {
-          cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
+          var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
+          if(incompleteCommands.length) {
+            //This will be a sibling of the incomplete command (or its child if it has one) 
+            if (_.last(incompleteCommands).command.child) {
+              cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell) 
+            } else {
+              cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
+            }
+          } else {
+            cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
+          }
         }
         if(sibling.parent) newCommand.parent = sibling.parent
         //^ this might override the proper sibling which could be not necessarily the parent of the other sibling...  
-
       } else { //< this is a child of the current state._command:  
         //TODO: ^^ consider if better determination needed here! 
         //callers might be different but still be not a child of current command

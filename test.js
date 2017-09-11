@@ -646,7 +646,7 @@ test('Fire shorthand', (t) => {
 
   stack.on('go', () => {
     t.pass('going')
-    stack.next()
+    stack.next() 
   })  
 
   stack.fire('green', (err, state, nextFire) => {
@@ -656,12 +656,14 @@ test('Fire shorthand', (t) => {
 })
 
 test('Fire shorthand + multi commands', (t) => {
-  t.plan(5)
+  t.plan(6)
   let stack = requireUncached('./stack.js')
+  let gg = requireUncached('gg')
 
   stack.on('green', (state) => {
     t.pass('green light on')
     stack.fire('go')
+    stack.next()
   })
 
   stack.on('go', (state) => {
@@ -679,9 +681,12 @@ test('Fire shorthand + multi commands', (t) => {
     stack.next()
   })  
 
+  //Red should be a sibling of root... 
   stack.fire('red', (err, state) => {
     t.pass('stopped')
   })
+
+  t.equals(gg.examine(stack.grid, [0,1]).command.path, '/red')
 
 })
 

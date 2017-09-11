@@ -175,6 +175,8 @@ stack.fire = function(path, param2, param3) {
       }
       if(state._command.parent && state._command.parent.caller == newCommand.caller) sibling = true
 
+      //is there another scenario where there may be a sibling? 
+
       if(sibling) { 
         //Expand grid size if necessary: 
         //find the easternmost command... 
@@ -189,7 +191,13 @@ stack.fire = function(path, param2, param3) {
           //TODO: replace with a general 'sync middleware hook' in whereby any module could
           //perform a sync function here                   
         }
-        cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
+        var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
+        if(incompleteCommands.length) {
+          //This will be a sibling of the incomplete ecommand: 
+          cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
+        } else {
+          cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
+        }
         if(sibling.parent) newCommand.parent = sibling.parent
         //^ this might override the proper sibling which could be not necessarily the parent of the other sibling...  
 
@@ -252,12 +260,11 @@ stack.fire = function(path, param2, param3) {
       stack.grid = gg.populateCells(stack.grid) 
       if(stack.renderGrid) stack.renderGrid()           
 
-
-
       var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
-
-      if(incompleteCommands.length) {
-        //This will be a sibling of the incomplet ecommand: 
+      if(incompleteCommands.length && _.last(incompleteCommands).command.caller != newCommand.caller) {
+        //^ This will be a sibling of the incomplete command....
+        //unless the incomplete command and new command share the same caller; in which case 
+        //they will be siblings.
         newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
         //may need to improve it and look for last child or make child 'children' (an array of childs)
       } else {
@@ -417,7 +424,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
 
 //possily here is calling nextCommand but not making note that 
   
-  if(stack.state._command.done) return stack.next()
+  if(stack.state._command.done) return //stack.next()
 
   //If there is a parent - return and continue where it left off:
   if(stack.state._command.parent && !stack.state._command.parent.done ) {
@@ -657,11 +664,11 @@ stack.next = (syncFunc) => {
 
   if(stack.state._command.middleware_done) {
     //We are now likely running the command's callback...
-    if(!stack.state._command.callback_invoked) {
+    if(stack.state._command.callback && !stack.state._command.callback_invoked) {
       //invoke the command's callback (by running endWaterffall) 
       return endWaterfall()
     } else {
-      //the command's callback has already been invoked, so the command is over
+      //the command's callback has already been invoked (or does not have one), so the command is over
       //(however, to guard against this executing multiple times additional logic may be necessary)
       //ONLY if the function that called stack.next() is 
       //the callback

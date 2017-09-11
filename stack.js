@@ -193,8 +193,12 @@ stack.fire = function(path, param2, param3) {
         }
         var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
         if(incompleteCommands.length) {
-          //This will be a sibling of the incomplete ecommand: 
-          cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
+          //This will be a sibling of the incomplete command (or its child if it has one) 
+          if (_.last(incompleteCommands).command.child) {
+            cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell) 
+          } else {
+            cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
+          }
         } else {
           cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
         }

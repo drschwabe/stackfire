@@ -1128,8 +1128,9 @@ test('inadvertent next calls pt2', (t) => {
   stack.fire('apple', () => {
     t.pass('apple fire callback reached')
     //stack.next()
-    stack.fire('bannana-shake')
-    stack.fire('cherry')
+    stack.fire('bannana-shake', stack.next)
+    stack.fire('cherry', stack.next)
+    stack.next()
   })
 
   setTimeout(() => {
@@ -1163,7 +1164,7 @@ test('inadvertent next calls pt3', (t) => {
   stack.fire('apple', () => {
     t.pass('apple fire callback reached')
     //stack.next()
-    stack.fire('bannana-shake')
+    stack.fire('bannana-shake', stack.next)
     stack.fire('cherry', () => {
       t.pass('cherry fire callback reached')
       console.log('do not finish apple') //< By invoking a callback that does not

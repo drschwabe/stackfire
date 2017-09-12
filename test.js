@@ -1237,3 +1237,37 @@ test('stack.next() caller check', (t) => {
   //Wood is not done cause it never calls stack.next()
   //Stone and paper are both done cause their callbacks both call stack.next() 
 })
+
+
+test('wait for loading...', (t) => {
+  t.plan(5)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')    
+
+  var loaded = false 
+
+  stack.on('init', () => {
+    stack.fire('load', () => {
+      setTimeout(() => { //< (simulate loading)
+        t.pass('loading complete')
+        loaded = true
+        stack.next() 
+      }, 1000)
+    })
+    //This should wait for it's sibling to finish loading:  
+    stack.fire('do-other-stuff', () => {
+      console.log('now do other stuff')      
+      t.ok(loaded)
+    })
+  })
+
+  stack.fire('init')
+
+  //cell check: 
+  setTimeout(() => {
+    t.equals(  _.find(stack.grid.enties, (enty) => enty.command.path == '/init').command.cell, 0)
+    //Both these commands are siblings of the original '/init' command: 
+    t.equals(  _.find(stack.grid.enties, (enty) => enty.command.path == '/load').command.cell, 2) 
+    t.equals(  _.find(stack.grid.enties, (enty) => enty.command.path == '/do-other-stuff').command.cell, 3) 
+  }, 2000)
+})

@@ -272,8 +272,12 @@ stack.fire = function(path, param2, param3) {
       if(incompleteCommands.length && _.last(incompleteCommands).command.caller != newCommand.caller) {
         //^ This will be a sibling of the incomplete command....
         //unless the incomplete command and new command share the same caller; in which case 
-        //they will be siblings.
-        newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
+        //they will be siblings....
+        if( _.last(incompleteCommands).command.child) { //Prioritize child if any: 
+          newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)          
+        } else {
+          newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)                    
+        }
         //may need to improve it and look for last child or make child 'children' (an array of childs)
       } else {
         //otherwise there are no incomplete commands; we can put this on root level:

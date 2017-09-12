@@ -747,7 +747,10 @@ stack.next = (syncFunc) => {
         if(_.isUndefined(seriouslyIncompleteCommand.current_middleware_index)) {
           return waterfall(seriouslyIncompleteCommand)
         } else {
-          return resumeWaterfall(seriouslyIncompleteCommand)
+          //don't resumewaterfall, let's just make it active command... 
+          //return resumeWaterfall(seriouslyIncompleteCommand)
+          stack.state._command = seriouslyIncompleteCommand
+          return 
         } 
       } else {
         console.log('whoa edge case!')

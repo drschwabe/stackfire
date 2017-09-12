@@ -1361,3 +1361,20 @@ test('stack.next for ons vs fires pt5', (t) => {
   t.notOk(gg.examine(stack.grid, [1, 0]).command.done)  //< bean-sprouts is not done because stack.next was not called during it's final callback. 
   t.notOk(gg.examine(stack.grid, 0).command.done)
 })
+
+
+
+test.only('nested on/next situation', (t) => {
+  t.plan(1)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')   
+
+  stack.on('apple', () => {
+    stack.fire('orange', stack.next)
+    //stack.next is not called during the middleware function so apple should never complete... 
+  })
+  stack.fire('apple', stack.next)
+
+  t.notOk(gg.examine(stack.grid, 0).command.done )
+
+})

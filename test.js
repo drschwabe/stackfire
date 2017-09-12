@@ -1271,3 +1271,93 @@ test('wait for loading...', (t) => {
     t.equals(  _.find(stack.grid.enties, (enty) => enty.command.path == '/do-other-stuff').command.cell, 3) 
   }, 2000)
 })
+
+test('stack.next for ons vs fires', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')   
+
+  stack.on('apple', () => {
+    stack.fire('bannana', stack.next)
+    stack.next()
+  })
+
+  stack.fire('apple', stack.next)
+
+  t.ok(gg.examine(stack.grid, [1, 0]).command.done)  //< /apple is done
+  t.ok(gg.examine(stack.grid, 0).command.done) //< /bannana is done
+})
+
+
+test('stack.next for ons vs fires pt2', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')   
+
+  stack.on('cherry', () => {
+    debugger
+    stack.fire('date', () => {
+
+    }) 
+    //^ Both cherry and date should be incomplete; stack.next is never called on either. 
+  })
+  stack.fire('cherry')
+  
+  debugger
+  t.notOk(gg.examine(stack.grid, [1, 0]).command.done)  //< date is not done
+  t.notOk(gg.examine(stack.grid, 0).command.done) //< cherry is not done
+  //actually date is done cause there is no middleware... if date was fired with a callback it would not be done. 
+})
+
+
+test('stack.next for ons vs fires pt3', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')   
+
+  stack.on('asparagus', () => {
+    stack.fire('bean-sprouts') 
+  })
+  stack.fire('asparagus')
+  t.ok(gg.examine(stack.grid, [1, 0]).command.done)  //< bean-sprouts is done because there is no middleware, nor callback provided. 
+  t.notOk(gg.examine(stack.grid, 0).command.done) //< asparagus is not done
+})
+
+test('stack.next for ons vs fires pt4', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')   
+
+  stack.on('bean-sprouts', () => {
+    console.log('bean-sprouts in progress')
+    stack.next() 
+  })
+
+  stack.on('asparagus', () => {
+    stack.fire('bean-sprouts') 
+  })
+  stack.fire('asparagus')
+  t.ok(gg.examine(stack.grid, [1, 0]).command.done)  //< bean-sprouts is done because the middleware is done and no callback was provided. 
+  t.notOk(gg.examine(stack.grid, 0).command.done)
+})
+
+
+test('stack.next for ons vs fires pt5', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')   
+
+  stack.on('bean-sprouts', () => {
+    console.log('bean-sprouts in progress')
+    stack.next() 
+  })
+
+  stack.on('asparagus', () => {
+    stack.fire('bean-sprouts', () => {
+      //callback provided but stack.next not called
+    }) 
+  })
+  stack.fire('asparagus')
+  t.notOk(gg.examine(stack.grid, [1, 0]).command.done)  //< bean-sprouts is not done because stack.next was not called during it's final callback. 
+  t.notOk(gg.examine(stack.grid, 0).command.done)
+})

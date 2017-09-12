@@ -419,11 +419,14 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     //it being called again:
     if(newCommand.parent) {
        //only if there is actually middleware (ie- middlewareless fire): 
-      if(!stack.state._command.middleware_done && stack.state._command.matching_route.middleware) {
+      if(!stack.state._command.middleware_done && stack.state._command.matching_route.middleware && stack.state._command.current_middleware_index) {
         stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
         //(TODO: consider implication of multiple fires within a middleware function;
         //the above functionality may have unexpected implications)  
-      }    
+      } else {
+        console.log('edge case?')
+        debugger
+      }
     }
     return waterfall(newCommand)
   }
@@ -685,7 +688,7 @@ stack.next = (syncFunc) => {
       //ONLY if the function that called stack.next() is 
       //the callback
       //this is critical... 
-      debugger
+      
       stack.state._command.done = true  
       //we need to wait to make sure the current stack.next() being executed 
       //is the one from the callback and not another command.... 
@@ -703,7 +706,7 @@ stack.next = (syncFunc) => {
       console.log('whaaa another edge case!') 
     }
 
-    debugger
+    
 
     //^ This ensures we increment to the next middleware in the stack: 
     return resumeWaterfall(stack.state._command)
@@ -729,7 +732,7 @@ stack.next = (syncFunc) => {
         //stack.awaitNext() <- somehow just sort of queues and waits for 'next' 
         //to be called.
         console.log('incomplete command - but next was not called from it') 
-        debugger
+        
       } else {
         seriouslyIncompleteCommand.done = true
       }
@@ -748,7 +751,7 @@ stack.next = (syncFunc) => {
         } 
       } else {
         console.log('whoa edge case!')
-        debugger
+        
       }
     }
   }

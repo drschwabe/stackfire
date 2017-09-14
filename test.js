@@ -26,12 +26,16 @@ test("stack.fire nested within stack.on", (t) => {
     console.log('/apple "on" (middleware in progress). _command.path:')
     console.log(stack.state._command.path)
 
-    stack.fire('/bannana', (err, newState, nextFire) => {
+    stack.fire('/bannana', () => {
       console.log('/bannana fired (its final callback in progress)')
       console.log(stack.state._command.path)     
       console.log("/bannana's callback will immediately call stack.next()")   
       debugger
-      stack.next() //Maybe can solve this with calling stack.nextFire()
+      stack.next()
+      stack.next() //< this is for the apple.
+      //calling stack.next twice in a callback useful for synchrononus functions. 
+      //something else I may consider is stack.done('apple') ie- you can conclude 
+      //a command by calling that. 
     })
   })
 
@@ -72,7 +76,8 @@ test("stack.fire nested within stack.on (async)", (t) => {
         console.log(stack.state._command.path)     
         console.log("/bannana's callback will immediately call nextFire()")   
         debugger
-        stack.next() //Maybe can solve this with calling stack.nextFire()
+        stack.next() 
+        stack.next() 
       })
     }, 500)
   })
@@ -548,6 +553,7 @@ test('Robot assembly line', (t) => {
       console.log(`state._command.path is: ${stack.state._command.path}
       `)
       stack.next()
+      stack.next() 
     })
   })
 
@@ -617,7 +623,16 @@ test('Async element initialization', (t) => {
       //TODO: should be some brakes when the next() command fires; some extra logic to prevent max callback.
       console.log('fired: ' + stack.state._command.path)
       stack.next()
+      stack.next()  //Could be an issue with doing double calls like this though.... 
+      //for an async func in particular, stack.next might get called
+      //but without reference to the original middleware that it's intended for - 
+      //you can't necessarily move forward the stack...
+      //which is why it may be important to pass stack.next('element/:elemnetName') here... 
+      //or stack.next('element/' + stack.state._command.params.elementName)
       //next(null, newState)
+      //if you call just stack.next() it will do a general advance; but may cause issue if 
+      //you need things to execute in specific order so thats why its advisable to use stack.next('/name-of-function') or possibly another way would be to do it my original way which was to pass
+      //the 'next' object
     })
   })
 
@@ -642,6 +657,7 @@ test('Fire shorthand', (t) => {
   stack.on('green', () => {
     t.pass('green light')
     stack.fire('go', stack.next) //< Shortand
+    stack.next() //< You have to call stack.next() for the ON
   })
 
   stack.on('go', () => {
@@ -662,7 +678,7 @@ test('Fire shorthand + multi commands', (t) => {
 
   stack.on('green', (state) => {
     t.pass('green light on')
-    stack.fire('go')
+    stack.fire('go', stack.next)
     stack.next()
   })
 
@@ -1364,7 +1380,7 @@ test('stack.next for ons vs fires pt5', (t) => {
 
 
 
-test.only('nested on/next situation', (t) => {
+test('nested on/next situation', (t) => {
   t.plan(1)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')   

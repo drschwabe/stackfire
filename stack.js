@@ -193,7 +193,6 @@ stack.fire = function(path, param2, param3) {
         }
         if(sibling) {
           cell = gg.nextOpenCellEast(stack.grid, sibling.cell)
-          debugger
         } else {
           var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
           if(incompleteCommands.length) {
@@ -425,7 +424,9 @@ var endWaterfall = (newCommand) => { //End of waterfall:
         //the above functionality may have unexpected implications)  
       } else {
         console.log('edge case?')
-        debugger
+        //if there are children awaiting; let it flow: 
+        if(!state._command.children_awaiting) return 
+        //return 
       }
     }
     return waterfall(newCommand)
@@ -545,14 +546,12 @@ var resumeWaterfall = (command) => {
       if(command.parent && !command.parent.done) {
         //if(command.children) 
         //invoke command for any children with incomplete middleware... 
-        debugger
         return stack.next()
       } else {
         //children? find them: 
         var child = _.find(stack.grid.enties, (enty) => enty.command.parent && enty.command.parent.path == command.path && !enty.command.done)
         if(child) child = child.command //< (if child is undefined it would throw err)
         //now assess the children... ie- are they done or no ? 
-        debugger
         if(child && _.isUndefined( child.middleware_done)) {
           return waterfall(child)
         }
@@ -609,12 +608,10 @@ var resumeWaterfall = (command) => {
         }       
       } else {
         console.log('edge case!')
-        debugger
+        //Possibly need to let it flow under some condition; but not on others... 
+        //for now just always return in this case.
+        //debugger
         return
-        //means the command has not been waterfalled yet; ie- it was a sibling who 
-        //got queued - so waterfall it now: 
-        //console.log('fresh command ${stack.state._command.path} was in queue, waterfalling...')
-        //return waterfall()
       }
     }
     middlewareToReallyRun.push(bufferFunction)
@@ -655,9 +652,6 @@ stack.next = (syncFunc) => {
   
   var callee = arguments.callee
   var caller = arguments.callee.caller
-
-  debugger
-
   if(syncFunc) syncFunc()
 
   //Determine if the current command has a 'next' property

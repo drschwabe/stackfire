@@ -114,6 +114,8 @@ stack.fire = function(path, param2, param3) {
     state = this.state
   }
 
+  debugger
+
   //Prepare the new command object: 
   var matchingRoutes = _.filter(this.routes, function(route) {
     var match =  route.route.match(path)
@@ -273,14 +275,16 @@ stack.fire = function(path, param2, param3) {
         //unless the incomplete command and new command share the same caller; in which case 
         //they will be siblings....
         if( _.last(incompleteCommands).command.child) { //Prioritize child if any: 
-          newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)          
+          newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
         } else {
-          newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)                    
+          newCommand.cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
         }
         //may need to improve it and look for last child or make child 'children' (an array of childs)
       } else {
         //otherwise there are no incomplete commands; we can put this on root level:
-        newCommand.cell = gg.nextOpenCell(stack.grid) //then find next open cell...
+        newCommand.cell = gg.nextOpenColumn(stack.grid) //then find next open column...
+        debugger
+        //(because we already expanded the grid there should be at least one open column eastmost)
       }
       stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
       stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
@@ -438,7 +442,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
 
   if(stack.state._command.parent && stack.state._command.parent.children_awaiting) stack.state._command.parent.children_awaiting--
 
-//possily here is calling nextCommand but not making note that 
+  //possily here is calling nextCommand but not making note that 
   
   if(stack.state._command.done) return //stack.next()
 

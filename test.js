@@ -1394,3 +1394,32 @@ test('nested on/next situation', (t) => {
   t.notOk(gg.examine(stack.grid, 0).command.done )
 
 })
+
+test.only('ensure unrelated commands never share same column', (t) => {
+  t.plan(7)
+
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg')  
+
+  stack.fire('apple', () => {
+    stack.fire('green')
+    stack.fire('red')
+  })  
+
+  stack.fire('berry', () => {
+    stack.fire('strawberry')
+    stack.fire('blueberry')
+    stack.fire('saskatoon')
+  })
+
+
+  t.ok( gg.examine(stack.grid, 0).command.path == '/apple')
+  t.ok( gg.examine(stack.grid, [1,0]).command.path == '/green')
+  t.ok( gg.examine(stack.grid, [1,1]).command.path == '/red')
+
+  t.ok( gg.examine(stack.grid, [0,2]).command.path == '/berry')
+  t.ok( gg.examine(stack.grid, [1,2]).command.path == '/strawberry')
+  t.ok( gg.examine(stack.grid, [1,3]).command.path == '/blueberry')
+  t.ok( gg.examine(stack.grid, [1,4]).command.path == '/saskatoon')
+
+})

@@ -10,7 +10,6 @@ test("stack.fire invokes stack.on", (t) => {
 
   stack.on('/do-something', () => {
     //t.ok(state, 'listener invoked')    
-    debugger
     t.equal(stack.state._command.path, '/do-something', "state._command.path equals '/do-something'")
   })
 
@@ -1395,7 +1394,7 @@ test('nested on/next situation', (t) => {
 
 })
 
-test.only('ensure unrelated commands never share same column', (t) => {
+test('ensure unrelated commands never share same column', (t) => {
   t.plan(7)
 
   let stack = requireUncached('./stack.js') 

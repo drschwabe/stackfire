@@ -114,8 +114,6 @@ stack.fire = function(path, param2, param3) {
     state = this.state
   }
 
-  debugger
-
   //Prepare the new command object: 
   var matchingRoutes = _.filter(this.routes, function(route) {
     var match =  route.route.match(path)
@@ -141,7 +139,7 @@ stack.fire = function(path, param2, param3) {
 
   if(!matchingRoutes.length) matchingRoutes[0] = {} //< Create a command obj anyway. 
 
-  
+  debugger
 
   matchingRoutes.forEach((matchingRoute, index) => {  
     var newCommand = {
@@ -283,7 +281,7 @@ stack.fire = function(path, param2, param3) {
       } else {
         //otherwise there are no incomplete commands; we can put this on root level:
         newCommand.cell = gg.nextOpenColumn(stack.grid) //then find next open column...
-        debugger
+        //debugger
         //(because we already expanded the grid there should be at least one open column eastmost)
       }
       stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
@@ -504,16 +502,13 @@ var endWaterfall = (newCommand) => { //End of waterfall:
         //current running command: 
         //I think it should be non destructive... ie- run it after the command... is done. 
       if(stack.state._command.done) return //< This should never happen...
-      console.log('all done (with callback)')  
       stack.state._command.done = true
       if(callback) callback() //< This type of callback must be synchronous!
       if(stack.renderGrid) stack.renderGrid()  
       if(siblingCommand) {
-        console.log('run sibling command...')
         return waterfall(siblingCommand)
       } else { //Even if no sibling from before, it is possible a new sibling 
         //has occurred so we run fand() it should figure it out: 
-        console.log('no siblings found, try nextCommand()')
         return stack.next()
       }
     }
@@ -521,10 +516,8 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     return state._command.callback(null, stack.state, nextFire)
   } else {
     state._command.done = true      
-    console.log('all done (no callback)') 
     if(stack.renderGrid) stack.renderGrid()    
     if(siblingCommand) {
-      console.log('run sibling command...')
       return waterfall(siblingCommand)  
     }    
   }
@@ -542,7 +535,6 @@ var resumeWaterfall = (command) => {
  
 
   if(!command.matching_route.middleware) {
-    console.log('no more matching_route middleware...')
     //check if the command ... 
     //command.done = true 
     if(stack.renderGrid) stack.renderGrid()
@@ -759,8 +751,6 @@ stack.next = (syncFunc) => {
 
   //start with the last one... 
   if(!incompleteCommands || _.isEmpty(incompleteCommands)) {
-    console.log('okay really all done now')
-
     stack.state._command = null
     return
   }

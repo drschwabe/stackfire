@@ -11,14 +11,19 @@ if (!isNode) browser = true
 var stack = { 
   routes : [], 
   state : {}, 
-  grid : gg.createGrid(1,1) 
+  grid : gg.createGrid(1,1), 
+  utils : [] 
 }
+
 stack.grid = gg.populateCells(stack.grid)
 
+const runUtils = () => {
+  stack.utils.forEach((utilFunc) => {
+    return utilFunc(stack) 
+  })
+}
 
 stack.on = function(param1, callback) {
-
-   
 
   //param1: a string or an array of strings.
   //(is either a single path or array of paths)  
@@ -139,7 +144,6 @@ stack.fire = function(path, param2, param3) {
 
   if(!matchingRoutes.length) matchingRoutes[0] = {} //< Create a command obj anyway. 
 
-  debugger
 
   matchingRoutes.forEach((matchingRoute, index) => {  
     var newCommand = {
@@ -187,7 +191,7 @@ stack.fire = function(path, param2, param3) {
             return enty
           })          
           stack.grid = gg.populateCells(stack.grid)
-          if(stack.renderGrid) stack.renderGrid()    
+          runUtils()     
           //TODO: replace with a general 'sync middleware hook' in whereby any module could
           //perform a sync function here                   
         }
@@ -221,7 +225,7 @@ stack.fire = function(path, param2, param3) {
             return enty
           })          
           stack.grid = gg.populateCells(stack.grid)  
-          if(stack.renderGrid) stack.renderGrid()                   
+          runUtils()                    
         }
     
         //search the next row down:  
@@ -247,7 +251,7 @@ stack.fire = function(path, param2, param3) {
         return enty
       }) 
 
-      if(stack.renderGrid) stack.renderGrid()  
+      runUtils()   
 
       
       if(sibling) return  //< We return if sibling because the current command  
@@ -265,7 +269,7 @@ stack.fire = function(path, param2, param3) {
         return enty
       })
       stack.grid = gg.populateCells(stack.grid) 
-      if(stack.renderGrid) stack.renderGrid()           
+      runUtils()            
 
       var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
       if(incompleteCommands.length && _.last(incompleteCommands).command.caller != newCommand.caller) {
@@ -287,7 +291,7 @@ stack.fire = function(path, param2, param3) {
       stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
       stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
 
-      if(stack.renderGrid) stack.renderGrid()      
+      runUtils()       
       waterfall(newCommand) //< finally, run the middleware waterfall! 
       //callback()
     }
@@ -300,7 +304,7 @@ var waterfall = (command) => {
       state = stack.state
 
   state._command = command   
-  if(stack.renderGrid) stack.renderGrid()  
+  runUtils()   
   async.series([
     function(seriesCallback) {
       var seedFunction = function(next) { 
@@ -413,7 +417,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       stack.state._command.done = false
     }
 
-    if(stack.renderGrid) stack.renderGrid() 
+    runUtils()  
 
     //If child fire, we must take heed that the current "on" middleware function
     //which fired the command must now be marked as complete to avoid
@@ -436,7 +440,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
   if(!stack.state._command) return
   //state._command.done = true  
   stack.state._command.middleware_done = true 
-  if(stack.renderGrid) stack.renderGrid()
+  runUtils() 
 
   if(stack.state._command.parent && stack.state._command.parent.children_awaiting) stack.state._command.parent.children_awaiting--
 
@@ -474,7 +478,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     } else {
       //return stack.state._command.next(null, stack.state)
       stack.state._command.done = true
-      if(stack.renderGrid) stack.renderGrid()
+      runUtils() 
       //we dont resume the parent, instead we wait for next... 
       //return resumeWaterfall(state._command.parent) 
       return //< do nothing (wait for stack.next() from parent)     
@@ -504,7 +508,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       if(stack.state._command.done) return //< This should never happen...
       stack.state._command.done = true
       if(callback) callback() //< This type of callback must be synchronous!
-      if(stack.renderGrid) stack.renderGrid()  
+      runUtils()   
       if(siblingCommand) {
         return waterfall(siblingCommand)
       } else { //Even if no sibling from before, it is possible a new sibling 
@@ -516,7 +520,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     return state._command.callback(null, stack.state, nextFire)
   } else {
     state._command.done = true      
-    if(stack.renderGrid) stack.renderGrid()    
+    runUtils()     
     if(siblingCommand) {
       return waterfall(siblingCommand)  
     }    
@@ -537,7 +541,7 @@ var resumeWaterfall = (command) => {
   if(!command.matching_route.middleware) {
     //check if the command ... 
     //command.done = true 
-    if(stack.renderGrid) stack.renderGrid()
+    runUtils() 
     if(!command.done && command.callback) {
       if(command.parent && !command.parent.done) {
         //if(command.children) 
@@ -682,7 +686,7 @@ stack.next = (syncFunc) => {
       stack.state._command.done = true  
       //we need to wait to make sure the current stack.next() being executed 
       //is the one from the callback and not another command.... 
-      if(stack.renderGrid) stack.renderGrid()
+      runUtils() 
     }
   } else {
     //there are still remaining middleware to run: 
@@ -726,7 +730,7 @@ stack.next = (syncFunc) => {
       } else {
         seriouslyIncompleteCommand.done = true
       }
-      if(stack.renderGrid) stack.renderGrid()
+      runUtils() 
       return 
     } else {
       //does it have a callback? 

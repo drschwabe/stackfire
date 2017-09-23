@@ -184,18 +184,16 @@ stack.fire = function(path, param2, param3) {
       if(sibling) { 
         //Expand grid size if necessary: 
         //find the easternmost command... 
-        if(gg.isEastEdge(stack.grid, gg.nextOccupiedCellEast(stack.grid, state._command.cell))){
-          stack.grid = gg.expandGrid(stack.grid) 
+
+        //Is there a cell to the east? 
+        if(gg.isEastEdge(stack.grid, stack.state._command.cell) || !gg.openCellsEast(grid, stack.state._command.cell)) => {
+          stack.grid = gg.expandGrid(stack.grid)
           stack.grid.enties = _.map(stack.grid.enties, (enty) => {
             enty.command.cell = enty.cell 
             return enty
-          })          
+          })
           stack.grid = gg.populateCells(stack.grid)
-          runUtils()     
-          //TODO: replace with a general 'sync middleware hook' in whereby any module could
-          //perform a sync function here                   
-        }
-        if(sibling) {
+          runUtils()
           cell = gg.nextOpenCellEast(stack.grid, sibling.cell)
         } else {
           var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
@@ -226,10 +224,13 @@ stack.fire = function(path, param2, param3) {
           })          
           stack.grid = gg.populateCells(stack.grid)  
           runUtils()                    
+        } else {
+          //should we be looking east too ? 
+          debugger
         }
     
         //search the next row down:  
-        cell = gg.nextOpenCellSouth(stack.grid, state._command.cell)        
+        cell = gg.nextOpenCellSouth(stack.grid, state._command.cell)   
 
         //also make note of parent...  
         newCommand.parent = state._command 
@@ -252,7 +253,6 @@ stack.fire = function(path, param2, param3) {
       }) 
 
       runUtils()   
-
       
       if(sibling) return  //< We return if sibling because the current command  
       //should finish first (stack will now call it upon completion; we just queued it) 
@@ -431,6 +431,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       } else {
         console.log('edge case?')
         //if there are children awaiting; let it flow: 
+        //debugger
         if(!state._command.children_awaiting) return 
         //return 
       }
@@ -649,6 +650,8 @@ var resumeWaterfall = (command) => {
 }
 
 stack.next = (syncFunc) => {
+
+  //debugger
   
   var callee = arguments.callee
   var caller = arguments.callee.caller

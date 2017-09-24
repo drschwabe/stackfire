@@ -186,7 +186,8 @@ stack.fire = function(path, param2, param3) {
         //find the easternmost command... 
 
         //Is there a cell to the east? 
-        if(gg.isEastEdge(stack.grid, stack.state._command.cell) || !gg.openCellsEast(grid, stack.state._command.cell)) => {
+        debugger
+        if( gg.isEastEdge(stack.grid, stack.state._command.cell) || !gg.openCellsEast(stack.grid, stack.state._command.cell) ) {
           stack.grid = gg.expandGrid(stack.grid)
           stack.grid.enties = _.map(stack.grid.enties, (enty) => {
             enty.command.cell = enty.cell 
@@ -226,12 +227,23 @@ stack.fire = function(path, param2, param3) {
           runUtils()                    
         } else {
           //should we be looking east too ? 
-          debugger
+          //it's not a South Edge, that means there may be an enty (child) already below.  
+          //if that is the case, the newcommand should become a sibling of the child (which 
+          //is already complete presumably)
+          var nextCellSouth = gg.nextCellSouth(stack.grid, stack.state._command.cell)
+          if(gg.examine(stack.grid, nextCellSouth)) {
+            debugger
+            //make it a sibling... 
+            //sibling = gg.examine(stack.grid, nextCellSouth)
+            var nextOpenCellEast = gg.nextOpenCellEast(stack.grid, nextCellSouth)
+            debugger //if there is no nextOPenCellEast we have to expand grid
+            cell = nextOpenCellEast
+          } else {
+            console.log('weird edge case?')
+            //search the next row down:  
+            cell = gg.nextOpenCellSouth(stack.grid, state._command.cell)   
+          }
         }
-    
-        //search the next row down:  
-        cell = gg.nextOpenCellSouth(stack.grid, state._command.cell)   
-
         //also make note of parent...  
         newCommand.parent = state._command 
         //give the command reference to it's new child too:  
@@ -255,7 +267,12 @@ stack.fire = function(path, param2, param3) {
       runUtils()   
       
       if(sibling) return  //< We return if sibling because the current command  
+
       //should finish first (stack will now call it upon completion; we just queued it) 
+
+      //if(sibling && !stack.state._command.callback_invoked) return 
+      //however, if the current command is running its callback - we will allow for this fire to proceed..
+      //nahh, let it queue... 
 
       //If child, end the parent's in-progress middlestack waterfall: 
       return endWaterfall(newCommand)
@@ -747,6 +764,7 @@ stack.next = (syncFunc) => {
           //don't resumewaterfall, let's just make it active command... 
           //return resumeWaterfall(seriouslyIncompleteCommand)
           stack.state._command = seriouslyIncompleteCommand
+          runUtils()
           return 
         } 
       } else {

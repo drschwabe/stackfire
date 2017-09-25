@@ -181,7 +181,24 @@ stack.fire = function(path, param2, param3) {
 
       //is there another scenario where there may be a sibling? 
 
-      if(sibling) { 
+
+      var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
+      if(incompleteCommands.length) {
+        //This will be a sibling of the incomplete command (or its child if it has one) 
+        if (_.last(incompleteCommands).command.child) {
+          cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
+          sibling =  _.last(incompleteCommands).command.child
+          if(sibling.parent) newCommand.parent = sibling.parent 
+        } else {
+          cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
+          sibling = _.last(incompleteCommands).command
+          if(sibling.parent) newCommand.parent = _.last(incompleteCommands).command.parent
+        }
+      } else {
+        cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
+      }
+
+      if(sibling && _.isUndefined(cell)) { 
         //Expand grid size if necessary: 
         //find the easternmost command... 
 
@@ -239,7 +256,7 @@ stack.fire = function(path, param2, param3) {
             debugger //if there is no nextOPenCellEast we have to expand grid
             cell = nextOpenCellEast
           } else {
-            console.log('weird edge case?')
+            //console.log('weird edge case?')
             //search the next row down:  
             cell = gg.nextOpenCellSouth(stack.grid, state._command.cell)   
           }
@@ -416,6 +433,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
     if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done)) {
       stack.state._command.middleware_done = true 
     }
+    //if we are IN a particular middleware function
 
     //assume callback is invoked and now we done... 
     if(stack.state._command.middleware_done && stack.state._command.callback_invoked) {

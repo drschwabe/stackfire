@@ -1411,7 +1411,6 @@ test('ensure unrelated commands never share same column', (t) => {
     stack.fire('saskatoon')
   })
 
-
   t.ok( gg.examine(stack.grid, 0).command.path == '/apple')
   t.ok( gg.examine(stack.grid, [1,0]).command.path == '/green')
   t.ok( gg.examine(stack.grid, [1,1]).command.path == '/red')
@@ -1420,5 +1419,58 @@ test('ensure unrelated commands never share same column', (t) => {
   t.ok( gg.examine(stack.grid, [1,2]).command.path == '/strawberry')
   t.ok( gg.examine(stack.grid, [1,3]).command.path == '/blueberry')
   t.ok( gg.examine(stack.grid, [1,4]).command.path == '/saskatoon')
+
+})
+
+
+test('Ensure commands do not get doubled in the grid if only fired once', (t) => {
+  t.plan(1)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg') 
+
+  stack.on('connect', () => {
+    console.log('do something')
+    stack.next() 
+  })
+
+  stack.on('connect', () => {
+    console.log('do another thing')
+    stack.next() 
+  })
+
+  stack.fire('connect', () => {
+    t.pass(1)
+    console.log(stack.grid.enties)
+  })
+
+  //this basic example does not reproduce the issue.... 
+
+})
+
+
+test('Ensure commands do not get doubled in the grid if only fired once, specifically if they are using parameter', (t) => {
+  t.plan(1)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg') 
+
+  //Order is important here... 
+  //the parameter version 'on' needs to like reverse itself
+  //though this could be a feature that is like not needed; or just a gotcha
+  //to watch out for. 
+
+  stack.on('element/awesome-element/connected', () => {
+    console.log('do another thing')
+    stack.next() 
+  })
+
+  stack.on('element/:elementName/connected', () => {
+    console.log('do something')
+    stack.next() 
+  })
+
+  stack.fire('element/awesome-element/connected', () => {
+    t.equals(stack.grid.enties.length, 1)
+    console.log(stack.grid.enties)
+  })
 
 })

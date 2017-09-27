@@ -162,6 +162,8 @@ stack.fire = function(path, param2, param3) {
     if(arguments.callee.caller) caller = arguments.callee.caller.toString()    
     newCommand.caller = caller 
 
+    newCommand.callee = callee
+
     //At this point if there is already a stack._command it means there is
     //another fire already in progress.  Therefore, it must be queued.
     //We use a grid based queing model (leveraging gg library). 
@@ -174,7 +176,6 @@ stack.fire = function(path, param2, param3) {
       if(state._command.caller == newCommand.caller) { //< Sibling will share the same caller. 
         //a sibling command needs to go into the cell in the next column (same row): 
         //if(state._command.caller.parent && state._command.caller.parent.caller != newCommand.caller) sibling = true
-        
         sibling = state._command
       }
       if(state._command.parent && state._command.parent.caller == newCommand.caller) sibling = true
@@ -190,9 +191,14 @@ stack.fire = function(path, param2, param3) {
           sibling =  _.last(incompleteCommands).command.child
           if(sibling.parent) newCommand.parent = sibling.parent 
         } else {
-          cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
-          sibling = _.last(incompleteCommands).command
-          if(sibling.parent) newCommand.parent = _.last(incompleteCommands).command.parent
+          //cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
+          cell = gg.nextCellSouth(stack.grid, _.last(incompleteCommands).command.cell)
+          //var lastIncompleteCommandRow = gg.row(stack.grid, _.last(incompleteCommands).command.cell)
+          //debugger
+          //if( 'go' == gg.row(stack.grid, newCommand.cell)) {
+            //sibling = _.last(incompleteCommands).command
+            //if(sibling.parent) newCommand.parent = _.last(incompleteCommands).command.parent
+          //}
         }
       } else {
         cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
@@ -295,6 +301,41 @@ stack.fire = function(path, param2, param3) {
       return endWaterfall(newCommand)
       //callback()
     } else {
+      //There is an edge case, in whereby we may still have a sibling situation: 
+      //a bit ugly though cause the command is considered done
+      //... but its still 'active' so this may be OK: 
+      if(stack.state._command && stack.state._command.child) {
+        if(stack.state._command.child.callee == callee) {
+          //the new command is actually a sibling of the current commands last child... 
+          //make it asibling and put it into the next open cell on that row... 
+          newCommand.sibling = stack.state._command.child
+          newCommand.parent = stack.state._command.child.parent 
+          //determine if to exapnd grid east: 
+          var isEastEdge = gg.isEastEdge(stack.grid, stack.state._command.child.cell)
+          var lessThanTwoOpenCellsEast = gg.openCellsEast(stack.grid, stack.state._command.child.cell) < 2
+          if( isEastEdge|| lessThanTwoOpenCellsEast) {
+            debugger
+            stack.grid = gg.expandGrid(stack.grid)
+            stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+              enty.command.cell = enty.cell 
+              return enty
+            })
+            //stack.grid = gg.populateCells(stack.grid)
+
+            //Now insert the new cell: 
+            newCommand.cell = gg.nextOpenCellEast(stack.grid, stack.state._command.child.cell)
+
+
+            stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
+            stack.grid = gg.populateCells(stack.grid) //<^ insert and re-populate the grid cells. 
+
+            runUtils()              
+
+            return waterfall(newCommand) //< finally, run the middleware waterfall! 
+           }
+        }
+      }
+
       //Otherwise, if no command active, we assume it is root level... 
       stack.grid = gg.expandGrid(stack.grid)
       //We have to manually update cell nums on the command property of each enty: 
@@ -686,7 +727,6 @@ var resumeWaterfall = (command) => {
 
 stack.next = (syncFunc) => {
 
-  //debugger
   
   var callee = arguments.callee
   var caller = arguments.callee.caller

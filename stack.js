@@ -186,40 +186,47 @@ stack.fire = function(path, param2, param3) {
 
 
       var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
-      if(incompleteCommands.length) {
+      if(!sibling && incompleteCommands.length) {
         //This will be a sibling of the incomplete command (or its child if it has one) 
-        if (_.last(incompleteCommands).command.child) {
+        if (_.last(incompleteCommands).command.child && !_.last(incompleteCommands).command.child.done) {
           cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
           sibling =  _.last(incompleteCommands).command.child
           if(sibling.parent) newCommand.parent = sibling.parent 
         } else {
           //cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
           var lastIncompleteCommand =  _.last(incompleteCommands).command
-          var nextCellSouth = gg.nextCellSouth(stack.grid, lastIncompleteCommand.cell)
-          if(!sibling) {
-            if(!nextCellSouth) {
-              stack.grid = gg.expandGrid(stack.grid)
-              stack.grid.enties = _.map(stack.grid.enties, (enty) => {
-                enty.command.cell = enty.cell 
-                return enty
-              })
-              stack.grid = gg.populateCells(stack.grid)
-              runUtils()
-            }
-            nextCellSouth = gg.nextCellSouth(stack.grid, lastIncompleteCommand.cell)
+          var nextOpenColumn = gg.nextOpenColumn(stack.grid, lastIncompleteCommand.cell - 1)
+          if(_.isNaN(nextOpenColumn)) {
+            //expand grid east 
+            stack.grid = gg.expandGrid(stack.grid)
+            stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+              enty.command.cell = enty.cell 
+              return enty
+            })
+            stack.grid = gg.populateCells(stack.grid)
+            runUtils()
+            nextOpenColumn = gg.nextOpenColumn(stack.grid, lastIncompleteCommand.cell -1)
+          }
+          var nextCellSouth = gg.nextCellSouth(stack.grid, gg.xyToIndex(stack.grid, [gg.indexToXy(stack.grid, lastIncompleteCommand.cell)[0], nextOpenColumn]))
+          if(!nextCellSouth) {
+            stack.grid = gg.expandGrid(stack.grid)
+            stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+              enty.command.cell = enty.cell 
+              return enty
+            })
+            stack.grid = gg.populateCells(stack.grid)
+            runUtils()
+            nextCellSouth = gg.nextCellSouth(stack.grid, gg.xyToIndex(stack.grid, [gg.indexToXy(stack.grid, lastIncompleteCommand.cell)[0], nextOpenColumn]))
             cell = nextCellSouth
           }
         }
-      } else {
-        cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
-      }
+      } 
 
       if(sibling && _.isUndefined(cell)) { 
         //Expand grid size if necessary: 
         //find the easternmost command... 
 
         //Is there a cell to the east? 
-        debugger
         if( gg.isEastEdge(stack.grid, stack.state._command.cell) || !gg.openCellsEast(stack.grid, stack.state._command.cell) ) {
           stack.grid = gg.expandGrid(stack.grid)
           stack.grid.enties = _.map(stack.grid.enties, (enty) => {
@@ -233,7 +240,7 @@ stack.fire = function(path, param2, param3) {
           var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
           if(incompleteCommands.length) {
             //This will be a sibling of the incomplete command (or its child if it has one) 
-            if (_.last(incompleteCommands).command.child) {
+            if (_.last(incompleteCommands).command.child && !_.last(incompleteCommands).command.child.done) {
               cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell) 
             } else {
               cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)

@@ -101,6 +101,8 @@ stack.fire = function(path, param2, param3) {
 
   if(path.substr(0, 1) != '/') path = '/' + path //< Ensure path is always prefixed with '/'
 
+ // debugger
+
   var state, callback
   //Parse the parameters to figure out what we got: 
   if(_.isFunction(param2)) { 
@@ -192,13 +194,21 @@ stack.fire = function(path, param2, param3) {
           if(sibling.parent) newCommand.parent = sibling.parent 
         } else {
           //cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
-          cell = gg.nextCellSouth(stack.grid, _.last(incompleteCommands).command.cell)
-          //var lastIncompleteCommandRow = gg.row(stack.grid, _.last(incompleteCommands).command.cell)
-          //debugger
-          //if( 'go' == gg.row(stack.grid, newCommand.cell)) {
-            //sibling = _.last(incompleteCommands).command
-            //if(sibling.parent) newCommand.parent = _.last(incompleteCommands).command.parent
-          //}
+          var lastIncompleteCommand =  _.last(incompleteCommands).command
+          var nextCellSouth = gg.nextCellSouth(stack.grid, lastIncompleteCommand.cell)
+          if(!sibling) {
+            if(!nextCellSouth) {
+              stack.grid = gg.expandGrid(stack.grid)
+              stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+                enty.command.cell = enty.cell 
+                return enty
+              })
+              stack.grid = gg.populateCells(stack.grid)
+              runUtils()
+            }
+            nextCellSouth = gg.nextCellSouth(stack.grid, lastIncompleteCommand.cell)
+            cell = nextCellSouth
+          }
         }
       } else {
         cell = gg.nextOpenCellEast(stack.grid, stack.state._command.cell)
@@ -248,18 +258,17 @@ stack.fire = function(path, param2, param3) {
           })          
           stack.grid = gg.populateCells(stack.grid)  
           runUtils()                    
-        } else {
+        } else if(!cell) {
           //should we be looking east too ? 
           //it's not a South Edge, that means there may be an enty (child) already below.  
           //if that is the case, the newcommand should become a sibling of the child (which 
           //is already complete presumably)
           var nextCellSouth = gg.nextCellSouth(stack.grid, stack.state._command.cell)
           if(gg.examine(stack.grid, nextCellSouth)) {
-            debugger
             //make it a sibling... 
             //sibling = gg.examine(stack.grid, nextCellSouth)
             var nextOpenCellEast = gg.nextOpenCellEast(stack.grid, nextCellSouth)
-            debugger //if there is no nextOPenCellEast we have to expand grid
+            //if there is no nextOPenCellEast we have to expand grid
             cell = nextOpenCellEast
           } else {
             //console.log('weird edge case?')

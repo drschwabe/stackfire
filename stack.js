@@ -787,8 +787,10 @@ stack.next = (syncFunc) => {
 
     //if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done) 
     if(stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index]) {
-      stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
-      stack.state._command.current_middleware_index++
+      if( stack.state._command.current_middleware_index != stack.state._command.matching_route.middleware.length - 1) {
+        stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+        stack.state._command.current_middleware_index++
+      }
     } else {
       //may want to return here; this might mean there is nothing left to do
       console.log('whaaa another edge case!') 

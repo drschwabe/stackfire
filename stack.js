@@ -746,6 +746,10 @@ stack.next = (syncFunc) => {
   
   var callee = arguments.callee
   var caller = arguments.callee.caller
+
+  var caller2 = this.caller 
+  var caller3 = this.callee 
+
   if(syncFunc) syncFunc()
 
   //Determine if the current command has a 'next' property
@@ -790,6 +794,19 @@ stack.next = (syncFunc) => {
       if( stack.state._command.current_middleware_index != stack.state._command.matching_route.middleware.length - 1) {
         stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
         stack.state._command.current_middleware_index++
+      } else {
+        //it is possible the current middleware is done but is not marked as so.... 
+        // var calleeOfNext = arguments.callee
+        // var calleeOfNext = arguments.callee
+        //stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true        
+        //debugger
+        //stack.state._command.current_middleware_index++
+        //RIGHT HERE we need more information
+        //the problem is we don't know if the middleware command is done or not
+        //possibly buffer functions can give more info - or buffer function can do something extra to ensure this situation is avoided. 
+        //need to isolate the problem from Favvs app to a clear test exposing the issue
+        //seems to happen when multiple 'ons' for a given command are used
+        debugger
       }
     } else {
       //may want to return here; this might mean there is nothing left to do

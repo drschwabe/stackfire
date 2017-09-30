@@ -216,7 +216,7 @@ stack.fire = function(path, param2, param3) {
             })
             stack.grid = gg.populateCells(stack.grid)
             runUtils()
-            nextCellSouth = gg.nextCellSouth(stack.grid, gg.xyToIndex(stack.grid, [gg.indexToXy(stack.grid, lastIncompleteCommand.cell)[0], nextOpenColumn]))
+            nextCellSouth = gg.nextCellSouth(stack.grid, lastIncompleteCommand.cell)
             cell = nextCellSouth
           }
         }

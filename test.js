@@ -56,6 +56,7 @@ test("stack.fire nested within stack.on", (t) => {
     console.log('/apple fired (its final callback in progress). _command.path:')
     console.log(stack.state._command.path)    
     t.pass('reached end of the original fire (/apple)')
+    debugger
     stack.next()
   })
 })
@@ -1486,8 +1487,8 @@ test('finish all middleware (triple on)', (t) => {
 
   stack.fire('/favvorite-main-save', () => {
     t.pass('command finished') 
-    stack.next() 
     debugger
+    stack.next() 
   })
 
 })

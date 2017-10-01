@@ -446,8 +446,8 @@ var waterfall = (command) => {
 
             //Mark middleware as complete: 
             stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
-            stack.state._command.last_buffer = stack.state._command.current_middleware_index            
             stack.state._command.current_middleware_index++
+            stack.state._command.last_buffer = stack.state._command.current_middleware_index            
 
             //return next(null, state)
 
@@ -817,6 +817,14 @@ stack.next = (syncFunc) => {
         if(stack.state._command.current_middleware_index + 1 != stack.state._command.matching_route.middleware.length) {
           stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
           stack.state._command.current_middleware_index++
+        } else {
+          //still another situation where we want to advance stuff.... 
+          //console.log(stack.state._command)     
+          debugger
+          if(stack.state._command.last_buffer == stack.state._command.current_middleware_index) {
+            stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+            stack.state._command.current_middleware_index++    
+          }
         }
       }
     } else {

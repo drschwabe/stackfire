@@ -1434,7 +1434,7 @@ test.skip('Ensure commands do not get doubled in the grid if only fired once, sp
 })
 
 
-test('finish all middleware', (t) => {
+test.only('finish all middleware', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg') 
@@ -1488,6 +1488,8 @@ test('finish all middleware (triple on)', (t) => {
   stack.fire('/favvorite-main-save', () => {
     t.pass('command finished') 
     debugger
+    //child done
+    //possibly child.caller could be used ? 
     stack.next() 
   })
 

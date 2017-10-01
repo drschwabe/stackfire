@@ -820,10 +820,18 @@ stack.next = (syncFunc) => {
         } else {
           //still another situation where we want to advance stuff.... 
           //console.log(stack.state._command)     
-          debugger
           if(stack.state._command.last_buffer == stack.state._command.current_middleware_index) {
             stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
             stack.state._command.current_middleware_index++    
+          } else {
+            //still another situation!  This time there is a possibility a command may get run twice ..
+            //possibly coming back from firing the child ? 
+            if(stack.state._command.child) {
+              debugger
+              stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+              stack.state._command.current_middleware_index++                
+            }
+            //debugger
           }
         }
       }

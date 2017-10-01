@@ -38,7 +38,8 @@ test("stack.fire nested within stack.on", (t) => {
     })
   })
 
-  stack.on('/bannana', () => {         
+  stack.on('/bannana', () => {     
+    debugger    
     console.log('/bannana "on" middleware in progress. _command.path:')
     console.log(stack.state._command.path) 
     t.ok(stack.state, 'root level listener invoked from a nested fire')
@@ -767,50 +768,6 @@ test.skip('buffer fires every fire (complex)', (t) => {
   })
 })
 
-
-// test.only('ensure buffers dont fire more than they need too', (t) => {
-//   t.plan(3)
-//   let stack = requireUncached('./stack.js')  
-
-//   stack.on('/_buffer', (state, next) => {
-//     console.log('buffer fired')
-//     t.pass()
-//     next()
-//   })
-
-//   stack.on('a', (state, next) => {
-
-//     stack.fire('1', (err, state) => {
-//       next(null, state)
-//     })
-
-//   })
-
-//   stack.on('a', (state, next) => {   
-
-//     stack.fire('2', () => {
-//       next(null, state)
-//     })
-
-//   })
-
-//   stack.fire('a', () => {
-//     t.pass('Test finished')
-//   })
-
-// })
-
-
-//This isnt working: 
-    //  stack.fire('element/mf-docs/rendered', next)
-//but this does: 
-//       stack.fire('element/mf-docs/rendered', (err, state) => {
-//         next(null, state)
-//       })
-
-// So need a test to expose this issue, and to fix it. 
-
-
 test.skip('Demonstrate multiple ways of calling next (WIP)', (t) => {
   t.plan(5)
   let stack = requireUncached('./stack.js')  
@@ -1471,6 +1428,66 @@ test.skip('Ensure commands do not get doubled in the grid if only fired once, sp
   stack.fire('element/awesome-element/connected', () => {
     t.equals(stack.grid.enties.length, 1)
     console.log(stack.grid.enties)
+  })
+
+})
+
+
+test('finish all middleware', (t) => {
+  t.plan(2)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg') 
+
+  stack.on('save', () => {
+    t.pass('save stuff')
+    stack.fire('elements/render', () => {
+      stack.next() 
+      stack.next() 
+    })  
+  })
+
+  stack.on('elements/render', () => {
+    stack.fire('buffet/render', () => {
+      stack.next() 
+      stack.next() 
+    })
+  })
+
+  stack.on('save', () => {
+    t.pass('save more stuff') 
+  })
+
+  stack.fire('save')
+})
+
+
+
+test('finish all middleware (triple on)', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js') 
+  let gg = requireUncached('gg') 
+
+  stack.on('/favvorite-main-save', () => {
+    stack.fire('elements/render', () => {
+      stack.next()
+      stack.next()
+    })
+  })
+
+  stack.on('/favvorite-main-save', () => {
+    t.pass('first middleware invoked')
+    stack.next() 
+  })
+
+  stack.on('favvorite-main-save', () => {
+    t.pass('second middleware invoked') 
+    stack.next()
+  })
+
+  stack.fire('/favvorite-main-save', () => {
+    t.pass('command finished') 
+    stack.next() 
+    debugger
   })
 
 })

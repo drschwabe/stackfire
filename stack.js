@@ -446,9 +446,12 @@ var waterfall = (command) => {
 
             //Mark middleware as complete: 
             stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+            stack.state._command.last_buffer = stack.state._command.current_middleware_index            
             stack.state._command.current_middleware_index++
 
             //return next(null, state)
+
+            debugger
             
             return stack.state._command.next()
             return stack.next()
@@ -806,13 +809,15 @@ stack.next = (syncFunc) => {
         //but fails other tests; duplicates middleware functions.. 
 
         //RIGHT HERE we need more information
-        //the problem is we don't know if the middleware command is done or not
+        //the problem is we don't know if the middleware command is reaaaally done or not
         //possibly buffer functions can give more info - or buffer function can do something extra to ensure this situation is avoided. 
         //need to isolate the problem from Favvs app to a clear test exposing the issue
         //seems to happen when multiple 'ons' for a given command are used
-        stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true        
-        stack.state._command.current_middleware_index++
         debugger
+        if(stack.state._command.current_middleware_index + 1 != stack.state._command.matching_route.middleware.length) {
+          stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+          stack.state._command.current_middleware_index++
+        }
       }
     } else {
       //may want to return here; this might mean there is nothing left to do

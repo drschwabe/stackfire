@@ -827,9 +827,12 @@ stack.next = (syncFunc) => {
             //still another situation!  This time there is a possibility a command may get run twice ..
             //possibly coming back from firing the child ? 
             if(stack.state._command.child) {
-              debugger
-              stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
-              stack.state._command.current_middleware_index++                
+              //debugger
+              console.log(stack.state._command.child)
+              if(stack.state._command.child.child && !stack.state._command.child.last_buffer) {
+                stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+                stack.state._command.current_middleware_index++                      
+              }
             }
             //debugger
           }

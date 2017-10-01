@@ -1434,7 +1434,7 @@ test.skip('Ensure commands do not get doubled in the grid if only fired once, sp
 })
 
 
-test.only('finish all middleware', (t) => {
+test('finish all middleware', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg') 

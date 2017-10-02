@@ -447,7 +447,12 @@ var waterfall = (command) => {
             //Mark middleware as complete: 
             stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
             stack.state._command.current_middleware_index++
-            stack.state._command.last_buffer = stack.state._command.current_middleware_index            
+            stack.state._command.last_buffer = stack.state._command.current_middleware_index    
+
+            if(_.every(stack.state._command.matching_route.middleware, (entry) => entry.done)) {
+              stack.state._command.middleware_done = true 
+            }
+            //should we mark command as done too ? 
 
             //return next(null, state)
 
@@ -755,6 +760,8 @@ stack.next = (syncFunc) => {
 
   if(syncFunc) syncFunc()
 
+  debugger
+
   //Determine if the current command has a 'next' property
   //in which case, it should invoke that... 
   //ie- instead of stack.next() performing a live analyzation of the grid
@@ -829,6 +836,8 @@ stack.next = (syncFunc) => {
             if(stack.state._command.child) {
               //debugger
               console.log(stack.state._command.child)
+              //alll tests pass if you just check for child... 
+              //but favvs app still not running a missing middleware
               if(stack.state._command.child.child && !stack.state._command.child.last_buffer) {
                 stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
                 stack.state._command.current_middleware_index++                      

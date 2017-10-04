@@ -101,7 +101,7 @@ stack.fire = function(path, param2, param3) {
 
   if(path.substr(0, 1) != '/') path = '/' + path //< Ensure path is always prefixed with '/'
 
- // debugger
+ 
 
   var state, callback
   //Parse the parameters to figure out what we got: 
@@ -296,7 +296,7 @@ stack.fire = function(path, param2, param3) {
 
       //update next...
       stack.grid.enties = _.map(stack.grid.enties, (enty) => {
-        //debugger
+        //
         //enty.command.next = 
         //^ determine the logic for what command to run next....
         //this should be very similar to stack.next() itself.... 
@@ -330,7 +330,7 @@ stack.fire = function(path, param2, param3) {
           var isEastEdge = gg.isEastEdge(stack.grid, stack.state._command.child.cell)
           var lessThanTwoOpenCellsEast = gg.openCellsEast(stack.grid, stack.state._command.child.cell) < 2
           if( isEastEdge|| lessThanTwoOpenCellsEast) {
-            debugger
+            
             stack.grid = gg.expandGrid(stack.grid)
             stack.grid.enties = _.map(stack.grid.enties, (enty) => {
               enty.command.cell = enty.cell 
@@ -376,7 +376,7 @@ stack.fire = function(path, param2, param3) {
       } else {
         //otherwise there are no incomplete commands; we can put this on root level:
         newCommand.cell = gg.nextOpenColumn(stack.grid) //then find next open column...
-        //debugger
+        //
         //(because we already expanded the grid there should be at least one open column eastmost)
       }
       stack.grid = gg.insertEnty(stack.grid, { command : newCommand, cell: newCommand.cell }) 
@@ -434,9 +434,9 @@ var waterfall = (command) => {
             //wait - already have it up there ...
             if(!state || !next) {
               //return null
-              console.log('state or next missing')
-              console.log(state)
-              console.log(next)
+              //console.log('state or next missing')
+              //console.log(state)
+              //console.log(next)
           
               //return
             }
@@ -456,7 +456,6 @@ var waterfall = (command) => {
 
             //return next(null, state)
 
-            debugger
             
             return stack.state._command.next()
             return stack.next()
@@ -531,7 +530,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       } else {
         console.log('edge case?')
         //if there are children awaiting; let it flow: 
-        //debugger
+        
         if(!state._command.children_awaiting) return 
         //return 
       }
@@ -572,7 +571,6 @@ var endWaterfall = (newCommand) => { //End of waterfall:
       }
       stack.state._command.callback_invoked = true
       //stack.state._command.callback_underway = true 
-      //debugger
       //return _.defer(() => {
         return stack.state._command.callback()
       //})
@@ -669,6 +667,9 @@ var resumeWaterfall = (command) => {
   //is there still a callback to run? 
   //if(command.callback)
 
+  //try stack.next() ? 
+  if(command.next) return command.next() 
+
   //hack up the remaining middleware; only middleware that isn't already done: 
   var middlewareToRun = _.reject(command.matching_route.middleware, (entry) => entry.done)
 
@@ -697,7 +698,7 @@ var resumeWaterfall = (command) => {
         stack.state._command.middleware_done = true
         return stack.state._command.next()
       }
-      //debugger
+      //
       if(stack.state._command.current_middleware_index) {
         if(stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index]) {
           stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true    
@@ -711,7 +712,7 @@ var resumeWaterfall = (command) => {
         console.log('edge case!')
         //Possibly need to let it flow under some condition; but not on others... 
         //for now just always return in this case.
-        //debugger
+        //
         return
       }
     }
@@ -752,6 +753,7 @@ var resumeWaterfall = (command) => {
 stack.next = (syncFunc) => {
 
   
+
   var callee = arguments.callee
   var caller = arguments.callee.caller
 
@@ -760,7 +762,6 @@ stack.next = (syncFunc) => {
 
   if(syncFunc) syncFunc()
 
-  debugger
 
   //Determine if the current command has a 'next' property
   //in which case, it should invoke that... 
@@ -812,7 +813,7 @@ stack.next = (syncFunc) => {
         //Enabling this ensures all middleware completes (Favvs, etc): 
         //stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true        
         //stack.state._command.current_middleware_index++
-        //debugger
+        //
         //but fails other tests; duplicates middleware functions.. 
 
         //RIGHT HERE we need more information
@@ -820,31 +821,32 @@ stack.next = (syncFunc) => {
         //possibly buffer functions can give more info - or buffer function can do something extra to ensure this situation is avoided. 
         //need to isolate the problem from Favvs app to a clear test exposing the issue
         //seems to happen when multiple 'ons' for a given command are used
-        debugger
+        
         if(stack.state._command.current_middleware_index + 1 != stack.state._command.matching_route.middleware.length) {
           stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
           stack.state._command.current_middleware_index++
         } else {
           //still another situation where we want to advance stuff.... 
           //console.log(stack.state._command)     
-          if(stack.state._command.last_buffer == stack.state._command.current_middleware_index) {
-            stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
-            stack.state._command.current_middleware_index++    
-          } else {
+          // if(stack.state._command.last_buffer == stack.state._command.current_middleware_index) {
+          //   stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
+          //   stack.state._command.current_middleware_index++    
+          // } else {
             //still another situation!  This time there is a possibility a command may get run twice ..
             //possibly coming back from firing the child ? 
             if(stack.state._command.child) {
-              //debugger
+              //
               console.log(stack.state._command.child)
               //alll tests pass if you just check for child... 
               //but favvs app still not running a missing middleware
-              if(stack.state._command.child.child && !stack.state._command.child.last_buffer) {
+              //if(stack.state._command.child.child && !stack.state._command.child.last_buffer) {
+              if(stack.state._command.child && !stack.state._command.child.done) {                
                 stack.state._command.matching_route.middleware[stack.state._command.current_middleware_index].done = true
                 stack.state._command.current_middleware_index++                      
               }
             }
-            //debugger
-          }
+            //
+          //s}
         }
       }
     } else {

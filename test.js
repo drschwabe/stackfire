@@ -1494,3 +1494,25 @@ test('finish all middleware (triple on)', (t) => {
   })
 
 })
+
+
+test('Completion pyramid', (t) => {
+  t.plan(1)
+  let stack = requireUncached('./stack.js') 
+  stack.fire('first', () => {
+    stack.fire('second', () => {
+      stack.fire('third', () => {
+        stack.fire('fourth', () => {
+          stack.fire('fifth', () => {
+            stack.next()
+            stack.next() 
+            stack.next() 
+            stack.next() 
+            stack.next()             
+          })
+        })
+      })      
+    })
+  })
+  t.pass()
+})

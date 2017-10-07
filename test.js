@@ -1516,3 +1516,52 @@ test('Completion pyramid', (t) => {
   })
   t.pass()
 })
+
+
+test('Middleware fires in correct order', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js') 
+
+  stack.on('go', () => {
+    t.pass('first wildcard')
+    stack.next() 
+  })
+
+  stack.on('go', () => {
+    t.pass('second listener')
+    stack.next() 
+  })
+
+  stack.on('go', () => {
+    t.pass('third listener')
+    stack.next() 
+  })
+
+  stack.fire('go')
+
+})
+
+
+test('Middleware fires in correct order (with wildcards)', (t) => {
+  t.plan(3)
+  let stack = requireUncached('./stack.js') 
+
+  stack.on('*wild', () => {
+    t.pass('first wildcard')
+    stack.next() 
+  })
+
+  stack.on('go', () => {
+    t.pass('go')
+    stack.next() 
+  })
+
+  stack.on('*wild', () => {
+    t.pass('second wildcard')
+    stack.next() 
+  })
+
+  stack.fire('go')
+
+})
+

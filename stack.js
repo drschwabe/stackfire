@@ -188,9 +188,15 @@ stack.fire = function(path, param2, param3) {
       var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
       if(!sibling && incompleteCommands.length) {
         //This will be a sibling of the incomplete command (or its child if it has one) 
-        if (_.last(incompleteCommands).command.child && !_.last(incompleteCommands).command.child.done) {
-          cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.child.cell)
-          sibling =  _.last(incompleteCommands).command.child
+        var lastCommand = _.last(incompleteCommands).command
+        if (lastCommand.child && !lastCommand.child.done) {
+          cell = gg.nextOpenCell(stack.grid, lastCommand.child.cell)
+          sibling = lastCommand.command.child
+          if(sibling.parent) newCommand.parent = sibling.parent 
+        } if(  lastCommand == stack.state._command && lastCommand.child)  {
+          //Current command is not done, however - however it's children are. 
+          cell = gg.nextOpenCellEast(stack.grid, lastCommand.child.cell)
+          sibling =  lastCommand.child
           if(sibling.parent) newCommand.parent = sibling.parent 
         } else {
           //cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)

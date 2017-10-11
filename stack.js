@@ -235,8 +235,25 @@ stack.fire = function(path, param2, param3) {
 
           var lastIncompleteCommandXy= gg.indexToXy(stack.grid, lastIncompleteCommand.cell)
           //one row down, same column: 
-          cell = gg.xyToIndex(stack.grid, [lastIncompleteCommandXy[0] + 1, lastIncompleteCommandXy[1]])
+          //cell = gg.xyToIndex(stack.grid, [lastIncompleteCommandXy[0] + 1, lastIncompleteCommandXy[1]])
 
+
+          console.log(callee)
+          console.log(caller)
+          console.log(lastIncompleteCommand.callee)
+          console.log(lastIncompleteCommand.caller)
+
+          if(callee == lastIncompleteCommand.callee && lastIncompleteCommand.parent && !lastIncompleteCommand.sibling) {
+
+            //var nextSellNorth = gg.examine(gg.nextCellNorth(stack.grid, lastIncompleteCommand))
+
+            //lastIncompleteCommand.parent
+
+            //Make it a sibling: 
+
+            sibling = lastIncompleteCommand
+            cell = gg.nextOpenCellEast(stack.grid, lastIncompleteCommand.cell)
+          }
         }
       } 
 
@@ -254,6 +271,7 @@ stack.fire = function(path, param2, param3) {
           stack.grid = gg.populateCells(stack.grid)
           runUtils()
           cell = gg.nextOpenCellEast(stack.grid, sibling.cell)
+
         } else {
           var incompleteCommands = _.filter( stack.grid.enties, (enty) => !enty.command.done)
           if(incompleteCommands.length) {
@@ -308,6 +326,7 @@ stack.fire = function(path, param2, param3) {
       }
 
       newCommand.cell = cell  //< finally assign the cell, then insert it into grid....
+      newCommand.sibling = sibling 
 
       stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })     
       stack.grid = gg.populateCells(stack.grid)

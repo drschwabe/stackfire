@@ -193,14 +193,31 @@ stack.fire = function(path, param2, param3) {
           cell = gg.nextOpenCell(stack.grid, lastCommand.child.cell)
           sibling = lastCommand.command.child
           if(sibling.parent) newCommand.parent = sibling.parent 
-        } if(  lastCommand == stack.state._command && lastCommand.child)  {
+        } else if(  lastCommand == stack.state._command && lastCommand.child)  {
           //Current command is not done, however - however it's children are. 
           cell = gg.nextOpenCellEast(stack.grid, lastCommand.child.cell)
           sibling =  lastCommand.child
           if(sibling.parent) newCommand.parent = sibling.parent 
         } else {
-          //cell = gg.nextOpenCell(stack.grid, _.last(incompleteCommands).command.cell)
+          //Are we going to put this cell below or beside ?  
           var lastIncompleteCommand =  _.last(incompleteCommands).command
+
+          //Expand the grid both directions if necessary: 
+          //var lastCommandXy = gg.indexToXy(stack.grid, lastIncompleteCommand.cell)
+          //var lastCommandColumn = stack.grid, gg.xyToIndex(stack.grid, lastCommandXy[1])
+
+          var nextCellSouth = gg.nextCellSouth(stack.grid, lastIncompleteCommand.cell)
+          if(!nextCellSouth) {
+            stack.grid = gg.expandGrid(stack.grid)
+            stack.grid.enties = _.map(stack.grid.enties, (enty) => {
+              enty.command.cell = enty.cell 
+              return enty
+            })
+            stack.grid = gg.populateCells(stack.grid)
+            runUtils()
+            nextCellSouth = gg.nextCellSouth(stack.grid, lastIncompleteCommand.cell)
+          }
+
           var nextOpenColumn = gg.nextOpenColumn(stack.grid, lastIncompleteCommand.cell - 1)
           if(_.isNaN(nextOpenColumn)) {
             //expand grid east 
@@ -213,18 +230,13 @@ stack.fire = function(path, param2, param3) {
             runUtils()
             nextOpenColumn = gg.nextOpenColumn(stack.grid, lastIncompleteCommand.cell -1)
           }
-          var nextCellSouth = gg.nextCellSouth(stack.grid, gg.xyToIndex(stack.grid, [gg.indexToXy(stack.grid, lastIncompleteCommand.cell)[0], nextOpenColumn]))
-          if(!nextCellSouth) {
-            stack.grid = gg.expandGrid(stack.grid)
-            stack.grid.enties = _.map(stack.grid.enties, (enty) => {
-              enty.command.cell = enty.cell 
-              return enty
-            })
-            stack.grid = gg.populateCells(stack.grid)
-            runUtils()
-            nextCellSouth = gg.nextCellSouth(stack.grid, lastIncompleteCommand.cell)
-            cell = nextCellSouth
-          }
+
+          //logic to determine if we put this cell beside or one row down...
+
+          var lastIncompleteCommandXy= gg.indexToXy(stack.grid, lastIncompleteCommand.cell)
+          //one row down, same column: 
+          cell = gg.xyToIndex(stack.grid, [lastIncompleteCommandXy[0] + 1, lastIncompleteCommandXy[1]])
+
         }
       } 
 

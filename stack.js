@@ -254,6 +254,20 @@ stack.fire = function(path, param2, param3) {
             sibling = lastIncompleteCommand
             cell = gg.nextOpenCellEast(stack.grid, lastIncompleteCommand.cell)
           }
+          else if(callee == lastIncompleteCommand.callee && lastIncompleteCommand.parent) {
+            //need to accomomdate for this 
+            runUtils()
+            console.log('match n stuff')
+            runUtils()
+
+            //if(gg.nextCellWest(stack.grid, ))
+
+            //more logic needed .... 
+            //sometimes it will be a parent sometimes it will be a child... 
+            //probably can look at the sibling of last command
+            //sibling = lastIncompleteCommand
+            //cell = gg.nextOpenCellEast(stack.grid, lastIncompleteCommand.cell)
+          }
         }
       } 
 

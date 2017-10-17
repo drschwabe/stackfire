@@ -238,19 +238,21 @@ stack.fire = function(path, param2, param3) {
           //cell = gg.xyToIndex(stack.grid, [lastIncompleteCommandXy[0] + 1, lastIncompleteCommandXy[1]])
 
 
-          console.log(callee)
-          console.log(caller)
-          console.log(lastIncompleteCommand.callee)
-          console.log(lastIncompleteCommand.caller)
+          // console.log(callee)
+          // console.log(caller)
+          // console.log(lastIncompleteCommand.callee)
+          // console.log(lastIncompleteCommand.caller)
 
-          if(callee == lastIncompleteCommand.callee && lastIncompleteCommand.parent && !lastIncompleteCommand.sibling) {
+          if(callee == lastIncompleteCommand.callee && lastIncompleteCommand.parent && !lastIncompleteCommand.sibling && !gg.isEdge(stack.grid, lastIncompleteCommand.cell )) {
 
             //var nextSellNorth = gg.examine(gg.nextCellNorth(stack.grid, lastIncompleteCommand))
 
             //lastIncompleteCommand.parent
 
-            //Make it a sibling: 
+            //Make it a sibling...
 
+            //unless there is no cell to the left... 
+             
             sibling = lastIncompleteCommand
             cell = gg.nextOpenCellEast(stack.grid, lastIncompleteCommand.cell)
           }
@@ -258,6 +260,7 @@ stack.fire = function(path, param2, param3) {
             //need to accomomdate for this 
             runUtils()
             console.log('match n stuff')
+            debugger
             runUtils()
 
             //if(gg.nextCellWest(stack.grid, ))
@@ -612,6 +615,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
           //determine if the current command's callback has already been run...
           if(stack.state._command.done) return //< This should never happen...
           stack.state._command.callback_underway = false
+        debugger
           stack.state._command.done = true
           if(callback) callback() //< This type of callback must be a synchronous function!
           //(cause we are not returning it; we are proceeding to resume waterfall..

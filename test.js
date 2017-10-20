@@ -4,7 +4,21 @@ const test = require('tape-catch'),
       _ = require('underscore'), 
       log = console.log
 
-test("stack.fire invokes stack.on", (t) => {
+var tests = []
+
+var addThenRunTest = (testName, testFunc) => {
+  var testEntry = {
+    name : testName, 
+    test_func : () => {
+      test(testName, testFunc) 
+    }
+  }
+  tests.push(testEntry)
+  testEntry.test_func()
+}
+
+addThenRunTest("stack.fire invokes stack.on", (t) => {
+  //addThenRunTest("stack.fire invokes stack.on", (t) => {
   t.plan(1)
   let stack = requireUncached('./stack.js')
 
@@ -17,7 +31,7 @@ test("stack.fire invokes stack.on", (t) => {
 
 })
 
-test("stack.fire nested within stack.on", (t) => {
+addThenRunTest("stack.fire nested within stack.on", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
 
@@ -61,7 +75,9 @@ test("stack.fire nested within stack.on", (t) => {
   })
 })
 
-test("stack.fire nested within stack.on (async)", (t) => {
+
+
+addThenRunTest("stack.fire nested within stack.on (async)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
 
@@ -110,7 +126,7 @@ test("stack.fire nested within stack.on (async)", (t) => {
 })
 
 
-test("fire three nested commands and verify state consistency along the way", (t) => {
+addThenRunTest("fire three nested commands and verify state consistency along the way", (t) => {
   t.plan(6) //This will be the next major engineering hurdle; 
   //to ensure that commands that are children of children fire and return back to the 
   //root command; will wnat to make a visualization of this. 
@@ -143,7 +159,7 @@ test("fire three nested commands and verify state consistency along the way", (t
 })
 
 
-test("Different command listeners should not fire from a single command", (t) => {
+addThenRunTest("Different command listeners should not fire from a single command", (t) => {
   let stack = requireUncached('./stack.js')
 
   stack.on('/go', () => {
@@ -164,7 +180,7 @@ test("Different command listeners should not fire from a single command", (t) =>
 
 })
 
-test("(same as above, but more complex route)", (t) => {
+addThenRunTest("(same as above, but more complex route)", (t) => {
 
   let stack = requireUncached('./stack.js')
 
@@ -187,7 +203,7 @@ test("(same as above, but more complex route)", (t) => {
 })
 
 
-test("(same as above, but even more complex routes using a parameter)", (t) => {
+addThenRunTest("(same as above, but even more complex routes using a parameter)", (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
   stack.on('/inventory/:item/deliver', () => {
@@ -210,7 +226,7 @@ test("(same as above, but even more complex routes using a parameter)", (t) => {
 })
 
 
-test("(same as above, but even more complex routes using multiple parameters)", (t) => {
+addThenRunTest("(same as above, but even more complex routes using multiple parameters)", (t) => {
 
   let stack = requireUncached('./stack.js')
   stack.on('/go/:destination/:time', (state, next) => {
@@ -232,7 +248,7 @@ test("(same as above, but even more complex routes using multiple parameters)", 
 })
 
 //Test to ensure stack.state is updated as expected. 
-test("stack.state integrity (and commands without listeners)", (t) => {
+addThenRunTest("stack.state integrity (and commands without listeners)", (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
   stack.fire('/take-off', () => {
@@ -244,7 +260,7 @@ test("stack.state integrity (and commands without listeners)", (t) => {
   })
 })
 
-test('Catch all wildcard listener', (t) => {
+addThenRunTest('Catch all wildcard listener', (t) => {
   t.plan(4)
   let stack = requireUncached('./stack.js')
 
@@ -266,7 +282,7 @@ test('Catch all wildcard listener', (t) => {
 
 })
 
-test("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
+addThenRunTest("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
   let stack = requireUncached('./stack.js')
   t.plan(2)
 
@@ -293,7 +309,7 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
 })
 
 //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same. 
-test("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
+addThenRunTest("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(2)
@@ -320,7 +336,7 @@ test("Wildcard plays nicely with other listeners (wildcard listener established 
   stack.fire('diamond')
 })
 
-test("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
+addThenRunTest("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(3)
@@ -367,7 +383,7 @@ test("Wildcard correctly is added to stacks and fires in the correct order", (t)
 })
 
 
-test("Commands are agnostic to stating with a slash or not", (t) => {
+addThenRunTest("Commands are agnostic to stating with a slash or not", (t) => {
 
   let stack = requireUncached('./stack.js')
   t.plan(5)
@@ -404,7 +420,7 @@ test("Commands are agnostic to stating with a slash or not", (t) => {
 })
 
 
-test('berries', (t) => {
+addThenRunTest('berries', (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')    
@@ -434,7 +450,7 @@ test('berries', (t) => {
 
 
 
-test("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+addThenRunTest("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
   t.plan(5)
 
   let stack = requireUncached('./stack.js')  
@@ -476,7 +492,7 @@ test("A subsequent fire waits until the current stack is finished before becomin
 })
 
 
-test("Commands not issued should not fire (using wildcard commands)", (t) => {
+addThenRunTest("Commands not issued should not fire (using wildcard commands)", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')
@@ -511,7 +527,7 @@ test("Commands not issued should not fire (using wildcard commands)", (t) => {
 })
 
 
-test("Commands not issued should not fire (using commands that use URL param)", (t) => {
+addThenRunTest("Commands not issued should not fire (using commands that use URL param)", (t) => {
   t.plan(3)
 
   let stack = requireUncached('./stack.js')
@@ -540,7 +556,7 @@ test("Commands not issued should not fire (using commands that use URL param)", 
   })  
 })
 
-test('Robot assembly line', (t) => {
+addThenRunTest('Robot assembly line', (t) => {
   t.plan(4)
 
   let stack = requireUncached('./stack.js')
@@ -579,7 +595,7 @@ test('Robot assembly line', (t) => {
 })
 
 
-test('Async element initialization', (t) => {
+addThenRunTest('Async element initialization', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')
   let async = requireUncached('async')
@@ -651,7 +667,7 @@ test('Async element initialization', (t) => {
 })
 
 
-test('Fire shorthand', (t) => {
+addThenRunTest('Fire shorthand', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')
 
@@ -672,7 +688,7 @@ test('Fire shorthand', (t) => {
 
 })
 
-test('Fire shorthand + multi commands', (t) => {
+addThenRunTest('Fire shorthand + multi commands', (t) => {
   t.plan(6)
   let stack = requireUncached('./stack.js')
   let gg = requireUncached('gg')
@@ -707,7 +723,7 @@ test('Fire shorthand + multi commands', (t) => {
 
 })
 
-test('command nulls after fire', (t) => {
+addThenRunTest('command nulls after fire', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')  
   stack.on('bake-cookie', () => {
@@ -805,7 +821,7 @@ test.skip('Demonstrate multiple ways of calling next (WIP)', (t) => {
   //TODO: make another thing where you just pass an 'on' next (above only shows passing of nextFire)
 })
 
-test('Multi command stress test', (t) => {
+addThenRunTest('Multi command stress test', (t) => {
   t.plan(13)
   let stack = requireUncached('./stack.js')  
   let gg = requireUncached('gg')  
@@ -895,7 +911,7 @@ test.skip('Strawberry milkshake', (t) => {
 
 
 
-test('Empty goldmine', (t) => {
+addThenRunTest('Empty goldmine', (t) => {
   t.plan(5)
   let stack = requireUncached('./stack.js')  
   let gg = requireUncached('gg') 
@@ -946,7 +962,7 @@ test('Empty goldmine', (t) => {
 
 })
 
-test('Incomplete garden', (t) => {
+addThenRunTest('Incomplete garden', (t) => {
   t.plan(4)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')    
@@ -985,7 +1001,7 @@ test('Incomplete garden', (t) => {
 })
 
 
-test('Complete garden', (t) => {
+addThenRunTest('Complete garden', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
 
@@ -1010,7 +1026,7 @@ test('Complete garden', (t) => {
 
 })
 
-test('Multiple .on with same name', (t) => {
+addThenRunTest('Multiple .on with same name', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js')  
 
@@ -1027,7 +1043,7 @@ test('Multiple .on with same name', (t) => {
   stack.fire('water')
 })
 
-test('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t) => {
+addThenRunTest('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
 
@@ -1048,7 +1064,7 @@ test('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t)
 })
 
 
-test('inadvertent next calls', (t) => {
+addThenRunTest('inadvertent next calls', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
 
@@ -1081,7 +1097,7 @@ test('inadvertent next calls', (t) => {
 
 
 
-test('inadvertent next calls pt2', (t) => {
+addThenRunTest('inadvertent next calls pt2', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js')  
   let gg = requireUncached('gg')  
@@ -1117,7 +1133,7 @@ test('inadvertent next calls pt2', (t) => {
 
 
 
-test('inadvertent next calls pt3', (t) => {
+addThenRunTest('inadvertent next calls pt3', (t) => {
   t.plan(4)
   let stack = requireUncached('./stack.js')  
   let gg = requireUncached('gg')  
@@ -1155,7 +1171,7 @@ test('inadvertent next calls pt3', (t) => {
 })
 
 
-test('rows of siblings', (t) => {
+addThenRunTest('rows of siblings', (t) => {
   t.plan(8)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')     
@@ -1185,7 +1201,7 @@ test('rows of siblings', (t) => {
 })
 
 
-test('stack.next() caller check', (t) => {
+addThenRunTest('stack.next() caller check', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')       
@@ -1212,7 +1228,7 @@ test('stack.next() caller check', (t) => {
 })
 
 
-test('wait for loading...', (t) => {
+addThenRunTest('wait for loading...', (t) => {
   t.plan(5)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')    
@@ -1245,7 +1261,7 @@ test('wait for loading...', (t) => {
   }, 2000)
 })
 
-test('stack.next for ons vs fires', (t) => {
+addThenRunTest('stack.next for ons vs fires', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')   
@@ -1262,7 +1278,7 @@ test('stack.next for ons vs fires', (t) => {
 })
 
 
-test('stack.next for ons vs fires pt2', (t) => {
+addThenRunTest('stack.next for ons vs fires pt2', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')   
@@ -1283,7 +1299,7 @@ test('stack.next for ons vs fires pt2', (t) => {
 })
 
 
-test('stack.next for ons vs fires pt3', (t) => {
+addThenRunTest('stack.next for ons vs fires pt3', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')   
@@ -1296,7 +1312,7 @@ test('stack.next for ons vs fires pt3', (t) => {
   t.notOk(gg.examine(stack.grid, 0).command.done) //< asparagus is not done
 })
 
-test('stack.next for ons vs fires pt4', (t) => {
+addThenRunTest('stack.next for ons vs fires pt4', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')   
@@ -1315,7 +1331,7 @@ test('stack.next for ons vs fires pt4', (t) => {
 })
 
 
-test('stack.next for ons vs fires pt5', (t) => {
+addThenRunTest('stack.next for ons vs fires pt5', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')   
@@ -1337,7 +1353,7 @@ test('stack.next for ons vs fires pt5', (t) => {
 
 
 
-test('nested on/next situation', (t) => {
+addThenRunTest('nested on/next situation', (t) => {
   t.plan(1)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg')   
@@ -1352,7 +1368,7 @@ test('nested on/next situation', (t) => {
 
 })
 
-test('ensure unrelated commands never share same column', (t) => {
+addThenRunTest('ensure unrelated commands never share same column', (t) => {
   t.plan(7)
 
   let stack = requireUncached('./stack.js') 
@@ -1380,7 +1396,7 @@ test('ensure unrelated commands never share same column', (t) => {
 
 })
 
-test('Ensure commands do not get doubled in the grid if only fired once', (t) => {
+addThenRunTest('Ensure commands do not get doubled in the grid if only fired once', (t) => {
   t.plan(1)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg') 
@@ -1434,7 +1450,7 @@ test.skip('Ensure commands do not get doubled in the grid if only fired once, sp
 })
 
 
-test('finish all middleware', (t) => {
+addThenRunTest('finish all middleware', (t) => {
   t.plan(2)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg') 
@@ -1463,7 +1479,7 @@ test('finish all middleware', (t) => {
 
 
 
-test('finish all middleware (triple on)', (t) => {
+addThenRunTest('finish all middleware (triple on)', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js') 
   let gg = requireUncached('gg') 
@@ -1496,7 +1512,7 @@ test('finish all middleware (triple on)', (t) => {
 })
 
 
-test('Completion pyramid', (t) => {
+addThenRunTest('Completion pyramid', (t) => {
   t.plan(1)
   let stack = requireUncached('./stack.js') 
   stack.fire('first', () => {
@@ -1518,7 +1534,7 @@ test('Completion pyramid', (t) => {
 })
 
 
-test('Middleware fires in correct order', (t) => {
+addThenRunTest('Middleware fires in correct order', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js') 
 
@@ -1542,7 +1558,7 @@ test('Middleware fires in correct order', (t) => {
 })
 
 
-test('Middleware fires in correct order (with wildcards)', (t) => {
+addThenRunTest('Middleware fires in correct order (with wildcards)', (t) => {
   t.plan(3)
   let stack = requireUncached('./stack.js') 
 
@@ -1565,3 +1581,6 @@ test('Middleware fires in correct order (with wildcards)', (t) => {
 
 })
 
+
+
+module.exports = tests

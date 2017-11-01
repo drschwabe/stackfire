@@ -20,6 +20,14 @@ var testObj = {
         }
       })
     }
+    newTest.only = (testName, testFunc) => {
+      testObj.only = {
+        name : testName, 
+        func : (testName) => {
+          test(testName, testFunc) 
+        }
+      }
+    }
     //^ if run == true we will loop over this to perform 
     //the tests
 
@@ -1588,8 +1596,36 @@ var testObj = {
 
     })
 
+
+    newTest.only('All middleware fires', (t) => {
+      t.plan(1)
+
+      let stack = requireUncached('./stack.js')
+
+      stack.on('click', () => {
+        stack.fire('init')
+      })
+
+      stack.on('init', () => {
+        t.ok('do something')
+        stack.next() 
+      })
+
+      stack.on('init', () => {
+        t.ok('do another thing')
+        stack.next()
+      })
+
+      stack.fire('click')
+
+    })
+
+
     if(run) { 
       console.log('run tests...')
+      if(testObj.only) {
+        return testObj.only.func(testObj.only.name)
+      }
       testObj.tests.forEach((entry) => {
         entry.func(entry.name)
       })      

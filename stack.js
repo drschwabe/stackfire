@@ -1,8 +1,8 @@
 var async = require('async'), 
-    _ = require('underscore'), 
-    routeParser = require('route-parser'), 
-    gg = require('gg'),    
-    isNode = require('detect-node'), 
+    _ = require('underscore'),
+    routeParser = require('route-parser'),
+    gg = require('gg'),
+    isNode = require('detect-node'),
     _l = require('lodash')
 
 var browser = false
@@ -19,7 +19,7 @@ stack.grid = gg.populateCells(stack.grid)
 
 const runUtils = () => {
   stack.utils.forEach((utilFunc) => {
-    return utilFunc(stack) 
+    return utilFunc(stack)
   })
 }
 
@@ -260,7 +260,7 @@ stack.fire = function(path, param2, param3) {
             //need to accomomdate for this 
             runUtils()
             console.log('match n stuff')
-            debugger
+            //debugger
             runUtils()
 
             //if(gg.nextCellWest(stack.grid, ))
@@ -615,7 +615,7 @@ var endWaterfall = (newCommand) => { //End of waterfall:
           //determine if the current command's callback has already been run...
           if(stack.state._command.done) return //< This should never happen...
           stack.state._command.callback_underway = false
-        debugger
+        //debugger
           stack.state._command.done = true
           if(callback) callback() //< This type of callback must be a synchronous function!
           //(cause we are not returning it; we are proceeding to resume waterfall..

@@ -34,8 +34,11 @@ var testObj = {
     //Now write each test as normal, but call it with queuing function:  
     newTest("stack.fire invokes stack.on", (t) => {
       //newTest("stack.fire invokes stack.on", (t) => {
+      console.log('w00t')
       t.plan(1)
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      debugger
 
       stack.on('/do-something', () => {
         //t.ok(state, 'listener invoked')    
@@ -48,7 +51,7 @@ var testObj = {
 
     newTest("stack.fire nested within stack.on", (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('/apple', () => {
         console.log('/apple "on" (middleware in progress). _command.path:')
@@ -94,7 +97,7 @@ var testObj = {
 
     newTest("stack.fire nested within stack.on (async)", (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('/apple', (state, next) => {
         console.log('/apple "on" (middleware in progress). _command.path:')
@@ -145,7 +148,7 @@ var testObj = {
       t.plan(6) //This will be the next major engineering hurdle; 
       //to ensure that commands that are children of children fire and return back to the 
       //root command; will wnat to make a visualization of this. 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('/land-on-moon', () => {
         stack.state.landed = true
@@ -175,7 +178,7 @@ var testObj = {
 
 
     newTest("Different command listeners should not fire from a single command", (t) => {
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('/go', () => {
         t.equals(stack.state._command.path, '/go', 'expected listener invoked')
@@ -197,7 +200,7 @@ var testObj = {
 
     newTest("(same as above, but more complex route)", (t) => {
 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('/go/somewhere', () => {
         t.equals(stack.state._command.path, '/go/somewhere', 'expected listener invoked')
@@ -220,7 +223,7 @@ var testObj = {
 
     newTest("(same as above, but even more complex routes using a parameter)", (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       stack.on('/inventory/:item/deliver', () => {
         t.equals(stack.state._command.path, '/inventory/widget/deliver', 'expected listener invoked')
         t.ok(stack.state._command.params.item, 'parameter is included on the command')
@@ -243,7 +246,7 @@ var testObj = {
 
     newTest("(same as above, but even more complex routes using multiple parameters)", (t) => {
 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       stack.on('/go/:destination/:time', (state, next) => {
         t.equals(stack.state._command.path, '/go/Brisbane/tomorrow', 'expected listener invoked')
         stack.next()
@@ -265,7 +268,7 @@ var testObj = {
     //Test to ensure stack.state is updated as expected. 
     newTest("stack.state integrity (and commands without listeners)", (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       stack.fire('/take-off', () => {
         t.equals(stack.state, stack.state, 'stack.state equals the newly returned state')
         stack.state.flying = true 
@@ -277,7 +280,7 @@ var testObj = {
 
     newTest('Catch all wildcard listener', (t) => {
       t.plan(4)
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('*wild', () => {
         if(stack.state._command.path == '/_buffer') return next(null, state)
@@ -298,7 +301,7 @@ var testObj = {
     })
 
     newTest("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       t.plan(2)
 
       stack.on('heart', () => {
@@ -326,7 +329,7 @@ var testObj = {
     //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same. 
     newTest("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       t.plan(2)
 
       stack.on('heart', () => {
@@ -353,7 +356,7 @@ var testObj = {
 
     newTest("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       t.plan(3)
 
       stack.on('ten', () => {
@@ -400,7 +403,7 @@ var testObj = {
 
     newTest("Commands are agnostic to stating with a slash or not", (t) => {
 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       t.plan(5)
 
       stack.on('party', () => {
@@ -436,9 +439,9 @@ var testObj = {
 
 
     newTest('berries', (t) => {
-      t.plan(4)
+      t.plan(5)
 
-      let stack = requireUncached('./stack.js')    
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')    
 
       t.ok(_.isArray(stack.grid.cells))
 
@@ -455,6 +458,7 @@ var testObj = {
 
       stack.fire('vegetable', () => { 
         //Even though no middleware, ensure this enty still exists on the grid: 
+        t.pass('fired vegetable')
         stack.next() //< The command is not done until we call next
         //(even though there are no further commands to fire)
       }) 
@@ -468,7 +472,7 @@ var testObj = {
     newTest("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
       t.plan(5)
 
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('warning-alarm', () => {
         console.log('you have 2 seconds to comply')
@@ -510,7 +514,7 @@ var testObj = {
     newTest("Commands not issued should not fire (using wildcard commands)", (t) => {
       t.plan(3)
 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       //Defining a wildcard listener atop of the stack seems to result in 
       //subsequent listeners being fired even though their command was not issued...
@@ -545,7 +549,7 @@ var testObj = {
     newTest("Commands not issued should not fire (using commands that use URL param)", (t) => {
       t.plan(3)
 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('/bomb/:anything', () => {
         t.pass('this should invoke on every fire')
@@ -574,7 +578,7 @@ var testObj = {
     newTest('Robot assembly line', (t) => {
       t.plan(4)
 
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('robot/assemble/:product', () => {
         console.log('"robot/assemble/:product" on!')    
@@ -612,8 +616,8 @@ var testObj = {
 
     newTest('Async element initialization', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js')
-      let async = requireUncached('async')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let async = process.browser ? require('async') : requireUncached('async')
 
       stack.on('element/init/:prefix', () => {
         var elems = ['my-elem-a', 'my-elem-b', 'my-elem-c']
@@ -684,7 +688,7 @@ var testObj = {
 
     newTest('Fire shorthand', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('green', () => {
         t.pass('green light')
@@ -705,8 +709,8 @@ var testObj = {
 
     newTest('Fire shorthand + multi commands', (t) => {
       t.plan(6)
-      let stack = requireUncached('./stack.js')
-      let gg = requireUncached('gg')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('green', (state) => {
         t.pass('green light on')
@@ -740,7 +744,7 @@ var testObj = {
 
     newTest('command nulls after fire', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
       stack.on('bake-cookie', () => {
         t.ok(stack.state._command, 'bake-cookie')
         stack.next()
@@ -754,7 +758,7 @@ var testObj = {
 
     test.skip('buffer fires every fire', (t) => {
       t.plan(6)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
       stack.on('apples', (state, next) => {
         t.pass('apples on!')
         next(null, state)
@@ -779,7 +783,7 @@ var testObj = {
 
     test.skip('buffer fires every fire (complex)', (t) => {
       t.plan(5)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
       stack.on('apples', (state, next) => {
         t.pass('apples on!')
         stack.fire('oranges', (err, state) => {
@@ -802,7 +806,7 @@ var testObj = {
 
     test.skip('Demonstrate multiple ways of calling next (WIP)', (t) => {
       t.plan(5)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('shake', (state, next) => {
         //The shake command is not done yet: 
@@ -838,8 +842,8 @@ var testObj = {
 
     newTest('Multi command stress test', (t) => {
       t.plan(13)
-      let stack = requireUncached('./stack.js')  
-      let gg = requireUncached('gg')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('shake', (state) => {
         //The shake command is not done yet: 
@@ -900,7 +904,7 @@ var testObj = {
 
     test.skip('Strawberry milkshake', (t) => {
       t.plan(10)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('milkshake', (state, next) => {
       
@@ -928,8 +932,8 @@ var testObj = {
 
     newTest('Empty goldmine', (t) => {
       t.plan(5)
-      let stack = requireUncached('./stack.js')  
-      let gg = requireUncached('gg') 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
 
       stack.state.gold = false
 
@@ -979,8 +983,8 @@ var testObj = {
 
     newTest('Incomplete garden', (t) => {
       t.plan(4)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')    
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')    
 
       stack.fire('dig', (err, state, nextFire) => {
         log('dug')
@@ -1018,7 +1022,7 @@ var testObj = {
 
     newTest('Complete garden', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.fire('dig', (err, state, nextFire) => {
         log('dug')
@@ -1043,7 +1047,7 @@ var testObj = {
 
     newTest('Multiple .on with same name', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('water', () => {
         t.pass('flowing...')
@@ -1060,7 +1064,7 @@ var testObj = {
 
     newTest('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('apple', () => {
         t.pass()
@@ -1081,7 +1085,7 @@ var testObj = {
 
     newTest('inadvertent next calls', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('init', () => {
         t.pass('/init on')
@@ -1114,8 +1118,8 @@ var testObj = {
 
     newTest('inadvertent next calls pt2', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js')  
-      let gg = requireUncached('gg')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('bannana-shake', () => {
         console.log('brrshh-zzzzzze....')
@@ -1150,8 +1154,8 @@ var testObj = {
 
     newTest('inadvertent next calls pt3', (t) => {
       t.plan(4)
-      let stack = requireUncached('./stack.js')  
-      let gg = requireUncached('gg')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.on('bannana-shake', () => {
         console.log('brrshh-zzzzzze....')
@@ -1188,8 +1192,8 @@ var testObj = {
 
     newTest('rows of siblings', (t) => {
       t.plan(8)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')     
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')     
       stack.fire('fruits', () => {
         stack.fire('apple')
         stack.fire('bannana')
@@ -1218,8 +1222,8 @@ var testObj = {
 
     newTest('stack.next() caller check', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')       
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')       
 
       stack.fire('stone', () => {
         stack.next()
@@ -1245,8 +1249,8 @@ var testObj = {
 
     newTest('wait for loading...', (t) => {
       t.plan(5)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')    
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')    
 
       var loaded = false 
 
@@ -1278,8 +1282,8 @@ var testObj = {
 
     newTest('stack.next for ons vs fires', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')   
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')   
 
       stack.on('apple', () => {
         stack.fire('bannana', stack.next)
@@ -1295,8 +1299,8 @@ var testObj = {
 
     newTest('stack.next for ons vs fires pt2', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')   
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')   
 
       stack.on('cherry', () => {
         debugger
@@ -1316,8 +1320,8 @@ var testObj = {
 
     newTest('stack.next for ons vs fires pt3', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')   
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')   
 
       stack.on('asparagus', () => {
         stack.fire('bean-sprouts') 
@@ -1329,8 +1333,8 @@ var testObj = {
 
     newTest('stack.next for ons vs fires pt4', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')   
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')   
 
       stack.on('bean-sprouts', () => {
         console.log('bean-sprouts in progress')
@@ -1348,8 +1352,8 @@ var testObj = {
 
     newTest('stack.next for ons vs fires pt5', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')   
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')   
 
       stack.on('bean-sprouts', () => {
         console.log('bean-sprouts in progress')
@@ -1370,8 +1374,8 @@ var testObj = {
 
     newTest('nested on/next situation', (t) => {
       t.plan(1)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')   
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')   
 
       stack.on('apple', () => {
         stack.fire('orange', stack.next)
@@ -1386,8 +1390,8 @@ var testObj = {
     newTest('ensure unrelated commands never share same column', (t) => {
       t.plan(7)
 
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg')  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js')  
 
       stack.fire('apple', () => {
         stack.fire('green')
@@ -1413,8 +1417,8 @@ var testObj = {
 
     newTest('Ensure commands do not get doubled in the grid if only fired once', (t) => {
       t.plan(1)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg') 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
 
       stack.on('connect', () => {
         console.log('do something')
@@ -1439,8 +1443,8 @@ var testObj = {
     //(it's kind of a 'gotcha' something that could be unexpected)
     test.skip('Ensure commands do not get doubled in the grid if only fired once, specifically if they are using parameter', (t) => {
       t.plan(1)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg') 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
 
       //Order is important here... 
       //the parameter version 'on' needs to like reverse itself
@@ -1467,8 +1471,8 @@ var testObj = {
 
     newTest('finish all middleware', (t) => {
       t.plan(2)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg') 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
 
       stack.on('save', () => {
         t.pass('save stuff')
@@ -1496,8 +1500,8 @@ var testObj = {
 
     newTest('finish all middleware (triple on)', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js') 
-      let gg = requireUncached('gg') 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      let gg = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
 
       stack.on('/favvorite-main-save', () => {
         stack.fire('elements/render', () => {
@@ -1529,7 +1533,7 @@ var testObj = {
 
     newTest('Completion pyramid', (t) => {
       t.plan(1)
-      let stack = requireUncached('./stack.js') 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
       stack.fire('first', () => {
         stack.fire('second', () => {
           stack.fire('third', () => {
@@ -1551,7 +1555,7 @@ var testObj = {
 
     newTest('Middleware fires in correct order', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js') 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
 
       stack.on('go', () => {
         t.pass('first wildcard')
@@ -1575,7 +1579,7 @@ var testObj = {
 
     newTest('Middleware fires in correct order (with wildcards)', (t) => {
       t.plan(3)
-      let stack = requireUncached('./stack.js') 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
 
       stack.on('*wild', () => {
         t.pass('first wildcard')
@@ -1597,10 +1601,12 @@ var testObj = {
     })
 
 
-    newTest.only('All middleware fires', (t) => {
+    newTest('All middleware fires', (t) => {
       t.plan(1)
 
-      let stack = requireUncached('./stack.js')
+
+
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('click', () => {
         stack.fire('init')
@@ -1631,8 +1637,11 @@ var testObj = {
       })      
     }
 
+
     return testObj.tests
   }
 } 
+
+if(process.browser) window.testObj = testObj 
 
 module.exports = testObj

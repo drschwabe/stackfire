@@ -1,5 +1,5 @@
 {
-  "name": "stack-core",
+  "name": "stack3",
   "description": "A command driven middleware stack for managing control flow / application state",
   "keywords": [
     "router",
@@ -12,7 +12,7 @@
     "stack",
     "command stack"
   ],
-  "version": "2.5.0",
+  "version": "3.0.0",
   "contributors": [
     "Derrick Schwabe <admin@nerdbusiness.com>"
   ],

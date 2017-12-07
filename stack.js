@@ -6,6 +6,7 @@ const async = require('async'),
 
 const stack = {
   commands : [],
+  queue : [], 
   utils : [] //< For third party mods
 }
 
@@ -53,7 +54,39 @@ stack.fire = (path) => {
 
   if(!matchingCommand) return
 
+  //Prepare the commands array into a function we can feed async...
+  //hmmmm maybe a forever loop? 
+  //ie- async.forever(stack.command)
+  //this way is stack.command gets 
 
+  //
+  gg.insertEnty
+
+  stack.queue.push
+
+  forever()
+
+  //Run the command....
+  async.waterfall(matchingCommand.middleware, (middleware, callback) => {
+    middleware.func(callback) 
+    //visualize this
+    //make sure if a command in prog - we never run another one.  
+  })
+
+}
+
+const forever = () => {
+  async.forever(
+    (next) => {
+      // next is suitable for passing to things that need a callback(err [, whatever]);
+      // it will result in this function being called again.
+
+    },
+    (err) => {
+      // if next is called with a value in its first parameter, it will appear
+      // in here as 'err', and execution will stop.
+    }
+  )
 }
 
 const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path

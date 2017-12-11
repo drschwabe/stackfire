@@ -39,11 +39,12 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      debugger
+      //debugger
 
       stack.on('/do-something', () => {
-        //t.ok(state, 'listener invoked')    
-        t.equal(stack.state._command.path, '/do-something', "state._command.path equals '/do-something'")
+        //t.ok(state, 'listener invoked') 
+        debugger   
+        t.equal(stack.state.path, '/do-something', "state.path equals '/do-something'")
       })
 
       stack.fire('/do-something')

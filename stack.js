@@ -2,11 +2,18 @@
 
 const async = require('async'), 
     routeParser = require('route-parser')
-    _ = require('underscore')
+    _ = require('underscore'), 
+    gg = require('gg'), 
+    isNode = require('detect-node')    
+
+var browser = false
+if (!isNode) browser = true
 
 const stack = {
+  state : {}, 
   commands : [],
   queue : [], 
+  grid : gg.createGrid(1,1), 
   utils : [] //< For third party mods
 }
 
@@ -32,7 +39,7 @@ stack.on = (path, callback) => {
 
   if(!existingCommand) {
     //No existing command, so let's define one now, 
-    //with hwo properties: the route and an array to store middleware...
+    //with two properties: the route and an array to store middleware...
     let command = { route: route, middleware: [newMiddleware] }
     stack.commands.push(command)
   } else {
@@ -41,38 +48,45 @@ stack.on = (path, callback) => {
     existingCommand.middleware.push(newMiddleware)
   }
   return
-
 }
 
 stack.fire = (path) => {
-  path = prefixPath(path)
+  stack.state.path = prefixPath(path)
 
   //Prepare the new command object: 
   const matchingCommand = _.find(stack.commands, (command) => {
-    return command.route.match(path)
+    return command.route.match(stack.state.path)
   })
 
   if(!matchingCommand) return
+
+  //matchingCommand.path = path
 
   //Prepare the commands array into a function we can feed async...
   //hmmmm maybe a forever loop? 
   //ie- async.forever(stack.command)
   //this way is stack.command gets 
 
-  //
-  gg.insertEnty
+  //Determine the cell
+  //stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })
+  //populate the grid with each function... 
+  stack.grid = gg.insertEnty(stack.grid, { command:  matchingCommand, cell : 0, func: matchingCommand.middleware[0].func })
 
-  stack.queue.push
+  //stack.grid = gg.insertEnty(stack.grid, { command: matchingCommand, cell : 0, })
 
-  forever()
+  gg.populateCells(stack.grid) 
 
-  //Run the command....
-  async.waterfall(matchingCommand.middleware, (middleware, callback) => {
-    middleware.func(callback) 
-    //visualize this
-    //make sure if a command in prog - we never run another one.  
-  })
+  if(window) window.renderGrid() 
 
+  //return 
+
+  //simply run the next function in the grid... 
+  stack.cell = 0 //< start at 0
+
+  stack.grid.cells[stack.cell].enties[0].func()
+
+  //Reset path: 
+  stack.state.path = null
 }
 
 const forever = () => {

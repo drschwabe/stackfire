@@ -3,11 +3,11 @@
 const async = require('async'), 
     routeParser = require('route-parser')
     _ = require('underscore'), 
-    gg = require('gg'), 
-    isNode = require('detect-node')    
+    gg = require('gg')
 
-var browser = false
-if (!isNode) browser = true
+
+var browser //< Variable to indicate if we running in Node or browser: 
+require('detect-node') ? browser = false : browser = true
 
 const stack = {
   state : {}, 
@@ -76,7 +76,7 @@ stack.fire = (path) => {
 
   gg.populateCells(stack.grid) 
 
-  if(window) window.renderGrid() 
+  if(browser) window.renderGrid() 
 
   //return 
 

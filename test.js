@@ -49,19 +49,19 @@ var testObj = {
     })
 
 
-    newTest.only("Mulitiple listeners invoke in a series (not parallel)", (t) => {
+    newTest("Mulitiple listeners invoke in a series (not parallel)", (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
       stack.on('/boot', () => {
-        t.ok(stack.state.path == '/boot')
+        t.ok(stack.state.path == '/boot', 'first boot listener ran')
         stack.state.booting = true 
       })
 
       stack.on('/boot', () => {
-        t.ok(stack.state.path == '/boot')
-        t.ok(stack.state.booting)
+        t.ok(stack.state.path == '/boot', 'second boot listener ran')
+        t.ok(stack.state.booting, 'variable set on state during first listener exists with expected value')
       })
 
       stack.fire('/boot')

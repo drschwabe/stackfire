@@ -5,7 +5,6 @@ const async = require('async'),
     _ = require('underscore'), 
     gg = require('gg')
 
-
 var browser //< Variable to indicate if we running in Node or browser: 
 require('detect-node') ? browser = false : browser = true
 
@@ -47,6 +46,7 @@ stack.on = (path, callback) => {
     //middleware into the command's existing stack: 
     existingCommand.middleware.push(newMiddleware)
   }
+
   return
 }
 
@@ -59,48 +59,29 @@ stack.fire = (path) => {
   })
 
   if(!matchingCommand) return
+  
+  //Prepare the grid / queue middleware for this command: 
+  matchingCommand.middleware.forEach((middleware, index) => { 
+    stack.grid = gg.insertEnty(stack.grid, { command:  matchingCommand, cell : index, func: middleware.func })
+    stack.grid = gg.expandGrid(stack.grid) //< Expand grid for each new middleware/enty inserted. 
+  })
 
-  //matchingCommand.path = path
+  //Populate cells of the grid: 
+  gg.populateCells(stack.grid)
 
-  //Prepare the commands array into a function we can feed async...
-  //hmmmm maybe a forever loop? 
-  //ie- async.forever(stack.command)
-  //this way is stack.command gets 
+  //#debugging: render the grid if we using browser: 
+  if(browser) window.renderGrid()
 
-  //Determine the cell
-  //stack.grid = gg.insertEnty(stack.grid, { command: newCommand, cell : cell })
-  //populate the grid with each function... 
-  stack.grid = gg.insertEnty(stack.grid, { command:  matchingCommand, cell : 0, func: matchingCommand.middleware[0].func })
-
-  //stack.grid = gg.insertEnty(stack.grid, { command: matchingCommand, cell : 0, })
-
-  gg.populateCells(stack.grid) 
-
-  if(browser) window.renderGrid() 
-
-  //return 
-
-  //simply run the next function in the grid... 
-  stack.cell = 0 //< start at 0
-
-  stack.grid.cells[stack.cell].enties[0].func()
-
-  //Reset path: 
-  stack.state.path = null
-}
-
-const forever = () => {
-  async.forever(
-    (next) => {
-      // next is suitable for passing to things that need a callback(err [, whatever]);
-      // it will result in this function being called again.
-
-    },
-    (err) => {
-      // if next is called with a value in its first parameter, it will appear
-      // in here as 'err', and execution will stop.
-    }
-  )
+  //Loop over each cell and execute the function it now contains: 
+  async.each(stack.grid.cells, (cell, callback) => {
+    if(!cell.enties.length) return callback()
+    cell.enties[0].func()
+    cell.enties[0].command.complete = true
+    callback()
+  }, () => {
+    //Reset path: 
+    stack.state.path = null    
+  })
 }
 
 const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path

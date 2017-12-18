@@ -35,15 +35,12 @@ var testObj = {
     newTest("stack.fire invokes stack.on", (t) => {
       //newTest("stack.fire invokes stack.on", (t) => {
       console.log('w00t')
-      t.plan(1)
+      t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      //debugger
-
       stack.on('/do-something', () => {
-        //t.ok(state, 'listener invoked') 
-        debugger   
+        t.ok(stack.state, 'listener invoked and stack state established') 
         t.equal(stack.state.path, '/do-something', "state.path equals '/do-something'")
       })
 

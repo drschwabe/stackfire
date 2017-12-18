@@ -48,6 +48,25 @@ var testObj = {
 
     })
 
+
+    newTest.only("Mulitiple listeners invoke in a series (not parallel)", (t) => {
+      t.plan(3)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      stack.on('/boot', () => {
+        t.ok(stack.state.path == '/boot')
+        stack.state.booting = true 
+      })
+
+      stack.on('/boot', () => {
+        t.ok(stack.state.path == '/boot')
+        t.ok(stack.state.booting)
+      })
+
+      stack.fire('/boot')
+    })
+
     newTest("stack.fire nested within stack.on", (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

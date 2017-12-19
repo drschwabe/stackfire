@@ -67,6 +67,34 @@ var testObj = {
       stack.fire('/boot')
     })
 
+    newTest("Mulitiple listeners are placed in the same column of the grid (not on row)", (t) => {
+      t.plan(4)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      stack.on('/boot', () => {
+        t.ok(stack.state.path == '/boot', 'first boot listener ran')
+      })
+
+      stack.on('/boot', () => {
+        t.ok(stack.state.path == '/boot', 'second boot listener ran')
+      })
+
+      stack.on('/boot', () => {
+        t.ok(stack.state.path == '/boot', 'third boot listener ran')
+      })      
+
+      stack.fire('/boot')
+
+      //Verify each listener (grid enty) exists at cells 0, 3, and 6
+      t.ok(stack.grid.enties[0].cell == 0 && stack.grid.enties[1].cell == 3 && stack.grid.enties[2].cell == 6, 'Each listener exist in the same column')
+      //ie: 
+      //0 x x
+      //3 x x 
+      //6 x x
+    })
+
+
     newTest("stack.fire nested within stack.on", (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

@@ -61,16 +61,33 @@ stack.fire = (path) => {
   if(!matchingCommand) return
   
   //Prepare the grid / queue middleware for this command: 
+  var lastInsertedCell = 0
   matchingCommand.middleware.forEach((middleware, index) => { 
-    stack.grid = gg.insertEnty(stack.grid, { command:  matchingCommand, cell : index, func: middleware.func })
-    stack.grid = gg.expandGrid(stack.grid) //< Expand grid for each new middleware/enty inserted. 
+    if(index === 0) cell = 0
+    else cell = gg.nextCellSouth(stack.grid, lastInsertedCell)
+
+    //Create a grid enty containing the command, cell, and the middleware's unique function:  
+    var middlewareEnty  = { command:  matchingCommand, cell : cell, func: middleware.func }
+    stack.grid = gg.insertEnty(stack.grid, middlewareEnty)
+
+    //Expand grid to accommodate for the next coming middleware/enty:
+    if( index != matchingCommand.middleware.length -1 ) {
+      //(only if this is not the last middleware in the list)
+      stack.grid = gg.expandGrid(stack.grid) 
+    }
+
+    //Populate cells of the grid: 
+    stack.grid = gg.populateCells(stack.grid)     
+
+    //Set this last because the middlewareEnty's cell has been updated 
+    //with the expansion: 
+    lastInsertedCell = middlewareEnty.cell
+
+    //#debugging: render the grid if we using browser: 
+    if(browser) window.renderGrid()
   })
 
-  //Populate cells of the grid: 
-  gg.populateCells(stack.grid)
 
-  //#debugging: render the grid if we using browser: 
-  if(browser) window.renderGrid()
 
   //Loop over each cell and execute the function it now contains: 
   async.each(stack.grid.cells, (cell, callback) => {

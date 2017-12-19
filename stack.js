@@ -16,7 +16,7 @@ const stack = {
   utils : [] //< For third party mods
 }
 
-//Middleware creation function: 
+//Listener creation function: 
 stack.on = (path, callback) => { 
 
   //Ensure path always is prefixed with a slash: 
@@ -31,20 +31,20 @@ stack.on = (path, callback) => {
     return existingCommand.route.match(path)
   })
 
-  //Either way, we will create a middleware entry;  
+  //Either way, we will create a listener entry;  
   //with two properties: an async handler function 
   //(which calls a callback) and the raw path...
-  const newMiddleware = { func : callback, path: path }   
+  const newListener = { func : callback, path: path }   
 
   if(!existingCommand) {
     //No existing command, so let's define one now, 
-    //with two properties: the route and an array to store middleware...
-    let command = { route: route, middleware: [newMiddleware] }
+    //with two properties: the route and an array to store listeners...
+    let command = { route: route, listeners: [newListener] }
     stack.commands.push(command)
   } else {
     //If the command already exists, just push this new
-    //middleware into the command's existing stack: 
-    existingCommand.middleware.push(newMiddleware)
+    //listener into the command's existing stack: 
+    existingCommand.listeners.push(newListener)
   }
 
   return
@@ -60,28 +60,28 @@ stack.fire = (path) => {
 
   if(!matchingCommand) return
   
-  //Prepare the grid / queue middleware for this command: 
+  //Prepare the grid / queue listener for this command: 
   var lastInsertedCell = 0
-  matchingCommand.middleware.forEach((middleware, index) => { 
+  matchingCommand.listeners.forEach((listener, index) => { 
     if(index === 0) cell = 0
     else cell = gg.nextCellSouth(stack.grid, lastInsertedCell)
 
-    //Create a grid enty containing the command, cell, and the middleware's unique function:  
-    var middlewareEnty  = { command:  matchingCommand, cell : cell, func: middleware.func }
-    stack.grid = gg.insertEnty(stack.grid, middlewareEnty)
+    //Create a grid enty containing the command, cell, and the listener's unique function:  
+    var listenerEnty  = { command:  matchingCommand, cell : cell, func: listener.func }
+    stack.grid = gg.insertEnty(stack.grid, listenerEnty)
 
-    //Expand grid to accommodate for the next coming middleware/enty:
-    if( index != matchingCommand.middleware.length -1 ) {
-      //(only if this is not the last middleware in the list)
+    //Expand grid to accommodate for the next coming listener/enty:
+    if( index != matchingCommand.listeners.length -1 ) {
+      //(only if this is not the last listener in the list)
       stack.grid = gg.expandGrid(stack.grid) 
     }
 
     //Populate cells of the grid: 
     stack.grid = gg.populateCells(stack.grid)     
 
-    //Set this last because the middlewareEnty's cell has been updated 
+    //Set this last because the listenerEnty's cell has been updated 
     //with the expansion: 
-    lastInsertedCell = middlewareEnty.cell
+    lastInsertedCell = listenerEnty.cell
 
     //#debugging: render the grid if we using browser: 
     if(browser) window.renderGrid()

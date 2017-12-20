@@ -95,6 +95,27 @@ var testObj = {
     })
 
 
+    newTest.only("Different commands align into different columns (and fire in order)", (t) => {
+      t.plan(5)
+      
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      stack.on('/boot', () => t.ok(stack.state.path == '/boot', 'first boot listener ran'))
+
+      stack.on('/boot', () => t.ok(stack.state.path == '/boot', 'second boot listener ran'))
+
+      stack.on('/boot', () => t.ok(stack.state.path == '/boot', 'third boot listener ran'))
+
+      stack.on('/strap', () => t.ok(stack.state.path == '/strap', 'first "strap" listener ran'))
+
+      stack.on('/strap', () => t.ok(stack.state.path == '/strap', 'second "strap" listener ran'))
+
+      stack.fire('/boot')
+
+      stack.fire('/strap')
+    })
+
     newTest("stack.fire nested within stack.on", (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

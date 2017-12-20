@@ -12,7 +12,7 @@ const stack = {
   state : {}, 
   commands : [],
   queue : [], 
-  grid : gg.createGrid(1,1), 
+  grid : gg.populateCells(gg.createGrid(1,1)), 
   utils : [] //< For third party mods
 }
 
@@ -61,10 +61,12 @@ stack.fire = (path) => {
   if(!matchingCommand) return
   
   //Prepare the grid / queue listener for this command: 
-  var lastInsertedCell = 0
+  var lastInsertedRow = 0
+  var column = _.indexOf(stack.commands, matchingCommand)
+
   matchingCommand.listeners.forEach((listener, index) => { 
-    if(index === 0) cell = 0
-    else cell = gg.nextCellSouth(stack.grid, lastInsertedCell)
+    if(index === 0) cell = gg.xyToIndex(stack.grid, [0, column])
+    else cell = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [lastInsertedRow, column]))
 
     //Create a grid enty containing the command, cell, and the listener's unique function:  
     var listenerEnty  = { command:  matchingCommand, cell : cell, func: listener.func }
@@ -81,7 +83,7 @@ stack.fire = (path) => {
 
     //Set this last because the listenerEnty's cell has been updated 
     //with the expansion: 
-    lastInsertedCell = listenerEnty.cell
+    lastInsertedRow = gg.indexToXy(stack.grid, listenerEnty.cell)[0]
 
     //#debugging: render the grid if we using browser: 
     if(browser) window.renderGrid()

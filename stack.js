@@ -93,13 +93,16 @@ stack.fire = (path) => {
 
   //Loop over each cell and execute the function it now contains: 
   async.each(stack.grid.cells, (cell, callback) => {
-    if(!cell.enties.length) return callback()
+    if(!cell.enties.length || cell.enties[0].complete) return callback()
     cell.enties[0].func()
-    cell.enties[0].command.complete = true
+    cell.enties[0].complete = true  //Note this does not yet accommodate for 
+    //async...  
     callback()
   }, () => {
     //Reset path: 
     stack.state.path = null    
+    //Reset the state of functions (note we will need a way to 
+    //ensure this command can get fired again from within another command on the same loop)
   })
 }
 

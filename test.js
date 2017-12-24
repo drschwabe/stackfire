@@ -94,8 +94,7 @@ var testObj = {
       //6 x x
     })
 
-
-    newTest.only("Different commands align into different columns (and fire in order)", (t) => {
+    newTest("Different commands align into different columns (and fire in order)", (t) => {
       t.plan(5)
       
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

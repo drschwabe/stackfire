@@ -136,6 +136,54 @@ var testObj = {
       stack.fire('apple')
     })
 
+    newTest("stack.fire nested within stack.on (complex)", (t) => {
+      t.plan(9)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      stack.on('orange', () => {
+        console.log('/orange "on" (listener function in progress)')
+        t.ok(stack.state.path, '/orange')
+      })
+
+      stack.on('orange', () => {
+        console.log('/orange again')
+        t.ok(stack.state.path, '/orange')
+      })
+
+      stack.on('orange', () => {
+        console.log('/orange yet again!')
+        t.ok(stack.state.path, '/orange')        
+        stack.fire('grapefruit')
+      })        
+
+      stack.on('/grapefruit', () => {     
+        console.log('/grapefruit "on" listener in progress. state.path:')
+        t.ok(stack.state, 'root level listener invoked from a nested fire')
+        t.equal(stack.state.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
+        t.equal(stack.state.cell.num, 13, 'grapefruit first listener assigned to correct cell')
+      })
+
+      stack.on('/grapefruit', () => {     
+        console.log('/grapefruit again')
+        t.equal(stack.state.cell.num, 19, 'grapefruit first listener assigned to correct cell')        
+      })  
+      
+      stack.on('orange', () => {
+        console.log('/orange again (should occur after grapefruit listeners)')
+        t.ok(stack.state.path, '/orange')        
+      })
+
+      stack.on('orange', () => {
+        console.log('/orange last time!')
+        t.ok(stack.state.path, '/orange')        
+      })
+
+      console.log('about to fire /apple')
+      stack.fire('orange')
+    })
+
+
     newTest("stack.fire nested within stack.on (async)", (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

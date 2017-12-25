@@ -50,6 +50,8 @@ stack.on = (path, callback) => {
   return
 }
 
+stack.state.row = 0
+
 stack.fire = (path) => {  
 
   stack.state.path = prefixPath(path)
@@ -62,7 +64,6 @@ stack.fire = (path) => {
   if(!matchingCommand) return
   
   //Prepare the grid / queue listener for this command: 
-  var lastInsertedRow = 0
   var column = _.indexOf(stack.commands, matchingCommand)
 
   matchingCommand.listeners.forEach((listener, index) => { 
@@ -74,8 +75,10 @@ stack.fire = (path) => {
     }
 
     var cell 
-    if(index === 0) cell = gg.xyToIndex(stack.grid, [0, column])
-    else cell = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [lastInsertedRow, column]))
+    //stack.state.cell = cell 
+
+    if(index === 0 && stack.state.row === 0) cell = gg.xyToIndex(stack.grid, [0, column])
+    else cell = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [stack.state.row, column]))
 
     //Create a grid enty containing the command, cell, and the listener's unique function:  
     var listenerEnty  = { command:  matchingCommand, cell : cell, func: listener.func }
@@ -92,35 +95,59 @@ stack.fire = (path) => {
 
     //Set this last because the listenerEnty's cell has been updated 
     //with the expansion: 
-    lastInsertedRow = gg.indexToXy(stack.grid, listenerEnty.cell)[0]
+    stack.state.row = gg.indexToXy(stack.grid, listenerEnty.cell)[0]
 
     //#debugging: render the grid if we using browser: 
     if(browser) window.renderGrid()
   })
 
+  const gridLoop = () => {
+    //Loop over each cell and execute the function it now contains: 
+    async.each(stack.grid.cells, (cell, callback) => {
+      stack.state.cell = cell    
+      if( _.indexOf(stack.grid.cells, cell) < 0) return callback()  
+      cell.num = _.indexOf(stack.grid.cells, cell)              
+      if(!cell.enties.length || cell.enties[0].done) return callback()
+      var thisColumnsCells = gg.columnCells(stack.grid, column)
+      if(!_.contains(thisColumnsCells, cell.num)) return callback() 
+      stack.state.row = gg.indexToXy(stack.grid, cell.num -1)[0]
+      cell.enties[0].underway = true  
+      if(browser) window.renderGrid()  
+      cell.enties[0].func()
+      delete cell.enties[0].underway      
+      cell.enties[0].done = true  
+      //Note this does not yet accommodate for async! 
+      if(browser) window.renderGrid()  
+      callback()
+    }, () => {
 
-  //Loop over each cell and execute the function it now contains: 
-  async.each(stack.grid.cells, (cell, callback) => {
-    if(!cell.enties.length || cell.enties[0].done) return callback()
-    var cellNum = _.indexOf(stack.grid.cells, cell)
-    var thisColumnsCells = gg.columnCells(stack.grid, column)
-    if(!_.contains(thisColumnsCells, cellNum)) return callback() 
-    cell.enties[0].underway = true  
-    if(browser) window.renderGrid()      
-    cell.enties[0].func()
-    delete cell.enties[0].underway      
-    cell.enties[0].done = true  //Note this does not yet accommodate for 
-    //async...  
-    if(browser) window.renderGrid()    
-    callback()
-  }, () => {
-    //Reset path: 
-    stack.state.path = null 
-    matchingCommand.done = true 
-    if(browser) window.renderGrid()
-    //Reset the state of functions (note we will need a way to 
-    //ensure this command can get fired again from within another command on the same loop)
-  })
+      //Find any incomplete listeners (listeners that were queued before an earlier
+      //listener up the column fired a new command): 
+      var incompleteListeners = _.filter(stack.grid.enties, (enty) => !enty.done)
+
+      //If there is a listener underway; let this async.each call complete
+      //(that listenr will then mark itself done and then return back here
+      //(not exactly sure why but that's how async deals with this situation))
+      if(_.findWhere( incompleteListeners, { underway : true })) {
+        matchingCommand.done = true  //< make the matchingCommand done. 
+        if(browser) window.renderGrid()   
+        return   
+      }
+
+      //otherwise - we need to start the loop again so those commands get done
+      //(without firing again cause they were already in a command that got fired originally)      
+      if(incompleteListeners.length) {
+        return gridLoop() 
+      }
+      
+      //Reset path and complete the matching command:  
+      stack.state.path = null 
+      matchingCommand.done = true
+      if(browser) window.renderGrid()         
+    })
+  }
+
+  gridLoop() 
 }
 
 const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path

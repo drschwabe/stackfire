@@ -96,7 +96,7 @@ var testObj = {
 
     newTest("Different commands align into different columns (and fire in order)", (t) => {
       t.plan(5)
-      
+
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
@@ -121,46 +121,20 @@ var testObj = {
       if(process.browser) window.stack = stack
 
       stack.on('/apple', () => {
-        console.log('/apple "on" (middleware in progress). _command.path:')
-        console.log(stack.state._command.path)
-
-        stack.fire('/bannana', () => {
-          console.log('/bannana fired (its final callback in progress)')
-          console.log(stack.state._command.path)     
-          console.log("/bannana's callback will immediately call stack.next()")   
-          debugger
-          stack.next()
-          stack.next() //< this is for the apple.
-          //calling stack.next twice in a callback useful for synchrononus functions. 
-          //something else I may consider is stack.done('apple') ie- you can conclude 
-          //a command by calling that. 
-        })
+        console.log('/apple "on" (listener function in progress). state.path:')
+        console.log(stack.state.path)
+        stack.fire('/bannana')
       })
 
       stack.on('/bannana', () => {     
-        debugger    
-        console.log('/bannana "on" middleware in progress. _command.path:')
-        console.log(stack.state._command.path) 
+        console.log('/bannana "on" listener in progress. state.path:')
+        console.log(stack.state.path) 
         t.ok(stack.state, 'root level listener invoked from a nested fire')
-        t.equal(stack.state._command.path, '/bannana', "state._command.path equals the path of the current 'on' listener.")       
-        console.log('/bannana middleware will now call stack.next()')
-        stack.next() 
+        t.equal(stack.state.path, '/bannana', "state.path equals the path of the current 'on' listener.")
       })
-
       console.log('about to fire /apple')
-
-      stack.fire('apple', (err) => {
-        //something is causing the apple callback to be called twice
-        // _.command.callback = _.once()  ?        
-        console.log('/apple fired (its final callback in progress). _command.path:')
-        console.log(stack.state._command.path)    
-        t.pass('reached end of the original fire (/apple)')
-        debugger
-        stack.next()
-      })
+      stack.fire('apple')
     })
-
-
 
     newTest("stack.fire nested within stack.on (async)", (t) => {
       t.plan(3)

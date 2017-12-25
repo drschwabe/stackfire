@@ -50,7 +50,8 @@ stack.on = (path, callback) => {
   return
 }
 
-stack.fire = (path) => {
+stack.fire = (path) => {  
+
   stack.state.path = prefixPath(path)
 
   //Prepare the new command object: 
@@ -65,6 +66,14 @@ stack.fire = (path) => {
   var column = _.indexOf(stack.commands, matchingCommand)
 
   matchingCommand.listeners.forEach((listener, index) => { 
+    //Expand the grid if necessary: 
+    if(column >= stack.grid.width) {
+      stack.grid = gg.expandGrid(stack.grid)
+      stack.grid = gg.populateCells(stack.grid)  
+      if(browser) window.renderGrid()      
+    }
+
+    var cell 
     if(index === 0) cell = gg.xyToIndex(stack.grid, [0, column])
     else cell = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [lastInsertedRow, column]))
 
@@ -89,20 +98,22 @@ stack.fire = (path) => {
     if(browser) window.renderGrid()
   })
 
+
   //Loop over each cell and execute the function it now contains: 
   async.each(stack.grid.cells, (cell, callback) => {
     if(!cell.enties.length || cell.enties[0].done) return callback()
-    //if(gg.toXy(cell))
-    //get the cell #
-    _.indexOf( stack.grid.cells, cell  )
-    debugger
+    var cellNum = _.indexOf(stack.grid.cells, cell)
+    var thisColumnsCells = gg.columnCells(stack.grid, column)
+    if(!_.contains(thisColumnsCells, cellNum)) return callback() 
+    cell.enties[0].underway = true  
+    if(browser) window.renderGrid()      
     cell.enties[0].func()
+    delete cell.enties[0].underway      
     cell.enties[0].done = true  //Note this does not yet accommodate for 
     //async...  
     if(browser) window.renderGrid()    
     callback()
   }, () => {
-    debugger
     //Reset path: 
     stack.state.path = null 
     matchingCommand.done = true 

@@ -13,7 +13,7 @@ const stack = {
   commands : [],
   queue : [], 
   grid : gg.populateCells(gg.createGrid(1,1)), 
-  utils : [] //< For third party mods
+  utils : [] //< For third party mods to execute at each hook
 }
 
 //Listener creation function: 
@@ -89,18 +89,24 @@ stack.fire = (path) => {
     if(browser) window.renderGrid()
   })
 
-
-
   //Loop over each cell and execute the function it now contains: 
   async.each(stack.grid.cells, (cell, callback) => {
-    if(!cell.enties.length || cell.enties[0].complete) return callback()
+    if(!cell.enties.length || cell.enties[0].done) return callback()
+    //if(gg.toXy(cell))
+    //get the cell #
+    _.indexOf( stack.grid.cells, cell  )
+    debugger
     cell.enties[0].func()
-    cell.enties[0].complete = true  //Note this does not yet accommodate for 
+    cell.enties[0].done = true  //Note this does not yet accommodate for 
     //async...  
+    if(browser) window.renderGrid()    
     callback()
   }, () => {
+    debugger
     //Reset path: 
-    stack.state.path = null    
+    stack.state.path = null 
+    matchingCommand.done = true 
+    if(browser) window.renderGrid()
     //Reset the state of functions (note we will need a way to 
     //ensure this command can get fired again from within another command on the same loop)
   })

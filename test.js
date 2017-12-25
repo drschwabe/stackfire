@@ -1745,7 +1745,7 @@ var testObj = {
 
     if(run) { 
       console.log('run tests...')
-      if(testObj.only) {
+      if(testObj.only) { //Only run the one test: 
         return testObj.only.func(testObj.only.name)
       }
       testObj.tests.forEach((entry) => {
@@ -1753,6 +1753,9 @@ var testObj = {
       })      
     }
 
+
+    //Only send the one test: 
+    if(testObj.only) return [testObj.only]
 
     return testObj.tests
   }

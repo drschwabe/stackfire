@@ -121,8 +121,8 @@ var testObj = {
       if(process.browser) window.stack = stack
 
       stack.on('/apple', () => {
-        console.log('/apple "on" (listener function in progress). state.path:')
-        console.log(stack.state.path)
+        console.log('/apple "on" (listener function in progress).')
+        t.equal(stack.state.path, '/apple', "state.path equals the path of the current 'on' listener.")        
         stack.fire('/bannana')
       })
 

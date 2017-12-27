@@ -63,43 +63,47 @@ stack.fire = (path) => {
 
   if(!matchingCommand) return
   
-  //Prepare the grid / queue listener for this command: 
-  var column = _.indexOf(stack.commands, matchingCommand)
+  var column 
 
-  matchingCommand.listeners.forEach((listener, index) => { 
-    //Expand the grid if necessary: 
-    if(column >= stack.grid.width) {
-      stack.grid = gg.expandGrid(stack.grid)
-      stack.grid = gg.populateCells(stack.grid)  
-      if(browser) window.renderGrid()      
-    }
+  const arrangeListeners = (command) => {
+    //Prepare the grid / queue listener for this command: 
+    column = _.indexOf(stack.commands, command)
 
-    var cell 
-    //stack.state.cell = cell 
+    command.listeners.forEach((listener, index) => { 
 
-    if(index === 0 && stack.state.row === 0) cell = gg.xyToIndex(stack.grid, [0, column])
-    else cell = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [stack.state.row, column]))
+      //Expand the grid if necessary: 
+      if(column >= stack.grid.width) {
+        stack.grid = gg.expandGrid(stack.grid)
+        stack.grid = gg.populateCells(stack.grid)  
+        if(browser) window.renderGrid()      
+      }
 
-    //Create a grid enty containing the command, cell, and the listener's unique function:  
-    var listenerEnty  = { command:  matchingCommand, cell : cell, func: listener.func }
-    stack.grid = gg.insertEnty(stack.grid, listenerEnty)
+      var cell 
 
-    //Expand grid to accommodate for the next coming listener/enty:
-    if( index != matchingCommand.listeners.length -1 ) {
-      //(only if this is not the last listener in the list)
-      stack.grid = gg.expandGrid(stack.grid) 
-    }
+      if(index === 0 && stack.state.row === 0) cell = gg.xyToIndex(stack.grid, [0, column])
+      else cell = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [stack.state.row, column]))
 
-    //Populate cells of the grid: 
-    stack.grid = gg.populateCells(stack.grid)     
+      //Create a grid enty containing the command, cell, and the listener's unique function:  
+      var listenerEnty  = { command:  command, cell : cell, func: listener.func }
+      stack.grid = gg.insertEnty(stack.grid, listenerEnty)
 
-    //Set this last because the listenerEnty's cell has been updated 
-    //with the expansion: 
-    stack.state.row = gg.indexToXy(stack.grid, listenerEnty.cell)[0]
+      //Expand grid to accommodate for the next coming listener/enty:
+      if( index != command.listeners.length -1 ) {
+        //(only if this is not the last listener in the list)
+        stack.grid = gg.expandGrid(stack.grid) 
+      }
 
-    //#debugging: render the grid if we using browser: 
-    if(browser) window.renderGrid()
-  })
+      //Populate cells of the grid: 
+      stack.grid = gg.populateCells(stack.grid)     
+
+      //Set this last because the listenerEnty's cell has been updated 
+      //with the expansion: 
+      stack.state.row = gg.indexToXy(stack.grid, listenerEnty.cell)[0]
+
+      //#debugging: render the grid if we using browser: 
+      if(browser) window.renderGrid()
+    })    
+  }
 
   const gridLoop = () => {
     //Loop over each cell and execute the function it now contains: 
@@ -137,7 +141,10 @@ stack.fire = (path) => {
       //otherwise - we need to start the loop again so those commands get done
       //(without firing again cause they were already in a command that got fired originally)      
       if(incompleteListeners.length) {
-        return gridLoop() 
+        debugger
+        arrangeListeners(incompleteListeners[0].command)
+        gridLoop() 
+        return
       }
       
       //Reset path and complete the matching command:  
@@ -146,6 +153,8 @@ stack.fire = (path) => {
       if(browser) window.renderGrid()         
     })
   }
+
+  arrangeListeners(matchingCommand)
 
   gridLoop() 
 }

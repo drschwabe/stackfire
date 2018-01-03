@@ -65,7 +65,7 @@ stack.fire = (path) => {
   
   var column 
 
-  const arrangeListeners = (command) => {
+  const initGridWithListeners = (command) => {
     //Prepare the grid / queue listener for this command: 
     column = _.indexOf(stack.commands, command)
 
@@ -142,7 +142,7 @@ stack.fire = (path) => {
       //(without firing again cause they were already in a command that got fired originally)      
       if(incompleteListeners.length) {
         debugger
-        arrangeListeners(incompleteListeners[0].command)
+        updateGridColumn(incompleteListeners[0].command)
         gridLoop() 
         return
       }
@@ -154,7 +154,78 @@ stack.fire = (path) => {
     })
   }
 
-  arrangeListeners(matchingCommand)
+  const updateGridColumn = (command) => {
+    //The 'live' version of this command's listeners are already assigned
+    //and in the grid (stack.grid.enties), 
+    //the command however is a re-usable 'on the shelf' version; so 
+    //we will reference what listeners it has and find them in the live grid, 
+    //so we can determine if each listener is done or not
+    //(and if not done, we update it's position in the grid to accommodate
+    //for sibling commands that increased the depth of the stack...
+    //ie: ensure each incomplete listener is pushed to the very bottom of the grid
+    //below any sibling commands that were fired after these listeners were
+    //originally assigned to the grid)
+    console.log(column)
+    stack.grid = gg.xyCells(stack.grid) //< make sure all cells are xY'ed
+    var shiftDown
+    command.listeners.forEach((listener, index) => {
+      var liveListener = _.findWhere( stack.grid.enties, {func : listener.func })
+      if(liveListener.done) return 
+      //If there is already been a determination to shiftDown, do so now: 
+      if(shiftDown) {
+        stack.grid = gg.move(stack.grid, liveListener.cell, 'south')
+        return    
+      }
+      var nextOccupiedCellEast =  gg.nextOccupiedCellEast(stack.grid, liveListener.cell )
+      //Any occupied cells to the east? 
+      //or listeners that share this same row... 
+
+      //before checking East, determine if there is already been a shift...
+
+      if(nextOccupiedCellEast) {
+        //find the next row down which is not occupied with cells from another command... 
+
+        var nextOpenRow = gg.nextOpenRow(stack.grid, liveListener.cell )
+
+        var nextRow = gg.nextRow(stack.grid, liveListener.cell)
+
+        var nextRowCells = gg.rowCells(stack.grid, liveListener.cell + stack.grid.width)
+
+        debugger
+
+        //Is every cell of the next row NOT occupied by a different command? 
+        //[x - -]
+        //[x y -]
+        //[x y -] < invalid
+        //[x - -] < valid
+        var nextRowValid = _.every (nextRowCells, (cell) => {
+          var enty = gg.examine(stack.grid, cell)
+          if(enty) { //if this enty is of the same command, its OK 
+            //(cause it will get pushed down next iteration
+            if(enty.command == command) return true
+            else return false
+          } else {
+            return true 
+          }
+        })
+        if(nextRowValid) {
+          shiftDown = true
+          stack.grid = gg.move(stack.grid, liveListener.cell, 'south')
+        } else {
+          //have to check the next cell!  Instead of a while, 
+          //better to just make the row check a function and keep calling until we
+          //reach the end of the grid (in which case we have to expand it)
+          debugger
+        }
+        debugger
+      }
+    })
+    stack.grid = gg.populateCells(stack.grid)
+    if(browser) window.renderGrid()
+    debugger    
+  }
+
+  initGridWithListeners(matchingCommand)
 
   gridLoop() 
 }

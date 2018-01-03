@@ -136,7 +136,7 @@ var testObj = {
       stack.fire('apple')
     })
 
-    newTest("stack.fire nested within stack.on (complex)", (t) => {
+    newTest.only("stack.fire nested within stack.on (complex)", (t) => {
       t.plan(9)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -158,25 +158,27 @@ var testObj = {
       })        
 
       stack.on('/grapefruit', () => {     
-        console.log('/grapefruit "on" listener in progress. state.path:')
+        console.log('/grapefruit "on" listener in progress.')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
-        t.equal(stack.state.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
-        t.equal(stack.state.cell.num, 13, 'grapefruit first listener assigned to correct cell')
       })
 
       stack.on('/grapefruit', () => {     
         console.log('/grapefruit again')
-        t.equal(stack.state.cell.num, 19, 'grapefruit first listener assigned to correct cell')        
+        t.equal(stack.state.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
       })  
       
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
-        t.ok(stack.state.path, '/orange')        
+        t.ok(stack.state.path, '/orange')   
+        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [4,0]), 'orange first listener assigned to correct cell')
+        debugger 
       })
 
       stack.on('orange', () => {
         console.log('/orange last time!')
-        t.ok(stack.state.path, '/orange')        
+        t.ok(stack.state.path, '/orange')  
+        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [5,0]), 'grapefruit second listener assigned to correct cell')        
+        debugger
       })
 
       console.log('about to fire /apple')

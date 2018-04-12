@@ -106,11 +106,12 @@ stack.fire = (path) => {
   }
 
   const gridLoop = () => {
+    console.log('start grid loop')
     //Loop over each cell and execute the function it now contains: 
-    async.each(stack.grid.cells, (cell, callback) => {
+    async.eachSeries(stack.grid.cells, (cell, callback) => {
       stack.state.cell = cell    
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()  
-      cell.num = _.indexOf(stack.grid.cells, cell)              
+      cell.num = _.indexOf(stack.grid.cells, cell)  
       if(!cell.enties.length || cell.enties[0].done) return callback()
       var thisColumnsCells = gg.columnCells(stack.grid, column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
@@ -124,6 +125,8 @@ stack.fire = (path) => {
       if(browser) window.renderGrid()  
       callback()
     }, () => {
+
+      console.log('finished grid loop')
 
       //Find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command): 
@@ -141,9 +144,8 @@ stack.fire = (path) => {
       //otherwise - we need to start the loop again so those commands get done
       //(without firing again cause they were already in a command that got fired originally)      
       if(incompleteListeners.length) {
-        debugger
         updateGridColumn(incompleteListeners[0].command)
-        gridLoop() 
+        gridLoop()
         return
       }
       
@@ -165,17 +167,12 @@ stack.fire = (path) => {
     //ie: ensure each incomplete listener is pushed to the very bottom of the grid
     //below any sibling commands that were fired after these listeners were
     //originally assigned to the grid)
-    console.log(column)
-    stack.grid = gg.xyCells(stack.grid) //< make sure all cells are xY'ed
+    console.log('begin updateGridColumn (should only execute once)')
     var shiftDown
-    command.listeners.forEach((listener, index) => {
+    command.listeners.forEach((listener, index) => {       
       var liveListener = _.findWhere( stack.grid.enties, {func : listener.func })
-      if(liveListener.done) return 
-      //If there is already been a determination to shiftDown, do so now: 
-      if(shiftDown) {
-        stack.grid = gg.move(stack.grid, liveListener.cell, 'south')
-        return    
-      }
+      if(liveListener.done) return
+
       var nextOccupiedCellEast =  gg.nextOccupiedCellEast(stack.grid, liveListener.cell )
       //Any occupied cells to the east? 
       //or listeners that share this same row... 
@@ -191,17 +188,19 @@ stack.fire = (path) => {
 
         var nextRowCells = gg.rowCells(stack.grid, liveListener.cell + stack.grid.width)
 
-        debugger
-
         //Is every cell of the next row NOT occupied by a different command? 
         //[x - -]
         //[x y -]
         //[x y -] < invalid
         //[x - -] < valid
-        var nextRowValid = _.every (nextRowCells, (cell) => {
+
+        debugger 
+
+        var nextRowValid = _.every(nextRowCells, (cell) => {
+        
           var enty = gg.examine(stack.grid, cell)
           if(enty) { //if this enty is of the same command, its OK 
-            //(cause it will get pushed down next iteration
+            //(cause it will get pushed down too)
             if(enty.command == command) return true
             else return false
           } else {
@@ -209,20 +208,35 @@ stack.fire = (path) => {
           }
         })
         if(nextRowValid) {
-          shiftDown = true
-          stack.grid = gg.move(stack.grid, liveListener.cell, 'south')
+
+          //find all commands in this column... 
+          var columnCells = gg.columnCells(stack.grid, nextRowCells[0]) 
+          var entiesToMove = []
+          var lastCompletedCommandInThisColumn
+          columnCells.forEach((cell, index) => {
+            var enty = gg.examine(stack.grid, cell)
+            if(enty && enty.command && !enty.done) {
+              entiesToMove.push(enty)
+            }
+          })
+          //Move the enties: 
+          entiesToMove.forEach((enty, index) => {
+            var targetColumn = 0 //< right now only works for first column
+            var targetRow = gg.indexToXy(stack.grid, nextRowCells[0])[0]  
+            enty.cell =  gg.xyToIndex( stack.grid, [targetRow  + index, targetColumn])
+          })
+          stack.grid = gg.populateCells(stack.grid)
+          if(browser) window.renderGrid()
         } else {
           //have to check the next cell!  Instead of a while, 
           //better to just make the row check a function and keep calling until we
           //reach the end of the grid (in which case we have to expand it)
-          debugger
         }
-        debugger
       }
     })
     stack.grid = gg.populateCells(stack.grid)
+    stack.grid = gg.xyCells(stack.grid) //< make sure all cells are xY'ed    
     if(browser) window.renderGrid()
-    debugger    
   }
 
   initGridWithListeners(matchingCommand)

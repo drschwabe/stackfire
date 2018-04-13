@@ -106,7 +106,6 @@ stack.fire = (path) => {
   }
 
   const gridLoop = () => {
-    console.log('start grid loop')
     //Loop over each cell and execute the function it now contains: 
     async.eachSeries(stack.grid.cells, (cell, callback) => {
       stack.state.cell = cell    
@@ -126,15 +125,13 @@ stack.fire = (path) => {
       callback()
     }, () => {
 
-      console.log('finished grid loop')
-
       //Find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command): 
       var incompleteListeners = _.filter(stack.grid.enties, (enty) => !enty.done)
 
       //If there is a listener underway; let this async.each call complete
-      //(that listenr will then mark itself done and then return back here
-      //(not exactly sure why but that's how async deals with this situation))
+      //(that listenr will then mark itself done and then return back here...
+      //not exactly sure why but that's how async deals with this situation)
       if(_.findWhere( incompleteListeners, { underway : true })) {
         matchingCommand.done = true  //< make the matchingCommand done. 
         if(browser) window.renderGrid()   
@@ -167,8 +164,7 @@ stack.fire = (path) => {
     //ie: ensure each incomplete listener is pushed to the very bottom of the grid
     //below any sibling commands that were fired after these listeners were
     //originally assigned to the grid)
-    console.log('begin updateGridColumn (should only execute once)')
-    var shiftDown
+
     command.listeners.forEach((listener, index) => {       
       var liveListener = _.findWhere( stack.grid.enties, {func : listener.func })
       if(liveListener.done) return
@@ -194,8 +190,6 @@ stack.fire = (path) => {
         //[x y -] < invalid
         //[x - -] < valid
 
-        debugger 
-
         var nextRowValid = _.every(nextRowCells, (cell) => {
         
           var enty = gg.examine(stack.grid, cell)
@@ -208,7 +202,6 @@ stack.fire = (path) => {
           }
         })
         if(nextRowValid) {
-
           //find all commands in this column... 
           var columnCells = gg.columnCells(stack.grid, nextRowCells[0]) 
           var entiesToMove = []
@@ -229,9 +222,7 @@ stack.fire = (path) => {
           stack.grid = gg.populateCells(stack.grid)
           if(browser) window.renderGrid()
         } else {
-          //have to check the next cell!  Instead of a while, 
-          //better to just make the row check a function and keep calling until we
-          //reach the end of the grid (in which case we have to expand it)
+          console.log('something weird happened')
         }
       }
     })

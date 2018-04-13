@@ -221,7 +221,8 @@ stack.fire = (path) => {
           })
           //Move the enties: 
           entiesToMove.forEach((enty, index) => {
-            var targetColumn = 0 //< right now only works for first column
+            var commandCell = _.findWhere(stack.grid.enties, { command:  command }).cell
+            var targetColumn = gg.indexToXy(stack.grid, commandCell)[1]
             var targetRow = gg.indexToXy(stack.grid, nextRowCells[0])[0]  
             enty.cell =  gg.xyToIndex( stack.grid, [targetRow  + index, targetColumn])
           })

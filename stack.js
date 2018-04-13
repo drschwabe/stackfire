@@ -176,54 +176,58 @@ stack.fire = (path) => {
       //before checking East, determine if there is already been a shift...
 
       if(nextOccupiedCellEast) {
-        //find the next row down which is not occupied with cells from another command... 
+        var loopCount = 0
+        var findNextValidRow = (startCell) => {
+          //find the next row down which is not occupied with cells from another command... 
+          var nextOpenRow = gg.nextOpenRow(stack.grid, startCell )
 
-        var nextOpenRow = gg.nextOpenRow(stack.grid, liveListener.cell )
+          var nextRow = gg.nextRow(stack.grid, startCell)
 
-        var nextRow = gg.nextRow(stack.grid, liveListener.cell)
+          var nextRowCells = gg.rowCells(stack.grid, startCell + stack.grid.width)
 
-        var nextRowCells = gg.rowCells(stack.grid, liveListener.cell + stack.grid.width)
-
-        //Is every cell of the next row NOT occupied by a different command? 
-        //[x - -]
-        //[x y -]
-        //[x y -] < invalid
-        //[x - -] < valid
-
-        var nextRowValid = _.every(nextRowCells, (cell) => {
-        
-          var enty = gg.examine(stack.grid, cell)
-          if(enty) { //if this enty is of the same command, its OK 
-            //(cause it will get pushed down too)
-            if(enty.command == command) return true
-            else return false
-          } else {
-            return true 
-          }
-        })
-        if(nextRowValid) {
-          //find all commands in this column... 
-          var columnCells = gg.columnCells(stack.grid, nextRowCells[0]) 
-          var entiesToMove = []
-          var lastCompletedCommandInThisColumn
-          columnCells.forEach((cell, index) => {
+          //Is every cell of the next row NOT occupied by a different command? 
+          //[x - -]
+          //[x y -]
+          //[x y -] < invalid
+          //[x - -] < valid
+          var nextRowValid = _.every(nextRowCells, (cell) => {
             var enty = gg.examine(stack.grid, cell)
-            if(enty && enty.command && !enty.done) {
-              entiesToMove.push(enty)
+            if(enty) { //if this enty is of the same command, its OK 
+              //(cause it will get pushed down too)
+              if(enty.command == command) return true
+              else return false
+            } else {
+              return true 
             }
           })
-          //Move the enties: 
-          entiesToMove.forEach((enty, index) => {
-            var commandCell = _.findWhere(stack.grid.enties, { command:  command }).cell
-            var targetColumn = gg.indexToXy(stack.grid, commandCell)[1]
-            var targetRow = gg.indexToXy(stack.grid, nextRowCells[0])[0]  
-            enty.cell =  gg.xyToIndex( stack.grid, [targetRow  + index, targetColumn])
-          })
-          stack.grid = gg.populateCells(stack.grid)
-          if(browser) window.renderGrid()
-        } else {
-          console.log('something weird happened')
+          if(nextRowValid) {
+            //find all commands in this column... 
+            var columnCells = gg.columnCells(stack.grid, liveListener.cell ) 
+            var entiesToMove = []
+            var lastCompletedCommandInThisColumn
+            columnCells.forEach((cell, index) => {
+              var enty = gg.examine(stack.grid, cell)
+              if(enty && enty.command && !enty.done) {
+                entiesToMove.push(enty)
+              }
+            })
+            //Move the enties: 
+            entiesToMove.forEach((enty, index) => {
+              var commandCell = _.findWhere(stack.grid.enties, { command:  command }).cell
+              var targetColumn = gg.indexToXy(stack.grid, commandCell)[1]
+              var targetRow = gg.indexToXy(stack.grid, nextRowCells[0])[0]  
+              enty.cell =  gg.xyToIndex( stack.grid, [targetRow  + index, targetColumn])
+            })
+            stack.grid = gg.populateCells(stack.grid)
+            if(browser) window.renderGrid()
+          } else {
+            loopCount++ 
+            console.log('checking next row...')
+            debugger
+            findNextValidRow(liveListener.cell + (loopCount * stack.grid.width))
+          }
         }
+        findNextValidRow(liveListener.cell) 
       }
     })
     stack.grid = gg.populateCells(stack.grid)

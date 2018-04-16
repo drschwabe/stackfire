@@ -135,7 +135,7 @@ var testObj = {
     })
 
     newTest("stack.fire nested within stack.on (complex)", (t) => {
-      t.plan(9)
+      t.plan(12)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
@@ -158,6 +158,7 @@ var testObj = {
       stack.on('/grapefruit', () => {     
         console.log('/grapefruit "on" listener in progress.')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
+        t.ok(stack.state.path, '/grapefruit')
       })
 
       stack.on('/grapefruit', () => {     
@@ -168,27 +169,32 @@ var testObj = {
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
         t.ok(stack.state.path, '/orange')   
-        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [5,0]), 'orange first listener after grapefruit command assigned to correct cell')
+        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [4,0]), 'orange first listener after grapefruit command assigned to correct cell')
       })
 
       stack.on('orange', () => {
         console.log('/orange last time!')
         t.ok(stack.state.path, '/orange')  
-        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [6,0]), 'orange second listener after grapefruit assigned to correct cell')        
+        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [5,0]), 'orange second listener after grapefruit assigned to correct cell')        
       })
 
       console.log('about to fire /orange')
       stack.fire('orange')
+
+      t.equal(stack.grid.cells[13].enties[0].command.route.spec, '/grapefruit')
+      t.equal(stack.grid.cells[19].enties[0].command.route.spec, '/grapefruit' )
+
+
     })
 
-
     newTest("stack.fire nested within stack.on (complex 2)", (t) => {
-      t.plan(9)
+      t.plan(11)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
       stack.on('strawberry', () => {
-        console.log('/strawberry "on" (listener function in progress)')        
+        console.log('/strawberry "on" (listener function in progress)')   
+        debugger     
       })
 
       stack.on('orange', () => {
@@ -199,35 +205,38 @@ var testObj = {
       stack.on('orange', () => {
         console.log('/orange again')
         t.ok(stack.state.path, '/orange')
+        debugger
       })
 
       stack.on('orange', () => {
         console.log('/orange yet again!')
-        t.ok(stack.state.path, '/orange')        
+        t.ok(stack.state.path, '/orange')  
+        debugger              
         stack.fire('grapefruit')
       })        
 
       stack.on('/grapefruit', () => {     
         console.log('/grapefruit "on" listener in progress.')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
+        debugger
       })
 
       stack.on('/grapefruit', () => {     
         console.log('/grapefruit again')
         t.equal(stack.state.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
+        debugger
       })  
       
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
         t.ok(stack.state.path, '/orange')   
-        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [5,1]), 'orange first listener after grapefruit command assigned to correct cell')
-        debugger 
+        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [4,1]), 'orange first listener after grapefruit command assigned to correct cell')
       })
 
       stack.on('orange', () => {
         console.log('/orange last time!')
         t.ok(stack.state.path, '/orange')  
-        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [6,1]), 'orange second listener after grapefruit assigned to correct cell')        
+        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [5,1]), 'orange second listener after grapefruit assigned to correct cell')        
       })
 
       console.log('about to fire /strawberry')
@@ -235,6 +244,10 @@ var testObj = {
 
       console.log('about to fire /orange')
       stack.fire('orange')
+
+      t.equal(stack.grid.cells[14].enties[0].command.route.spec, '/grapefruit')
+      t.equal(stack.grid.cells[20].enties[0].command.route.spec, '/grapefruit')
+
     })    
 
 

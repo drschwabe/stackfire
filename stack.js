@@ -16,7 +16,7 @@ const stack = {
   utils : [] //< For third party mods to execute at each hook
 }
 
-//Listener creation function: 
+//Listener creation function:
 stack.on = (path, callback) => { 
 
   //Ensure path always is prefixed with a slash: 
@@ -71,8 +71,8 @@ stack.fire = (path) => {
 
     command.listeners.forEach((listener, index) => { 
 
-      //Expand the grid if necessary: 
-      if(column >= stack.grid.width) {
+      //Do a pre grid expansion if necessary: 
+      if(column >= stack.grid.width || gg.anyColumnIsFull(stack.grid) ) {        
         stack.grid = gg.expandGrid(stack.grid)
         stack.grid = gg.populateCells(stack.grid)  
         if(browser) window.renderGrid()      
@@ -80,19 +80,27 @@ stack.fire = (path) => {
 
       var cell 
 
-      if(index === 0 && stack.state.row === 0) cell = gg.xyToIndex(stack.grid, [0, column])
-      else cell = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [stack.state.row, column]))
+      var nextCellSouth = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [stack.state.row, column]))
+
+      var nextCell
+
+      //nextCellSouth may not be valid; we may need to subtract the state.row by one if command still in prog
+      //but need to make sure this doesnt' fuck up test complex 1 which already works
+      //(and find out why it works)
+
+      if(index === 0 && stack.state.row === 0) { 
+        //(this is a first callback of a first row command)
+        cell = gg.xyToIndex(stack.grid, [0, column])
+      } else if(index == 0) { //< this is first callback of a queud (fired) command
+        cell = gg.xyToIndex(stack.grid, [stack.state.row, column] )
+      } else {
+        cell = nextCellSouth
+      } 
 
       //Create a grid enty containing the command, cell, and the listener's unique function:  
       var listenerEnty  = { command:  command, cell : cell, func: listener.func }
       stack.grid = gg.insertEnty(stack.grid, listenerEnty)
-
-      //Expand grid to accommodate for the next coming listener/enty:
-      if( index != command.listeners.length -1 ) {
-        //(only if this is not the last listener in the list)
-        stack.grid = gg.expandGrid(stack.grid) 
-      }
-
+   
       //Populate cells of the grid: 
       stack.grid = gg.populateCells(stack.grid)     
 
@@ -114,7 +122,7 @@ stack.fire = (path) => {
       if(!cell.enties.length || cell.enties[0].done) return callback()
       var thisColumnsCells = gg.columnCells(stack.grid, column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
-      stack.state.row = gg.indexToXy(stack.grid, cell.num -1)[0]
+      stack.state.row = gg.indexToXy(stack.grid, cell.num)[0]      
       cell.enties[0].underway = true  
       if(browser) window.renderGrid()  
       cell.enties[0].func()
@@ -223,7 +231,6 @@ stack.fire = (path) => {
           } else {
             loopCount++ 
             console.log('checking next row...')
-            debugger
             findNextValidRow(liveListener.cell + (loopCount * stack.grid.width))
           }
         }

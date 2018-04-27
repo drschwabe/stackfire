@@ -52,7 +52,7 @@ stack.on = (path, callback) => {
 
 stack.state.row = 0
 
-stack.fire = (path) => {  
+stack.fire = (path, callback) => {  
 
   stack.state.path = prefixPath(path)
 
@@ -61,11 +61,19 @@ stack.fire = (path) => {
     return command.route.match(stack.state.path)
   })
 
-  if(!matchingCommand) return
+  if(!matchingCommand && !callback) return
+  if(!matchingCommand && callback) return callback() 
+  //^ Just run the callback if there are no listeners
+  //(note this is lazy in that it doesn't register the command to the grid but probably OK)
+
+  if(callback) { //If a callback was supplied, add it to the end of this command's listeners: 
+    matchingCommand.listeners.push({ func : callback, path: stack.state.path })  
+  }
   
   var column 
 
   const initGridWithListeners = (command) => {
+
     //Prepare the grid / queue listener for this command: 
     column = _.indexOf(stack.commands, command)
 

@@ -248,54 +248,109 @@ var testObj = {
       t.equal(stack.grid.cells[14].enties[0].command.route.spec, '/grapefruit')
       t.equal(stack.grid.cells[20].enties[0].command.route.spec, '/grapefruit')
 
-    })    
+    })
+
+    newTest('stack.fire can be supplied with a callback', (t) => {
+      //to execute after all other listener callbacks finish
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+            
+      t.plan(1)
+
+      stack.fire('test', () => {
+        t.pass('callback is executed')
+      })
+    })
+
+
+    newTest('stack.fire can be supplied with a callback (plus a listner)', (t) => {
+
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+            
+      t.plan(2)
+
+      stack.on('test', () => {
+        t.pass('listener invoked')
+      })
+
+      stack.fire('test', () => {
+        t.pass('callback is executed')
+      })      
+
+    })
+
+    newTest('stack.fire can be supplied with a callback (plus multiple listeners)', (t) => {
+
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+            
+      t.plan(3)
+
+      stack.on('test', () => {
+        t.pass('listener invoked')
+      })
+
+      stack.on('test', () => {
+        t.pass('second listener invoked')
+      })
+
+      stack.fire('test', () => {
+        t.pass('callback is executed')
+      })    
+
+    })
 
 
     newTest("stack.fire nested within stack.on (async)", (t) => {
-      t.plan(3)
+      t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      stack.on('/apple', (state, next) => {
-        console.log('/apple "on" (middleware in progress). _command.path:')
-        console.log(stack.state._command.path)    
+      stack.on('/apple', () => {
+        debugger
+        console.log('/apple "on" (middleware in progress).  state.path:')
+        console.log(stack.state.path)  
         console.log('about to run .5 second timeout before firing /bannana...')
         //Nested async fire: 
         setTimeout(() => {
           debugger
-          stack.fire('/bannana', (err, newState, nextFire) => {
-            console.log('/bannana fired (its final callback in progress)')
-            console.log(stack.state._command.path)     
-            console.log("/bannana's callback will immediately call nextFire()")   
+          stack.fire('/bannana', () => {
             debugger
-            stack.next() 
-            stack.next() 
+            t.pass('/bannana reaches its callback')
+            console.log('/bannana fired (its final callback in progress)')
+            console.log(stack.state.path)  
+            console.log("/bannana's callback will immediately call nextFire()")   
           })
         }, 500)
       })
 
-      stack.on('/bannana', (state, next) => {         
-        console.log('/bannana "on" middleware in progress. _command.path:')
-        console.log(stack.state._command.path) 
+      debugger
+      stack.on('/bannana', () => {         
+        console.log('/bannana "on" middleware in progress. state.path:')
+        console.log(stack.state.path) 
         console.log('(this should not execute until after 0.5 seconds)')  
-        t.ok(state, 'root level listener invoked from a nested fire')
-        t.equal(stack.state._command.path, '/bannana', "state._command.path equals the path of the current 'on' listener.")       
+        t.ok(stack.state, 'root level listener invoked from a nested fire')
+        t.equal(stack.state.path, '/bannana', "state.path equals the path of the current 'on' listener.")       
         console.log('/bannana middleware will now call stack.next()')
-        stack.next() 
+        //stack.next() 
+        debugger
       })
 
       console.log('about to fire /apple')
 
-      stack.fire('apple', (err, state, nextFire) => {
+      debugger
+      stack.fire('apple', () => {
+        debugger
         //something is causing the apple callback to be called twice
         // _.command.callback = _.once()  ?        
-        console.log('/apple fired (its final callback in progress). _command.path:')
-        console.log(stack.state._command.path)    
+        console.log('/apple fired (its final callback in progress). state.path:')
+        console.log(stack.state.path)    
         console.log('about to run 1 second timeout before calling stack.next)')
         setTimeout(() => {
           t.pass('reached end of the original fire (/apple)')
           console.log('(this should not execute until after 1 seconds)')
-          stack.next()
+          //stack.next()
         }, 1000)
       })
     })

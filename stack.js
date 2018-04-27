@@ -197,6 +197,13 @@ stack.fire = (path, callback) => {
           //find the next row down which is not occupied with cells from another command... 
           var nextOpenRow = gg.nextOpenRow(stack.grid, startCell )
 
+          if(!nextOpenRow) { //expand the grid: 
+            stack.grid = gg.expandGrid(stack.grid)
+            stack.grid = gg.populateCells(stack.grid)  
+            if(browser && window.renderGrid) window.renderGrid()  
+            nextOpenRow = gg.nextOpenRow(stack.grid, startCell )               
+          }
+
           var nextRow = gg.nextRow(stack.grid, startCell)
 
           var nextRowCells = gg.rowCells(stack.grid, startCell + stack.grid.width)

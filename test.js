@@ -250,6 +250,79 @@ var testObj = {
 
     })
 
+
+    newTest("stack.fire nested within stack.on, which was nested in another stack.on", (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(3)      
+      stack.on('green', () => {
+        t.pass("green listener's callback invoked")
+        stack.fire('blue')
+      })
+
+      stack.on('blue', () => {
+        t.pass("blue listener's callback invoked")
+        stack.fire('red')
+      })
+
+      stack.on('red', () => {
+        t.pass("red listener's callback invoked")
+      })
+
+      stack.fire('green')
+
+    })
+
+
+    newTest("stack.fire nested within stack.on, which was nested in another stack.on (complex)", (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(9)      
+
+      stack.on('green', () => {
+        t.pass("green listener's first callback invoked")
+      })
+
+      stack.on('green', () => {
+        t.pass("green listener's second callback invoked")
+      })
+
+      stack.on('green', () => {
+        t.pass("green listener's third callback invoked")        
+      })
+
+      stack.on('green', () => {
+        t.pass("green listener's fourth callback invoked")
+        stack.fire('blue')
+      })
+
+      stack.on('green', () => {
+        t.pass("green listener's last callback invoked")
+        //TODO:  another test to ensure blue and red commands finished
+      })
+
+      stack.on('blue', () => {
+        t.pass("blue listener's first callback invoked")
+      })
+
+      stack.on('blue', () => {
+        t.pass("blue listener's second callback invoked")
+      })
+
+      stack.on('blue', () => {
+        t.pass("blue listener's third callback invoked")
+        stack.fire('red')
+      })
+
+      stack.on('red', () => {
+        t.pass("red listener's callback invoked")
+      })
+
+      stack.fire('green')
+
+    })
+
+
     newTest('stack.fire can be supplied with a callback', (t) => {
       //to execute after all other listener callbacks finish
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -298,6 +371,20 @@ var testObj = {
       stack.fire('test', () => {
         t.pass('callback is executed')
       })    
+
+    })
+
+    //new stack fire can be fired from a listener's callback
+    newTest("stack.fire can be fired from a listener's callback", () => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+    })
+
+    newTest('can do asynchronous stuff', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      t.plan(1)
 
     })
 

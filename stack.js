@@ -75,7 +75,7 @@ stack.fire = (path) => {
       if(column >= stack.grid.width || gg.anyColumnIsFull(stack.grid) ) {        
         stack.grid = gg.expandGrid(stack.grid)
         stack.grid = gg.populateCells(stack.grid)  
-        if(browser) window.renderGrid()      
+        if(browser && window.renderGrid) window.renderGrid()      
       }
 
       var cell 
@@ -109,7 +109,7 @@ stack.fire = (path) => {
       stack.state.row = gg.indexToXy(stack.grid, listenerEnty.cell)[0]
 
       //#debugging: render the grid if we using browser: 
-      if(browser) window.renderGrid()
+      if(browser && window.renderGrid) window.renderGrid()
     })    
   }
 
@@ -124,12 +124,12 @@ stack.fire = (path) => {
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
       stack.state.row = gg.indexToXy(stack.grid, cell.num)[0]      
       cell.enties[0].underway = true  
-      if(browser) window.renderGrid()  
+      if(browser && window.renderGrid) window.renderGrid()  
       cell.enties[0].func()
       delete cell.enties[0].underway      
       cell.enties[0].done = true  
       //Note this does not yet accommodate for async! 
-      if(browser) window.renderGrid()  
+      if(browser && window.renderGrid) window.renderGrid()  
       callback()
     }, () => {
 
@@ -142,7 +142,7 @@ stack.fire = (path) => {
       //not exactly sure why but that's how async deals with this situation)
       if(_.findWhere( incompleteListeners, { underway : true })) {
         matchingCommand.done = true  //< make the matchingCommand done. 
-        if(browser) window.renderGrid()   
+        if(browser && window.renderGrid) window.renderGrid()   
         return   
       }
 
@@ -157,7 +157,7 @@ stack.fire = (path) => {
       //Reset path and complete the matching command:  
       stack.state.path = null 
       matchingCommand.done = true
-      if(browser) window.renderGrid()         
+      if(browser && window.renderGrid) window.renderGrid()         
     })
   }
 
@@ -227,7 +227,7 @@ stack.fire = (path) => {
               enty.cell =  gg.xyToIndex( stack.grid, [targetRow  + index, targetColumn])
             })
             stack.grid = gg.populateCells(stack.grid)
-            if(browser) window.renderGrid()
+            if(browser && window.renderGrid) window.renderGrid()
           } else {
             loopCount++ 
             console.log('checking next row...')
@@ -239,7 +239,7 @@ stack.fire = (path) => {
     })
     stack.grid = gg.populateCells(stack.grid)
     stack.grid = gg.xyCells(stack.grid) //< make sure all cells are xY'ed    
-    if(browser) window.renderGrid()
+    if(browser && window.renderGrid) window.renderGrid()
   }
 
   initGridWithListeners(matchingCommand)

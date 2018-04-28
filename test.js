@@ -655,24 +655,20 @@ var testObj = {
       })
     })
 
-    newTest('Catch all wildcard listener', (t) => {
+    newTest.only('Catch all wildcard listener', (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
       stack.on('*wild', () => {
-        if(stack.state._command.path == '/_buffer') return next(null, state)
         t.pass('wildcard listener ran')
-        console.log(stack.state._command.path)
-        stack.next()
       })
 
-      stack.fire('anything', (err, state, next) => {
+      stack.fire('anything', () => {
         t.pass('anything fired')
-        stack.next()
       })
       
-      stack.fire('anything/else', (err, state) => {
+      stack.fire('anything/else', () => {
         t.pass('anything else fired too')
       })
 

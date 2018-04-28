@@ -80,7 +80,7 @@ stack.fire = (path, callback) => {
     command.listeners.forEach((listener, index) => { 
 
       //Do a pre grid expansion if necessary: 
-      if(column >= stack.grid.width || gg.anyColumnIsFull(stack.grid) ) {        
+      if(column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid) ) {        
         stack.grid = gg.expandGrid(stack.grid)
         stack.grid = gg.populateCells(stack.grid)  
         if(browser && window.renderGrid) window.renderGrid()      

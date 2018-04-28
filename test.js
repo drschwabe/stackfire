@@ -322,6 +322,64 @@ var testObj = {
 
     })
 
+    newTest("stack.fire nested spiderweb", (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(11) 
+      
+      stack.on('green', () => {
+        t.pass("green listener's first callback invoked")
+      })
+
+      stack.on('green', () => {
+        t.pass("green listener's second callback invoked")
+      })
+
+      stack.on('green', () => {
+        t.pass("green listener's third callback invoked")        
+      })
+
+      stack.on('green', () => {
+        t.pass("green listener's fourth callback invoked")
+        stack.fire('blue')
+      })
+
+      stack.on('green', () => {
+        t.pass("green listener's last callback invoked")
+        //TODO:  another test to ensure blue and red commands finished
+      })
+
+      stack.on('blue', () => {
+        t.pass("blue listener's first callback invoked")
+      })
+
+      stack.on('blue', () => {
+        t.pass("blue listener's second callback invoked")
+      })
+
+      stack.on('blue', () => {
+        t.pass("blue listener's third callback invoked")
+        debugger
+        stack.fire('red')
+      })
+
+      stack.on('red', () => {
+        t.pass("red listener's callback invoked")
+      })
+
+      stack.on('red', () => {
+        t.pass("red listener's second callback invoked")
+      }) 
+
+      stack.on('red', () => {
+        t.pass("red listener's third callback invoked")
+      })              
+
+      stack.fire('green')
+
+    })
+
+
 
     newTest('stack.fire can be supplied with a callback', (t) => {
       //to execute after all other listener callbacks finish

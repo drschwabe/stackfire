@@ -56,6 +56,13 @@ stack.fire = (path, callback) => {
 
   stack.state.path = prefixPath(path)
 
+  //check for wildcard *
+  //if its a wildcard, we need to add it to a list of wildcards
+  //and then for every command, before it runs - we add the wildcard callback
+  //this could be at the same point the command's callback is added
+  //however, we do want the wildcard to run AT the time it is defined for a given commmand
+  //so may have to maintain an extra index
+
   //Prepare the new command object: 
   const matchingCommand = _.find(stack.commands, (command) => {
     return command.route.match(stack.state.path)

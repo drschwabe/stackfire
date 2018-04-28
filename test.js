@@ -646,7 +646,7 @@ var testObj = {
       })
     })
 
-    newTest.only('Catch all wildcard listener', (t) => {
+    newTest('Catch all wildcard listener', (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -665,8 +665,8 @@ var testObj = {
     })
 
 
-    newTest('Catch all wildcard listener (wildcard listener defined after specific listener)', (t) => {
-      t.plan(6)
+    newTest.only('Catch all wildcard listener (wildcard listener defined after specific listener)', (t) => {
+      t.plan(7)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
@@ -682,15 +682,30 @@ var testObj = {
         debugger
       })
 
-
       stack.fire('anything')
-      
+
+      //should result in a 2x2 grid 
+      // [ /anything , 1  ]
+      // [ /wild ,     3]
+
       //The command route spec should be '/anything' for both listeners: 
       t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/anything' )
-      t.equals( stack.grid.cells[1].enties[0].command.route.spec, '/anything' )
+      //t.ok( stack.grid.cells[1].enties[0].length )
+      //t.equals( stack.grid.cells[1].enties[0].command.route.spec, '/anything' )
 
       t.equals( stack.grid.cells[0].enties[0].command.listeners[0].path, '/*wild' )
       t.equals( stack.grid.cells[2].enties[0].command.listeners[0].path, '/anything' )
+
+      t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/anything' )
+
+    })
+
+    newTest('', (t) => {
+
+      //if we had a callback on the fire, it would be a 3x3 grid with the callback last
+      // [ /anything ,  1,  2 ]
+      // [ /*wild ,     4,   5]
+      // [ /anything (callback), 7, 8]
 
     })
 

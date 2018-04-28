@@ -646,9 +646,8 @@ var testObj = {
       })
     })
 
-
     newTest.only('Catch all wildcard listener', (t) => {
-      t.plan(6)
+      t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
@@ -658,11 +657,31 @@ var testObj = {
         debugger
       })
 
+      stack.fire('anything')
+
+      t.equals( stack.grid.cells[0].enties[0].command.listeners[0].path, '/*wild' )
+      t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/anything' )
+
+    })
+
+
+    newTest('Catch all wildcard listener (wildcard listener defined after specific listener)', (t) => {
+      t.plan(6)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
       stack.on('anything', () => {
         t.pass('specific listener ran')
         t.equals(stack.state.path, '/anything')
         debugger        
       })
+
+      stack.on('*wild', () => {
+        t.pass('wildcard listener ran')
+        t.equals(stack.state.path, '/anything')
+        debugger
+      })
+
 
       stack.fire('anything')
       

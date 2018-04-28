@@ -432,10 +432,25 @@ var testObj = {
 
     })
 
-    //new stack fire can be fired from a listener's callback
-    newTest("stack.fire can be fired from a listener's callback", () => {
+    newTest("stack.fire can be fired from another fire callback", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+
+      t.plan(3)
+
+      stack.on('purple', () => {
+        t.pass("purple listener's callback executed")
+      })
+
+      stack.on('pink', () => {
+        t.pass("pink listener's callback executed")
+      })
+
+      stack.fire('purple', () => {
+        t.pass('purple callback is executed')
+        stack.fire('pink')
+      })  
+
     })
 
     newTest('can do asynchronous stuff', (t) => {

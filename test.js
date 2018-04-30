@@ -2050,6 +2050,31 @@ var testObj = {
 
     })
 
+    newTest('Column logic cell placement into grid is based on fire order (and not on listener registration)', (t) => {
+      t.plan(2)
+
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack 
+      
+      stack.on('apples', () => {
+        //need not run
+      })
+
+      stack.on('bannanas', () => {
+        //need not run
+      })
+
+      stack.on('cherries', () => {
+        t.pass()
+      })
+
+      stack.fire('cherries') //< fire cherries and ensure it starts on column 1
+
+      var command = _.find(stack.commands, (command) => command.route.spec == '/cherries')
+      t.equals( command.route.spec, '/cherries')
+
+    }) 
+
 
     if(run) { 
       console.log('run tests...')

@@ -90,8 +90,10 @@ stack.fire = (path, callback) => {
 
   const initGridWithListeners = (command) => {
 
-    //Prepare the grid / queue listener for this command: 
-    column = _.indexOf(stack.commands, command)
+    //Prepare the grid / queue listener callbacks for this command...
+
+    //find the leftmost available cell: 
+    column = gg.nextOpenColumn(stack.grid, 0)
 
     command.listeners.forEach((listener, index) => { 
 

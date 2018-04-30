@@ -54,6 +54,8 @@ stack.state.row = 0
 
 stack.fire = (path, callback) => {  
 
+  debugger
+
   stack.state.path = prefixPath(path)
 
   //check for wildcard *
@@ -64,14 +66,21 @@ stack.fire = (path, callback) => {
   //so may have to maintain an extra index
 
   //Prepare the new command object: 
+  var matchedRoute
   const matchingCommand = _.find(stack.commands, (command) => {
-    return command.route.match(stack.state.path)
+    matchedRoute = command.route.match(stack.state.path)
+    return matchedRoute
   })
+
 
   if(!matchingCommand && !callback) return
   if(!matchingCommand && callback) return callback() 
   //^ Just run the callback if there are no listeners
   //(note this is lazy in that it doesn't register the command to the grid but probably OK)
+
+  //Store the parameters, which are included as part of the result of route.match
+  //we did previously: 
+  stack.state.params = matchedRoute
 
   if(callback) { //If a callback was supplied, add it to the end of this command's listeners: 
     matchingCommand.listeners.push({ func : callback, path: stack.state.path })  

@@ -529,12 +529,11 @@ var testObj = {
             t.ok(stack.state.tookPicture, 'took picture') 
           })
         })
+        //TODO - test grid placement
       })
 
       //First command fired: 
-      stack.fire('/land-on-moon', () => {
-        stack.next()
-      })
+      stack.fire('/land-on-moon')
 
       t.ok(stack.state.landed && stack.state.flagPlanted && stack.state.tookPicture, 'mission complete')
     })
@@ -544,21 +543,22 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
+      t.plan(2)
+
       stack.on('/go', () => {
-        t.equals(stack.state._command.path, '/go', 'expected listener invoked')
-        stack.next()
+        t.equals(stack.state.path, '/go', 'expected listener invoked')
       })
 
       //This should not run: 
       stack.on('/stop', () => {
         t.fail('listener invoked when it should not have')
-        stack.next()
       }) 
 
-      stack.fire('/go', (err) => {
-        t.ok(stack.state._command.callback_invoked, 'callback invoked')
-        t.end()
+      stack.fire('/go', () => {
+        t.pass('callback invoked')
       })
+
+      //TODO - check grid placement, ensure the /go fire callback executes last
 
     })
 
@@ -567,44 +567,41 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
+      t.plan(2)
+
       stack.on('/go/somewhere', () => {
-        t.equals(stack.state._command.path, '/go/somewhere', 'expected listener invoked')
-        stack.next()
+        t.equals(stack.state.path, '/go/somewhere', 'expected listener invoked')
       })
 
       //This should not run: 
       stack.on('/stop/something', () => {
         t.fail('listener invoked when it should not have')
-        stack.next()
       }) 
 
       stack.fire('/go/somewhere', (err) => {
-        t.ok(stack.state._command.callback_invoked, 'callback invoked')
-        t.end()
+        t.pass('callback invoked')
       })
 
     })
-
 
     newTest("(same as above, but even more complex routes using a parameter)", (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+
       stack.on('/inventory/:item/deliver', () => {
-        t.equals(stack.state._command.path, '/inventory/widget/deliver', 'expected listener invoked')
-        t.ok(stack.state._command.params.item, 'parameter is included on the command')
-        stack.next()
+        debugger
+        t.equals(stack.state.path, '/inventory/widget/deliver', 'expected listener invoked')
+        t.ok(stack.state.params.item, 'parameter is included on the command')
       })
 
       //This should not run: 
       stack.on('/inventory/:item/destroy', () => {
         t.fail('listener invoked when it should not have')    
-        stack.next()
       })
 
       stack.fire('/inventory/widget/deliver', () => {
-        t.ok(stack.state._command.callback_invoked, 'end of stack reached')
-        t.end()
+        t.pass('end of stack reached')
       })
 
     })
@@ -614,20 +611,20 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+
+      t.plan(2)
+
       stack.on('/go/:destination/:time', (state, next) => {
-        t.equals(stack.state._command.path, '/go/Brisbane/tomorrow', 'expected listener invoked')
-        stack.next()
+        t.equals(stack.state.path, '/go/Brisbane/tomorrow', 'expected listener invoked')
       })
 
       //This should not run: 
       stack.on('/some/other/route', (state, next) => {
         t.fail('listener invoked when it should not have')
-        stack.next()
       })
 
       stack.fire('/go/Brisbane/tomorrow', (err, state) => {
-        t.ok(stack.state._command.callback_invoked, 'end of stack reached')
-        t.end()
+        t.pass('end of stack reached')
       })
 
     })
@@ -665,7 +662,7 @@ var testObj = {
     })
 
 
-    newTest.only('Catch all wildcard listener (wildcard listener defined after specific listener)', (t) => {
+    newTest('Catch all wildcard listener (wildcard listener defined after specific listener)', (t) => {
       t.plan(7)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -700,15 +697,6 @@ var testObj = {
 
     })
 
-    newTest('', (t) => {
-
-      //if we had a callback on the fire, it would be a 3x3 grid with the callback last
-      // [ /anything ,  1,  2 ]
-      // [ /*wild ,     4,   5]
-      // [ /anything (callback), 7, 8]
-
-    })
-
     newTest('Catch all wildcard listener (using callbacks)', (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -735,21 +723,17 @@ var testObj = {
 
       stack.on('heart', () => {
         t.fail("listener ('heart') which was never explicitly fired was invoked!")
-        stack.next()
       })
 
       //Establish wildcard before diamond: 
       stack.on('*wild', () => {
-        console.log(stack.state._command.path)
-        if(stack.state._command.path == '/_buffer') return next(null, state)    
+        console.log(stack.state.path)
         t.pass('*wild listener invoked')
-        stack.next()
       })
 
       stack.on('diamond', () => {
         //if(state._command.path != '/diamond') return next(null, state)        
         t.pass('diamond listener invoked')    
-        stack.next()
       })
 
       stack.fire('diamond')
@@ -764,21 +748,15 @@ var testObj = {
 
       stack.on('heart', () => {
         t.fail("listener ('heart') which was never explicitly fired was invoked!")
-        stack.next()
       })
 
       stack.on('diamond', () => {
         t.pass('diamond listener invoked')    
-        stack.next()
       })
 
       //Establish wildcard after diamond: 
       stack.on('*wild', () => {
-        if(stack.state._command.path == '/_buffer') return stack.next()   
-        //console.log(state._command.path)    
-        debugger  
         t.pass('*wild listener invoked')
-        stack.next()
       })  
 
       stack.fire('diamond')
@@ -792,42 +770,32 @@ var testObj = {
 
       stack.on('ten', () => {
         stack.state.counter = 10
-        stack.next()
       })
       stack.on('one', () => {
         stack.state.counter = 1
-        stack.next()
       })
       stack.on('zero', () => {
         stack.state.counter = 0
-        stack.next()
       })
 
       stack.on('*multiply', () => {
-        if(stack.state._command.path == '/_buffer') return stack.next()
         console.log('*multiply')
         stack.state.counter *= 10
-        stack.next()
       })
 
       stack.on('*multiply', () => {
-        if(stack.state._command.path == '/_buffer') return stack.next()    
         console.log('*multiply')
         stack.state.counter *= 10
-        stack.next()
       })
 
       stack.fire('ten', () => {
         t.equal(stack.state.counter, 1000, 'multiply called twice on ten') 
-        stack.next()   
       })
       stack.fire('zero', () => {
         t.equal(stack.state.counter, 0, 'zero canned with multiply is zero')
-        stack.next()
       })
       stack.fire('one', () => {
         t.equal(stack.state.counter, 100, 'one begets 100')
-        stack.next()
       })
     })
 
@@ -840,31 +808,24 @@ var testObj = {
 
       stack.on('party', () => {
         t.pass("It's a party!")
-        stack.next()
       })
 
       stack.on('/party', () => {
         t.pass("it's the same party!")
-        stack.next()
       })  
 
-      stack.fire('party', () => {
-        stack.next()
-      })
+      stack.fire('party')
 
       stack.on('/earthquake', () => {
         t.pass('earthquake!')
-        stack.next()
       })
 
       stack.on('earthquake', () => {
         t.pass('earthquake!!!!')
-        stack.next()
       })
 
       stack.fire('/earthquake', () => {
         t.pass('finished earthquake')
-        stack.next()
       })
 
     })
@@ -879,25 +840,21 @@ var testObj = {
       t.ok(_.isArray(stack.grid.cells))
 
       stack.on('berry', () => {
-        t.equals(stack.grid.enties[0].command.path, '/berry') 
-        stack.next()
+        t.equals(stack.grid.enties[0].command.route.spec, '/berry') 
       })
 
       stack.fire('berry', () => {  
         //now the fire has completed: 
-        t.ok(stack.grid.enties[0].command.middleware_done)
-        stack.next()    
+        //t.ok(stack.grid.enties[0].command.middleware_done)
+        t.pass()
       })  
 
       stack.fire('vegetable', () => { 
         //Even though no middleware, ensure this enty still exists on the grid: 
         t.pass('fired vegetable')
-        stack.next() //< The command is not done until we call next
-        //(even though there are no further commands to fire)
       }) 
 
       t.ok(stack.grid.enties[1].command.done)    
-
     })
 
 
@@ -911,14 +868,14 @@ var testObj = {
       stack.on('warning-alarm', () => {
         console.log('you have 2 seconds to comply')
         setTimeout(()=> {
-          stack.next()
+          console.log('wait 2 seconds')
+          //stack.next()
         }, 2000)  
       })
 
       stack.fire('warning-alarm', () => {
         t.pass('warning alarm finished')
-        debugger
-        stack.next() 
+        //stack.next() 
       }) 
 
       stack.fire('fire-turret', () => {
@@ -926,7 +883,7 @@ var testObj = {
         //The following should apply to state 
         //only AFTER warning alarm completes: 
         stack.state.firing_turret = true
-        t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
+        //t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
         //nextFire() < We don't call nextFire()
       })
 
@@ -955,27 +912,25 @@ var testObj = {
       //subsequent listeners being fired even though their command was not issued...
 
       stack.on('*wildcard', () => {
-        if(stack.state._command.path == '/_buffer') return stack.next()   
         t.pass('this should invoke on every fire')
-        stack.next()    
+        //stack.next()    
       })
 
       stack.on('/release-prisoner', () => {
         t.pass('expected listener invoked')
-        stack.next()
+        //stack.next()
       })
 
       //This should not run! 
       stack.on('/execute-prisoner', () => {
         //workaround by manually checking: 
-        if(stack.state._command != '/execute-prisoner') return stack.next()
+        //if(stack.state.path != '/execute-prisoner') return stack.next()
         t.fail('listener invoked when it should not have')
-        stack.next()
+        //stack.next()
       })
 
       stack.fire('/release-prisoner', () => {
         t.pass('end of stack reached')
-        t.end()
       })
 
     })
@@ -989,25 +944,24 @@ var testObj = {
 
       stack.on('/bomb/:anything', () => {
         t.pass('this should invoke on every fire')
-        stack.next()    
+        //stack.next()    
       })
 
       stack.on('/bomb/disarm', () => {
         t.pass('expected listener invoked')
-        stack.next()
+        //stack.next()
       })
 
       //This should not run! 
       stack.on('/bomb/detonate', () => {
         //workaround by manually checking: 
-        if(stack.state._command != '/bomb-detonate') return stack.next()  
+        //if(stack.state._command != '/bomb-detonate') return stack.next()  
         t.fail('listener invoked when it should not have')
-        stack.next()
+        //stack.next()
       })
 
       stack.fire('/bomb/disarm', () => {
         t.pass('end of stack reached')
-        t.end()
       })  
     })
 
@@ -1019,34 +973,34 @@ var testObj = {
 
       stack.on('robot/assemble/:product', () => {
         console.log('"robot/assemble/:product" on!')    
-        t.equals(stack.state._command.path, '/robot/assemble/box')    
+        t.equals(stack.state.path, '/robot/assemble/box')    
 
         stack.fire('robot/box', () => {
           console.log('"robot/box" fire complete')
-          console.log(`state._command.path is: ${stack.state._command.path}
+          console.log(`state._command.path is: ${stack.state.path}
           `)
-          stack.next()
-          stack.next() 
+          // stack.next()
+          // stack.next() 
         })
       })
 
       stack.on('robot/:product', () => {
         console.log('"robot/:product" on!')    
-        console.log(`state._command.path is: ${stack.state._command.path}
+        console.log(`state.path is: ${stack.state.path}
         `)  
-        t.equals(stack.state._command.path, '/robot/box')
-        stack.next()   
+        t.equals(stack.state.path, '/robot/box')
+        //stack.next()   
       })
 
       stack.fire('robot/assemble/box', () => {
         console.log('"robot/assemble/box" fire complete')
         debugger
-        t.equals(stack.state._command.path, '/robot/assemble/box')
-        stack.next()
+        t.equals(stack.state.path, '/robot/assemble/box')
+        //stack.next()
       })
 
       console.log('command is nulled?')
-      t.equals(stack.state._command, null)
+      t.equals(stack.state.path, null)
 
     })
 

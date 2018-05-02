@@ -54,7 +54,7 @@ stack.state.row = 0
 
 stack.fire = (path, callback) => {  
 
-  debugger
+  if(!_.isString(path)) return console.error('path is not a string')
 
   stack.state.path = prefixPath(path)
 
@@ -151,7 +151,8 @@ stack.fire = (path, callback) => {
       stack.state.row = gg.indexToXy(stack.grid, cell.num)[0]      
       cell.enties[0].underway = true  
       if(browser && window.renderGrid) window.renderGrid()  
-      cell.enties[0].func()
+      debugger
+      cell.enties[0].func() //< Execute the function! (synchronously)
       delete cell.enties[0].underway      
       cell.enties[0].done = true  
       //Note this does not yet accommodate for async! 
@@ -166,6 +167,7 @@ stack.fire = (path, callback) => {
       //If there is a listener underway; let this async.each call complete
       //(that listenr will then mark itself done and then return back here...
       //not exactly sure why but that's how async deals with this situation)
+      debugger
       if(_.findWhere( incompleteListeners, { underway : true })) {
         matchingCommand.done = true  //< make the matchingCommand done. 
         if(browser && window.renderGrid) window.renderGrid()   
@@ -173,7 +175,8 @@ stack.fire = (path, callback) => {
       }
 
       //otherwise - we need to start the loop again so those commands get done
-      //(without firing again cause they were already in a command that got fired originally)      
+      //(without firing again cause they were already in a command that got fired originally) 
+      debugger     
       if(incompleteListeners.length) {
         updateGridColumn(incompleteListeners[0].command)
         gridLoop()
@@ -216,16 +219,23 @@ stack.fire = (path, callback) => {
           var nextOpenRow = gg.nextOpenRow(stack.grid, startCell )
 
           if(!nextOpenRow) { //expand the grid: 
+            //convert startCell to xy so it can convert to the new grid : 
+            var startCellRC = gg.indexToXy(stack.grid, startCell)
+            debugger
             stack.grid = gg.expandGrid(stack.grid)
             stack.grid = gg.populateCells(stack.grid)  
             if(browser && window.renderGrid) window.renderGrid()  
-            nextOpenRow = gg.nextOpenRow(stack.grid, startCell )               
+            startCell = gg.xyToIndex(stack.grid, startCellRC)
+            debugger
+            nextOpenRow = gg.nextOpenRow(stack.grid, startCell )             
           }
 
-          var nextRow = gg.nextRow(stack.grid, startCell)
+          //var nextRow = gg.nextRow(stack.grid, startCell)
 
           var nextRowCells = gg.rowCells(stack.grid, startCell + stack.grid.width)
 
+          debugger 
+          
           //Is every cell of the next row NOT occupied by a different command? 
           //[x - -]
           //[x y -]
@@ -252,7 +262,14 @@ stack.fire = (path, callback) => {
                 entiesToMove.push(enty)
               }
             })
-            //Move the enties: 
+            //Before moving the enties, determine if a grid expansion is necessary: 
+            if(entiesToMove.length > 1) {
+              //determine how many available cells are below the current row: 
+              debugger
+              gg.openCellsDown(stack.grid, gg.index( nextRowCells[0] ) )
+            }
+
+            //Move the enties:
             entiesToMove.forEach((enty, index) => {
               var commandCell = _.findWhere(stack.grid.enties, { command:  command }).cell
               var targetColumn = gg.indexToXy(stack.grid, commandCell)[1]
@@ -264,6 +281,7 @@ stack.fire = (path, callback) => {
           } else {
             loopCount++ 
             console.log('checking next row...')
+            debugger
             findNextValidRow(liveListener.cell + (loopCount * stack.grid.width))
           }
         }

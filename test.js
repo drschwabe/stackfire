@@ -2075,6 +2075,51 @@ var testObj = {
 
     }) 
 
+    newTest.only('Stress test', (t) => {
+
+      t.plan(1)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack 
+
+      stack.on('ready', () => {
+        stack.fire('init')
+      })
+
+      stack.on('init', () => console.log('init first'))
+
+      stack.on('init', () => console.log('init second'))
+
+      stack.on('init', () => {
+        console.log('init third')
+        debugger
+        stack.fire('docs')
+      })
+
+      stack.on('init', () => {
+        console.log('init fourth')
+        debugger        
+      })
+
+      stack.on('docs', () => {
+        console.log('docs first')
+        debugger
+      })
+
+      stack.on('docs', () => {
+        console.log('docs second')
+        debugger        
+      })
+
+      stack.on('docs', () => {
+        console.log('docs third')
+        debugger
+      })
+
+      stack.fire('ready')
+
+      t.pass('test finshes')
+
+    })
 
     if(run) { 
       console.log('run tests...')

@@ -155,6 +155,15 @@ stack.fire = (path, callback) => {
       cell.enties[0].func() //< Execute the function! (synchronously)
       delete cell.enties[0].underway      
       cell.enties[0].done = true  
+
+      var allCallbacksDone = _.chain(stack.grid.enties)
+           .filter((enty) => enty.command.route.spec == cell.enties[0].command.route.spec)
+           .every((enty) => enty.done)
+           .value() 
+
+      debugger
+      if(allCallbacksDone) matchingCommand.done = true 
+
       //Note this does not yet accommodate for async! 
       if(browser && window.renderGrid) window.renderGrid()  
       callback()

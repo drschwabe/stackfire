@@ -139,8 +139,6 @@ stack.fire = (path, callback) => {
     })    
   }
 
-  var eachSeriesCallbacked = false
-
   const gridLoop = () => {
     //Loop over each cell and execute the function it now contains: 
 
@@ -190,10 +188,13 @@ stack.fire = (path, callback) => {
         return     
       }
 
-      //run the incomplete listener/callback by calling gridLoop again: 
+      //run the incomplete listener/callback by calling gridLoop again...
+      //first, update the path: 
+      stack.state.path = _.find( stack.grid.enties, (enty) => gg.column(stack.grid, enty.cell) == column)
+        .command.route.spec
+
       updateGridColumn(incompleteListeners[0].command)
-      gridLoop()    
-    
+      gridLoop()
     })
   }
 
@@ -273,7 +274,8 @@ stack.fire = (path, callback) => {
             if(entiesToMove.length > 1) {
               //determine how many available cells are below the current row: 
               debugger
-              gg.openCellsDown(stack.grid, gg.index( nextRowCells[0] ) )
+              //gg.openCellsDown(stack.grid, gg.index( nextRowCells[0] ) )
+              console.log('possible grid expansion is necessary?')
             }
 
             //Move the enties:

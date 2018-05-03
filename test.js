@@ -2075,7 +2075,7 @@ var testObj = {
 
     }) 
 
-    newTest.only('Stress test', (t) => {
+    newTest('Stress test', (t) => {
 
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

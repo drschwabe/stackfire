@@ -172,34 +172,28 @@ stack.fire = (path, callback) => {
       if(browser && window.renderGrid) window.renderGrid()  
       callback()
     }, () => {
-      //this runs x number of times gridLooped is called
-      //so the logic needs to return early if certain conditions 
-      //are in place to avoid inadvertent stuff
+      //this runs x number of times gridLoop (async.series specfically) 
+      //is called, so the logic needs to return early unless... 
 
-      //If there is a listener underway; let this async.each call complete
-      //(that listenr will then mark itself done and then return back here...
-      //not exactly sure why but that's how async deals with this situation)
-
-
-      //this should do it..
-
-
-      //Find any incomplete listeners (listeners that were queued before an earlier
+      //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command): 
       var incompleteListeners = _.filter(stack.grid.enties, (enty) => {
         return !enty.done && gg.column(stack.grid, enty.cell) == column
       })
 
-      if(incompleteListeners.length) {
-        updateGridColumn(incompleteListeners[0].command)
-        gridLoop()
-        return
+      if(!incompleteListeners.length) {
+        //if no incomplete listeners, exit the loop.... 
+        //first reset path and complete the matching command:  
+        stack.state.path = null 
+        matchingCommand.done = true
+        if(browser && window.renderGrid) window.renderGrid()
+        return     
       }
+
+      //run the incomplete listener/callback by calling gridLoop again: 
+      updateGridColumn(incompleteListeners[0].command)
+      gridLoop()    
     
-      //Reset path and complete the matching command:  
-      stack.state.path = null 
-      matchingCommand.done = true
-      if(browser && window.renderGrid) window.renderGrid()         
     })
   }
 

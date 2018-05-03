@@ -98,10 +98,12 @@ stack.fire = (path, callback) => {
     command.listeners.forEach((listener, index) => { 
 
       //Do a pre grid expansion if necessary: 
-      if(column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid) ) {        
+      if( _.isNaN(column) || column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid) ) {        
         stack.grid = gg.expandGrid(stack.grid)
         stack.grid = gg.populateCells(stack.grid)  
         if(browser && window.renderGrid) window.renderGrid()      
+        if(_.isNaN(column)) column = gg.nextOpenColumn(stack.grid, 0) 
+        //^ If there wasn't already an open column, now we have one.   
       }
 
       var cell 

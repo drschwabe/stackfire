@@ -139,8 +139,11 @@ stack.fire = (path, callback) => {
     })    
   }
 
+  var eachSeriesCallbacked = false
+
   const gridLoop = () => {
     //Loop over each cell and execute the function it now contains: 
+
     async.eachSeries(stack.grid.cells, (cell, callback) => {
       stack.state.cell = cell    
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()  
@@ -155,6 +158,7 @@ stack.fire = (path, callback) => {
       cell.enties[0].func() //< Execute the function! (synchronously)
       delete cell.enties[0].underway      
       cell.enties[0].done = true  
+      if(browser && window.renderGrid) window.renderGrid()  
 
       var allCallbacksDone = _.chain(stack.grid.enties)
            .filter((enty) => enty.command.route.spec == cell.enties[0].command.route.spec)
@@ -168,30 +172,30 @@ stack.fire = (path, callback) => {
       if(browser && window.renderGrid) window.renderGrid()  
       callback()
     }, () => {
-
-      //Find any incomplete listeners (listeners that were queued before an earlier
-      //listener up the column fired a new command): 
-      var incompleteListeners = _.filter(stack.grid.enties, (enty) => !enty.done)
+      //this runs x number of times gridLooped is called
+      //so the logic needs to return early if certain conditions 
+      //are in place to avoid inadvertent stuff
 
       //If there is a listener underway; let this async.each call complete
       //(that listenr will then mark itself done and then return back here...
       //not exactly sure why but that's how async deals with this situation)
-      debugger
-      if(_.findWhere( incompleteListeners, { underway : true })) {
-        matchingCommand.done = true  //< make the matchingCommand done. 
-        if(browser && window.renderGrid) window.renderGrid()   
-        return   
-      }
 
-      //otherwise - we need to start the loop again so those commands get done
-      //(without firing again cause they were already in a command that got fired originally) 
-      debugger     
+
+      //this should do it..
+
+
+      //Find any incomplete listeners (listeners that were queued before an earlier
+      //listener up the column fired a new command): 
+      var incompleteListeners = _.filter(stack.grid.enties, (enty) => {
+        return !enty.done && gg.column(stack.grid, enty.cell) == column
+      })
+
       if(incompleteListeners.length) {
         updateGridColumn(incompleteListeners[0].command)
         gridLoop()
         return
       }
-      
+    
       //Reset path and complete the matching command:  
       stack.state.path = null 
       matchingCommand.done = true

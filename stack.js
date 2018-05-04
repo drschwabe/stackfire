@@ -167,6 +167,7 @@ stack.fire = (path, callback) => {
 
       debugger
       if(allCallbacksDone) matchingCommand.done = true 
+      if(allCallbacksDone) stack.commands_completed.push(matchingCommand) 
 
       //Note this does not yet accommodate for async! 
       if(browser && window.renderGrid) window.renderGrid()  
@@ -185,7 +186,8 @@ stack.fire = (path, callback) => {
         //if no incomplete listeners, exit the loop.... 
         //first reset path and complete the matching command:  
         stack.state.path = null 
-        matchingCommand.done = true
+        //matchingCommand.done = true
+        stack.commands_completed.push(matchingCommand)
         if(browser && window.renderGrid) window.renderGrid()
         return     
       }

@@ -168,7 +168,8 @@ var testObj = {
       
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
-        t.ok(stack.state.path, '/orange')   
+        t.ok(stack.state.path, '/orange')
+        debugger   
         t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [4,0]), 'orange first listener after grapefruit command assigned to correct cell')
       })
 
@@ -262,6 +263,7 @@ var testObj = {
 
       stack.on('blue', () => {
         t.pass("blue listener's callback invoked")
+        debugger
         stack.fire('red')
       })
 
@@ -740,27 +742,27 @@ var testObj = {
     })
 
     //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same. 
-    newTest("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
+    // newTest("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
 
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack
-      t.plan(2)
+    //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+    //   if(process.browser) window.stack = stack
+    //   t.plan(2)
 
-      stack.on('heart', () => {
-        t.fail("listener ('heart') which was never explicitly fired was invoked!")
-      })
+    //   stack.on('heart', () => {
+    //     t.fail("listener ('heart') which was never explicitly fired was invoked!")
+    //   })
 
-      stack.on('diamond', () => {
-        t.pass('diamond listener invoked')    
-      })
+    //   stack.on('diamond', () => {
+    //     t.pass('diamond listener invoked')    
+    //   })
 
-      //Establish wildcard after diamond: 
-      stack.on('*wild', () => {
-        t.pass('*wild listener invoked')
-      })  
+    //   //Establish wildcard after diamond: 
+    //   stack.on('*wild', () => {
+    //     t.pass('*wild listener invoked')
+    //   })  
 
-      stack.fire('diamond')
-    })
+    //   stack.fire('diamond')
+    // })
 
     newTest("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
 
@@ -857,7 +859,41 @@ var testObj = {
       t.ok(stack.grid.enties[1].command.done)    
     })
 
+    newTest.only("When a completed command is fired for the 2nd time, its callbacks all correctly re-enter the grid but in a new column", (t) => {
+      t.plan(6)
 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      
+      stack.on('apple', () => {
+        console.log('first apple callback')
+      })
+
+      stack.on('apple', () => {
+        console.log('2nd apple callback')
+      })
+
+      stack.on('apple', () => {
+        console.log('third apple callback')
+      })    
+
+      stack.fire('apple')    
+
+      stack.fire('apple')  
+
+      // [  apple   apple  ]
+      // [  apple   apple  ]
+      // [  apple   apple  ]    
+  
+      t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [0,0]) ].enties[0].command.route.spec, '/apple' )
+      t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [1,0]) ].enties[0].command.route.spec, '/apple' )
+      t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [2,0]) ].enties[0].command.route.spec, '/apple' )
+
+      t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [0,1]) ].enties[0].command.route.spec, '/apple' )
+      t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [1,1]) ].enties[0].command.route.spec, '/apple' )
+      t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [2,1]) ].enties[0].command.route.spec, '/apple' )
+
+    })
 
     newTest("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
       t.plan(5)

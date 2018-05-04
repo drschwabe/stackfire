@@ -74,7 +74,11 @@ stack.fire = (path, callback) => {
     return matchedRoute
   })
 
-  //var clone = require('clone')
+  if(!matchingCommand && !callback) return
+  if(!matchingCommand && callback) return callback() 
+
+  //^ Just run the callback if there are no listeners
+  //(note this is lazy in that it doesn't register the command to the grid but probably OK)
 
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
@@ -91,10 +95,7 @@ stack.fire = (path, callback) => {
     debugger
   }
 
-  if(!matchingCommand && !callback) return
-  if(!matchingCommand && callback) return callback() 
-  //^ Just run the callback if there are no listeners
-  //(note this is lazy in that it doesn't register the command to the grid but probably OK)
+
 
   //Store the parameters, which are included as part of the result of route.match
   //we did previously: 

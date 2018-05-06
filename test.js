@@ -455,6 +455,53 @@ var testObj = {
 
     })
 
+    newTest.only('basic async example', (t) => {
+      t.plan(6)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      var firstSip = () => {
+        stack.state.listener = 'first'
+        setTimeout(() => {
+          console.log('first sip (takes 1 second)')
+          t.equals(stack.state.listener, 'first')
+        }, 1000)        
+      }
+
+      var secondSip = () => {
+        stack.state.listener = 'second'
+        setTimeout(() => {
+          console.log('second sip (takes about 2 seconds)')
+          t.equals(stack.state.listener, 'second')
+        }, 2000)        
+      }
+
+      var thirdSip = () => {
+        stack.state.listener = 'third'
+        setTimeout(() => {
+          console.log('third sip (takes 3 seconds)')
+          t.equals(stack.state.listener, 'third')
+        }, 3000)        
+      }            
+
+      stack.on('sip latte', firstSip)
+
+      stack.on('sip latte', secondSip)
+
+      stack.on('sip latte', thirdSip)
+
+      stack.fire('sip latte')
+
+      setTimeout(() => {
+        //check that the functions are placed in the same order: 
+        debugger
+        t.equals( stack.grid.enties[0].func.toString(), firstSip.toString() )
+        t.equals( stack.grid.enties[1].func.toString(), secondSip.toString() )
+        t.equals( stack.grid.enties[2].func.toString(), thirdSip.toString() )       
+      }, 6000)
+
+    })
+
     newTest("stack.fire nested within stack.on (async)", (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

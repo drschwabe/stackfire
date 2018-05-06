@@ -455,7 +455,7 @@ var testObj = {
 
     })
 
-    newTest.only('basic async example', (t) => {
+    newTest('basic async example', (t) => {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -501,6 +501,37 @@ var testObj = {
         t.equals( stack.grid.enties[2].func.toString(), thirdSip.toString() )       
       }, 700)
 
+    })
+
+    newTest('Presence of next param in cb fn determines if to be async or not', (t) => {
+      t.plan(1)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      var executeSyncly = () => console.log('executed syncly')
+      var executeAsyncly = (next) => setTimeout( () => {
+        console.log('executed asyncly')
+        next() 
+      }, 300)
+
+      var executeSynclyAgain = () => console.log('executed syncly (again)')
+
+      var executeAsynclyButDontCallNext = (next) => setTimeout( () => {
+        console.log('executed asyncly')
+      }, 300)
+
+      var dontExecuteEver = () => t.fail('should not have executed')
+
+      stack.on('go', executeSyncly )
+      stack.on('go', executeAsyncly )
+      stack.on('go', executeSynclyAgain )
+      stack.on('go', executeAsynclyButDontCallNext )
+      stack.on('go', dontExecuteEver )
+
+      stack.fire('go')
+      setTimeout(() => {
+        t.pass() 
+      }, 700)
     })
 
     newTest("stack.fire nested within stack.on (async)", (t) => {

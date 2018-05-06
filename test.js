@@ -460,30 +460,30 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      var firstSip = () => {
+      var firstSip = (next) => {
         stack.state.listener = 'first'
         setTimeout(() => {
-          console.log('first sip (takes 1 second)')
+          console.log('first sip (takes 100 ms)')
           t.equals(stack.state.listener, 'first')
-          stack.next() 
-        }, 1000)        
+          next() 
+        }, 100)        
       }
 
-      var secondSip = () => {
+      var secondSip = (next) => {
         stack.state.listener = 'second'
         setTimeout(() => {
-          console.log('second sip (takes about 2 seconds)')
+          console.log('second sip (takes 200 ms)')
           t.equals(stack.state.listener, 'second')
-          stack.next()
-        }, 2000)        
+          next()
+        }, 200)        
       }
 
-      var thirdSip = () => {
+      var thirdSip = (next) => {
         stack.state.listener = 'third'
         setTimeout(() => {
-          console.log('third sip (takes 3 seconds)')
+          console.log('third sip (takes 300 ms)')
           t.equals(stack.state.listener, 'third')
-        }, 3000)        
+        }, 300)        
       }            
 
       stack.on('sip latte', firstSip)
@@ -496,11 +496,10 @@ var testObj = {
 
       setTimeout(() => {
         //check that the functions are placed in the same order: 
-        debugger
         t.equals( stack.grid.enties[0].func.toString(), firstSip.toString() )
         t.equals( stack.grid.enties[1].func.toString(), secondSip.toString() )
         t.equals( stack.grid.enties[2].func.toString(), thirdSip.toString() )       
-      }, 6000)
+      }, 700)
 
     })
 

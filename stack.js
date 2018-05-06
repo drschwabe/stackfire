@@ -3,7 +3,8 @@
 const async = require('async'), 
     routeParser = require('route-parser')
     _ = require('underscore'), 
-    gg = require('gg')
+    gg = require('gg'), 
+    fnArgs = require('function-arguments') 
 
 var browser //< Variable to indicate if we running in Node or browser: 
 require('detect-node') ? browser = false : browser = true
@@ -173,7 +174,6 @@ stack.fire = (path, callback) => {
       stack.state.row = gg.indexToXy(stack.grid, cell.num)[0]      
       cell.enties[0].underway = true  
       if(browser && window.renderGrid) window.renderGrid()  
-      cell.enties[0].func() //< Execute the function! (synchronously)
 
       //needs to happen after the listener's callback is executed: 
 
@@ -197,6 +197,14 @@ stack.fire = (path, callback) => {
         if(browser && window.renderGrid) window.renderGrid()  
         return callbackFunc()
       })
+
+      cell.enties[0].func(stack.next) //< Execute the function! (synchronously)
+ 
+      //Wait for stack.next to be called, unless the user did not supply it
+      //Ie- usage is: stack.on(next, function) //< wait for next (async)
+      //stack.on(function) //< don't wait for next (synchronous) 
+      var entyFuncArgs = fnArgs( cell.enties[0].func  ) 
+      if(!entyFuncArgs.length) stack.next()       
       //callback()
     }, () => {
       //this runs x number of times gridLoop (async.series specfically) 

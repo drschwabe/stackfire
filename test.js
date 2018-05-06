@@ -465,6 +465,7 @@ var testObj = {
         setTimeout(() => {
           console.log('first sip (takes 1 second)')
           t.equals(stack.state.listener, 'first')
+          stack.next() 
         }, 1000)        
       }
 
@@ -473,6 +474,7 @@ var testObj = {
         setTimeout(() => {
           console.log('second sip (takes about 2 seconds)')
           t.equals(stack.state.listener, 'second')
+          stack.next()
         }, 2000)        
       }
 

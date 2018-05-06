@@ -174,21 +174,30 @@ stack.fire = (path, callback) => {
       cell.enties[0].underway = true  
       if(browser && window.renderGrid) window.renderGrid()  
       cell.enties[0].func() //< Execute the function! (synchronously)
-      delete cell.enties[0].underway      
-      cell.enties[0].done = true  
-      debugger
-      if(browser && window.renderGrid) window.renderGrid()  
 
-      var allCallbacksDone = _.chain(stack.grid.enties)
-           .filter((enty) => enty.command.route.spec == cell.enties[0].command.route.spec)
-           .every((enty) => enty.done)
-           .value() 
+      //needs to happen after the listener's callback is executed: 
 
-      if(allCallbacksDone) matchingCommand.done = true 
+      //if func has 'next' we assume this is an async... 
 
-      //Note this does not yet accommodate for async! 
-      if(browser && window.renderGrid) window.renderGrid()  
-      callback()
+      //for now, just make them all async
+      stack.next = _.wrap( callback, (callbackFunc) => {
+        delete cell.enties[0].underway      
+        cell.enties[0].done = true  
+        //debugger
+        if(browser && window.renderGrid) window.renderGrid()  
+
+        var allCallbacksDone = _.chain(stack.grid.enties)
+             .filter((enty) => enty.command.route.spec == cell.enties[0].command.route.spec)
+             .every((enty) => enty.done)
+             .value() 
+
+        if(allCallbacksDone) matchingCommand.done = true 
+
+        //Note this does not yet accommodate for async! 
+        if(browser && window.renderGrid) window.renderGrid()  
+        return callbackFunc()
+      })
+      //callback()
     }, () => {
       //this runs x number of times gridLoop (async.series specfically) 
       //is called, so the logic needs to return early unless... 

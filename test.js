@@ -114,7 +114,7 @@ var testObj = {
     })
 
     newTest.only("stack.fire nested within stack.on", (t) => {
-      t.plan(3)
+      t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
@@ -129,9 +129,12 @@ var testObj = {
         console.log(stack.state.path) 
         t.ok(stack.state, 'root level listener invoked from a nested fire')
         t.equal(stack.state.path, '/bannana', "state.path equals the path of the current 'on' listener.")
+        debugger
+        //at this point, apple should be done too
       })
       console.log('about to fire /apple')
       stack.fire('apple')
+      t.ok( stack.grid.cells[0].enties[0].done )
     })
 
     newTest("stack.fire nested within stack.on (complex)", (t) => {

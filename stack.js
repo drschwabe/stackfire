@@ -108,6 +108,10 @@ stack.fire = (path, callback) => {
   if(callback) { //If a callback was supplied, add it to the end of this command's listeners: 
     matchingCommand.listeners.push({ func : callback, path: stack.state.path })  
   }
+
+  //Is this fire from an existing callback already in progress on the grid? 
+  debugger  
+
   
   var column 
 
@@ -164,10 +168,12 @@ stack.fire = (path, callback) => {
     })    
   }
 
-  const gridLoop = () => {
+  const gridLoop = (startCell) => {
     //Loop over each cell and execute the function it now contains: 
 
     async.eachSeries(stack.grid.cells, (cell, callback) => {
+      debugger
+      if(cell < startCell) return callback() 
       stack.state.cell = cell    
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()  
       cell.num = _.indexOf(stack.grid.cells, cell)  
@@ -210,6 +216,7 @@ stack.fire = (path, callback) => {
       if(!entyFuncArgs.length && stack.next) stack.next()
       //callback()
     }, () => {
+      debugger
       //this runs x number of times gridLoop (async.series specfically) 
       //is called, so the logic needs to return early unless... 
 
@@ -228,7 +235,34 @@ stack.fire = (path, callback) => {
         stack.state.row = 0
         //stack.commands_completed.push(matchingCommand)
         if(browser && window.renderGrid) window.renderGrid()
-        return     
+        //return
+        //reset the column back one and then check for any remaining stuff in there: 
+        //column--; 
+        //is there a callback underway? If so, it is the parent of this command; so 
+        //we just complete it and then move on... 
+
+        var parentCallback = _.findWhere(stack.grid.enties, { underway: true })
+        if(parentCallback) {
+          delete parentCallback.underway
+          parentCallback.done = true 
+          if(browser && window.renderGrid) window.renderGrid()                  
+        }
+
+        debugger
+        var remainingCommand = _.find(stack.commands, (command) => !command.done) 
+        if(remainingCommand) {
+          var remainingCommandListener = _.find(stack.grid.enties, (listener) => listener.command.spec == remainingCommand.route.spec && !listener.done) 
+          if(remainingCommandListener) {
+            console.log('there are still incomplete listeners!')
+            //gridLoop(remainingCommand)
+            return 
+          } else {
+            remainingCommand.done = true 
+            if(browser && window.renderGrid) window.renderGrid()
+          }
+        }
+
+        return 
       }
 
       //run the incomplete listener/callback by calling gridLoop again...

@@ -113,12 +113,12 @@ var testObj = {
       stack.fire('/strap')
     })
 
-    newTest("stack.fire nested within stack.on", (t) => {
+    newTest.only("stack.fire nested within stack.on", (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      stack.on('/apple', () => {
+      stack.on('/apple', (next) => {
         console.log('/apple "on" (listener function in progress).')
         t.equal(stack.state.path, '/apple', "state.path equals the path of the current 'on' listener.")        
         stack.fire('/bannana')

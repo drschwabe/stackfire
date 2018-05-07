@@ -56,6 +56,9 @@ stack.state.row = 0
 stack.fire = (path, callback) => {  
   debugger
 
+  stack.next = null //< null this to ensure stack.next is not called from 
+  //synchronous callbacks that have a nested stack.fire call
+
   if(!_.isString(path)) return console.error('path is not a string')
 
   stack.state.path = prefixPath(path)
@@ -204,7 +207,7 @@ stack.fire = (path, callback) => {
       //Ie- usage is: stack.on(next, function) //< wait for next (async)
       //stack.on(function) //< don't wait for next (synchronous) 
       var entyFuncArgs = fnArgs( cell.enties[0].func  ) 
-      if(!entyFuncArgs.length) stack.next()       
+      if(!entyFuncArgs.length && stack.next) stack.next()
       //callback()
     }, () => {
       //this runs x number of times gridLoop (async.series specfically) 

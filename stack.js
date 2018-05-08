@@ -172,12 +172,12 @@ stack.fire = (path, callback) => {
     //Loop over each cell and execute the function it now contains: 
 
     async.eachSeries(stack.grid.cells, (cell, callback) => {
-      debugger
       if(cell < startCell) return callback() 
       stack.state.cell = cell    
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()  
       cell.num = _.indexOf(stack.grid.cells, cell)  
       if(!cell.enties.length || cell.enties[0].done) return callback()
+      debugger
       var thisColumnsCells = gg.columnCells(stack.grid, column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
       stack.state.row = gg.indexToXy(stack.grid, cell.num)[0]      
@@ -200,7 +200,7 @@ stack.fire = (path, callback) => {
              .every((enty) => enty.done)
              .value() 
 
-        if(allCallbacksDone) matchingCommand.done = true 
+        if(allCallbacksDone) cell.enties[0].command.done = true 
 
         //Note this does not yet accommodate for async! 
         if(browser && window.renderGrid) window.renderGrid()  
@@ -245,28 +245,30 @@ stack.fire = (path, callback) => {
         if(parentCallback) {
           delete parentCallback.underway
           parentCallback.done = true 
-          if(browser && window.renderGrid) window.renderGrid()                  
-        }
-
-        debugger
-        var remainingCommand = _.find(stack.commands, (command) => !command.done) 
-        if(remainingCommand) {
-          var remainingCommandListener = _.find(stack.grid.enties, (listener) => listener.command.spec == remainingCommand.route.spec && !listener.done) 
-          if(remainingCommandListener) {
-            console.log('there are still incomplete listeners!')
-            //gridLoop(remainingCommand)
-            return 
-          } else {
-            remainingCommand.done = true 
-            if(browser && window.renderGrid) window.renderGrid()
+          if(browser && window.renderGrid) window.renderGrid()  
+          debugger
+          var remainingCommand = _.find(stack.commands, (command) => !command.done) 
+          debugger
+          if(remainingCommand) {
+            var remainingCommandListener = _.find(stack.grid.enties, (listener) => listener.command.route.spec == remainingCommand.route.spec && !listener.done) 
+            if(remainingCommandListener) {
+              console.log('there are still incomplete listeners!')
+              stack.state.path = remainingCommandListener.command.route.spec
+              updateGridColumn(remainingCommandListener.command)
+              column = gg.column(stack.grid, remainingCommandListener.cell ) 
+              debugger
+              return gridLoop()
+            } else {
+              remainingCommand.done = true 
+              if(browser && window.renderGrid) window.renderGrid()
+            }
           }
         }
-
         return 
       }
 
       //run the incomplete listener/callback by calling gridLoop again...
-      //first, update the path: 
+      //first, update the path:
       stack.state.path = _.find( stack.grid.enties, (enty) => gg.column(stack.grid, enty.cell) == column)
         .command.route.spec
 

@@ -113,7 +113,7 @@ var testObj = {
       stack.fire('/strap')
     })
 
-    newTest.only("stack.fire nested within stack.on", (t) => {
+    newTest("stack.fire nested within stack.on", (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -137,8 +137,8 @@ var testObj = {
       t.ok( stack.grid.cells[0].enties[0].done )
     })
 
-    newTest("stack.fire nested within stack.on (complex)", (t) => {
-      t.plan(12)
+    newTest.only("stack.fire nested within stack.on (complex)", (t) => {
+      t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
@@ -152,7 +152,7 @@ var testObj = {
         t.ok(stack.state.path, '/orange')
       })
 
-      stack.on('orange', () => {
+      stack.on('orange', (next) => {
         console.log('/orange yet again!')
         t.ok(stack.state.path, '/orange')        
         stack.fire('grapefruit')
@@ -162,11 +162,13 @@ var testObj = {
         console.log('/grapefruit "on" listener in progress.')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
         t.ok(stack.state.path, '/grapefruit')
+        //next() 
       })
 
       stack.on('/grapefruit', () => {     
         console.log('/grapefruit again')
         t.equal(stack.state.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
+        //next() 
       })  
       
       stack.on('orange', () => {
@@ -188,6 +190,7 @@ var testObj = {
       t.equal(stack.grid.cells[13].enties[0].command.route.spec, '/grapefruit')
       t.equal(stack.grid.cells[19].enties[0].command.route.spec, '/grapefruit' )
 
+      t.ok( _.every(stack.commands, (command) => command.done), 'all commands are done') 
 
     })
 

@@ -263,7 +263,7 @@ stack.fire = (path, callback) => {
           parentListener.command.done = true 
           if(browser && window.renderGrid) window.renderGrid()
           //if parentListener is done, we still need to check other commands.. 
-          column--; 
+          if(column > 0) column--; 
           gridLoop() 
           return 
         } else {

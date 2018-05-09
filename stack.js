@@ -181,6 +181,21 @@ stack.fire = (path, callback) => {
       debugger
       var thisColumnsCells = gg.columnCells(stack.grid, column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
+      if(cell.enties[0].underway) {  //If its already underway, mark as done: 
+        delete cell.enties[0].underway  
+        cell.enties[0].done = true
+        if(browser && window.renderGrid) window.renderGrid()
+        return callback()           
+      }
+      //check the neighboor; we need to make sure nothing is there 
+      var nextCellEast = gg.examine( stack.grid,  gg.nextCellEast(stack.grid, cell.num) ) 
+      if(nextCellEast) { 
+        //If there is, an updateGridColumn / re-arrangement is required: 
+        updateGridColumn(cell.enties[0].command)
+        gridLoop() //< and restart the gridLoop (TODO: implement a startCell so we could start
+        //back here)
+        return 
+      }
       stack.state.row = gg.indexToXy(stack.grid, cell.num)[0]      
       cell.enties[0].underway = true  
       if(browser && window.renderGrid) window.renderGrid()  
@@ -257,6 +272,10 @@ stack.fire = (path, callback) => {
           } 
           parentListener.command.done = true 
           if(browser && window.renderGrid) window.renderGrid()
+          debugger
+          //if parentListener is done, we still need to check other commands.. 
+          column--; 
+          gridLoop() 
           return 
         } else {
           _.findWhere(stack.commands, { column : column }).done = true 

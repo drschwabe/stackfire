@@ -54,7 +54,6 @@ stack.on = (path, callback) => {
 stack.state.row = 0
 
 stack.fire = (path, callback) => {  
-  debugger
 
   stack.next = null //< null this to ensure stack.next is not called from 
   //synchronous callbacks that have a nested stack.fire call
@@ -87,16 +86,12 @@ stack.fire = (path, callback) => {
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
     console.log('do not "do" another command...')
-    debugger
     //create a new copy, this time with a uid...
     //matchingCommand = clone(matchingCommand)
     matchingCommand = _.clone(matchingCommand)    
-    //^ problem... 
-    debugger
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
     stack.commands.push(matchingCommand)
-    debugger
   }
 
 
@@ -110,8 +105,6 @@ stack.fire = (path, callback) => {
   }
 
   //Is this fire from an existing callback already in progress on the grid? 
-  debugger  
-
   
   var column 
 
@@ -178,7 +171,6 @@ stack.fire = (path, callback) => {
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()  
       cell.num = _.indexOf(stack.grid.cells, cell)  
       if(!cell.enties.length || cell.enties[0].done) return callback()
-      debugger
       var thisColumnsCells = gg.columnCells(stack.grid, column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
       if(cell.enties[0].underway) {  //If its already underway, mark as done: 
@@ -208,7 +200,6 @@ stack.fire = (path, callback) => {
       stack.next = _.wrap( callback, (callbackFunc) => {
         delete cell.enties[0].underway      
         cell.enties[0].done = true  
-        //debugger
         if(browser && window.renderGrid) window.renderGrid()  
 
         var allCallbacksDone = _.chain(stack.grid.enties)
@@ -232,7 +223,6 @@ stack.fire = (path, callback) => {
       if(!entyFuncArgs.length && stack.next) stack.next()
       //callback()
     }, () => {
-      debugger
       //this runs x number of times gridLoop (async.series specfically) 
       //is called, so the logic needs to return early unless... 
 
@@ -272,7 +262,6 @@ stack.fire = (path, callback) => {
           } 
           parentListener.command.done = true 
           if(browser && window.renderGrid) window.renderGrid()
-          debugger
           //if parentListener is done, we still need to check other commands.. 
           column--; 
           gridLoop() 

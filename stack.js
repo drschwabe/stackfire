@@ -121,6 +121,7 @@ stack.fire = (path, callback) => {
 
     //find the leftmost available cell: 
     column = gg.nextOpenColumn(stack.grid, 0)
+    command.column = column
 
     command.listeners.forEach((listener, index) => { 
 
@@ -235,34 +236,26 @@ stack.fire = (path, callback) => {
         stack.state.row = 0
         //stack.commands_completed.push(matchingCommand)
         if(browser && window.renderGrid) window.renderGrid()
-        //return
-        //reset the column back one and then check for any remaining stuff in there: 
-        //column--; 
+
         //is there a callback underway? If so, it is the parent of this command; so 
         //we just complete it and then move on... 
 
-        var parentCallback = _.findWhere(stack.grid.enties, { underway: true })
-        if(parentCallback) {
-          delete parentCallback.underway
-          parentCallback.done = true 
-          if(browser && window.renderGrid) window.renderGrid()  
-          debugger
-          var remainingCommand = _.find(stack.commands, (command) => !command.done) 
-          debugger
-          if(remainingCommand) {
-            var remainingCommandListener = _.find(stack.grid.enties, (listener) => listener.command.route.spec == remainingCommand.route.spec && !listener.done) 
-            if(remainingCommandListener) {
-              console.log('there are still incomplete listeners!')
-              stack.state.path = remainingCommandListener.command.route.spec
-              updateGridColumn(remainingCommandListener.command)
-              column = gg.column(stack.grid, remainingCommandListener.cell ) 
-              debugger
-              return gridLoop()
-            } else {
-              remainingCommand.done = true 
-              if(browser && window.renderGrid) window.renderGrid()
-            }
-          }
+        var parentListener = _.filter(stack.grid.enties, { underway: true }).reverse()[0]
+        if(parentListener) {
+          delete parentListener.underway
+          parentListener.done = true 
+          column = gg.column(stack.grid, parentListener.cell)
+          if(browser && window.renderGrid) window.renderGrid()
+          //remaining listeners? 
+          var remainingCommandListeners = _.filter(parentListener.command.listeners, (listener) => !listener.done)
+          if(remainingCommandListeners) return gridLoop() 
+          parentListener.command.done = true 
+          if(browser && window.renderGrid) window.renderGrid()
+          return 
+        } else {
+          _.findWhere(stack.commands, { column : column }).done = true 
+          if(browser && window.renderGrid) window.renderGrid()
+          return           
         }
         return 
       }

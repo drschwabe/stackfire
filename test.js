@@ -1447,59 +1447,59 @@ var testObj = {
 
 
 
-    // newTest('Empty goldmine', (t) => {
-    //   t.plan(5)
-    //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-    //   if(process.browser) window.stack = stack  
-    //   let gg = process.browser ? require('gg') : requireUncached('gg') 
+    test.skip('Empty goldmine', (t) => {
+      t.plan(5)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack  
+      let gg = process.browser ? require('gg') : requireUncached('gg') 
 
-    //   stack.state.gold = false
+      stack.state.gold = false
 
-    //   stack.on('mine', () => {
+      stack.on('mine', () => {
 
-    //     stack.fire('shovel', () => {
-    //       console.log('shovel for gold...')
+        stack.fire('shovel', () => {
+          console.log('shovel for gold...')
 
-    //       var shovelCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/shovel').command
+          var shovelCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/shovel').command
 
-    //       debugger
+          debugger
 
-    //       //Parent cell should equal 0 (first cell): 
-    //       t.equals(shovelCommand.parent.cell, 0, "shovel command's parent is at the first cell of the grid")
+          //Parent cell should equal 0 (first cell): 
+          t.equals(shovelCommand.parent.cell, 0, "shovel command's parent is at the first cell of the grid")
 
-    //       //Shovel command's cell should be directly below: 
-    //       var expectedCell = gg.xyToIndex(stack.grid, [1, 0])
+          //Shovel command's cell should be directly below: 
+          var expectedCell = gg.xyToIndex(stack.grid, [1, 0])
 
-    //       t.equals(shovelCommand.cell, expectedCell, 'shovel command is directly below the parent command')
+          t.equals(shovelCommand.cell, expectedCell, 'shovel command is directly below the parent command')
 
-    //       //This will never be true; there should be no advancement to 'cart' fire.
-    //       if(stack.state.gold == true) return stack.next()
-    //     })  
+          //This will never be true; there should be no advancement to 'cart' fire.
+          if(stack.state.gold == true) return stack.next()
+        })  
 
-    //     //technically stack.fire above is done... as such, we may need to use a different metric for stack.fire
-    //     //OR we should not mark as done
-    //     //perhaps we will say middlware_done and then command_done - command_done false until callback completed ie; nextFire called. 
+        //technically stack.fire above is done... as such, we may need to use a different metric for stack.fire
+        //OR we should not mark as done
+        //perhaps we will say middlware_done and then command_done - command_done false until callback completed ie; nextFire called. 
 
-    //     stack.fire('cart', () => {
-    //       //Should not run...
-    //       console.log('fill cart...')           
-    //       t.fail('there will never be any gold!')
-    //     })
+        stack.fire('cart', () => {
+          //Should not run...
+          console.log('fill cart...')           
+          t.fail('there will never be any gold!')
+        })
 
-    //   })  
+      })  
 
-    //   stack.fire('mine', (err, state) => {
-    //     //Should not run: 
-    //     t.fail('mining will never finish!')
-    //   })
+      stack.fire('mine', (err, state) => {
+        //Should not run: 
+        t.fail('mining will never finish!')
+      })
 
-    //   setTimeout(() => {
-    //     t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/mine', 'first cell is /mine') 
-    //     t.equals ( stack.grid.cells[gg.xyToIndex(stack.grid, [1,0])].enties[0].command.route.spec, '/shovel', 'next row down, same column is /shovel' )
-    //     t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [1,1])].enties[0].command.route.spec, '/cart', 'next column over is /cart (it is sibling so shares same row)')       
-    //   }, 100)
+      setTimeout(() => {
+        t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/mine', 'first cell is /mine') 
+        t.equals ( stack.grid.cells[gg.xyToIndex(stack.grid, [1,0])].enties[0].command.route.spec, '/shovel', 'next row down, same column is /shovel' )
+        t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [1,1])].enties[0].command.route.spec, '/cart', 'next column over is /cart (it is sibling so shares same row)')       
+      }, 100)
 
-    // })
+    })
 
     newTest('Incomplete garden', (t) => {
       t.plan(4)
@@ -2165,12 +2165,11 @@ var testObj = {
     }) 
 
     newTest('Stress test', (t) => {
-
-      t.plan(1)
+      t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack 
 
-      stack.on('ready', () => {
+      stack.on('ready', (next) => {
         stack.fire('init')
       })
 
@@ -2178,7 +2177,7 @@ var testObj = {
 
       stack.on('init', () => console.log('init second'))
 
-      stack.on('init', () => {
+      stack.on('init', (next) => {
         console.log('init third')
         debugger
         stack.fire('docs')
@@ -2208,6 +2207,24 @@ var testObj = {
 
       t.pass('test finshes')
 
+      stack.grid = gg.xyCells(stack.grid)
+
+      var thirdInit = gg.examine(stack.grid, [2, 1] )
+      var fourthInit = gg.examine(stack.grid, [3, 1] )      
+
+      debugger
+
+      t.ok( thirdInit.done, "third 'init' callback is done")
+      t.ok( fourthInit.done, "fourth 'init' callback is done")
+
+
+      t.ok( _.find(stack.commands, (command) => command.route.spec == '/docs').done, "/docs command is done")
+      t.ok( _.find(stack.commands, (command) => command.route.spec == '/init').done, "/init command is done")
+      t.ok( _.find(stack.commands, (command) => command.route.spec == '/ready').done, "/ready command is done")
+
+
+
+      //t.ok( stack.grid.cells[0].enties[0].command.done, "first 'ready' command is done")
     })
 
     if(run) { 

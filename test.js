@@ -137,7 +137,7 @@ var testObj = {
       t.ok( stack.grid.cells[0].enties[0].done )
     })
 
-    newTest("stack.fire nested within stack.on (complex)", (t) => {
+    newTest.only("stack.fire nested within stack.on (complex)", (t) => {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack

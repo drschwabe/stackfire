@@ -247,8 +247,14 @@ stack.fire = (path, callback) => {
           column = gg.column(stack.grid, parentListener.cell)
           if(browser && window.renderGrid) window.renderGrid()
           //remaining listeners? 
-          var remainingCommandListeners = _.filter(parentListener.command.listeners, (listener) => !listener.done)
-          if(remainingCommandListeners) return gridLoop() 
+          var remainingCommandListeners = _.filter(stack.grid.enties, (listener) => {
+            return listener.command.route.spec == parentListener.command.route.spec && !listener.done
+          })
+          if(remainingCommandListeners.length) {
+            stack.state.path = remainingCommandListeners[0].command.route.spec            
+            updateGridColumn(remainingCommandListeners[0].command)
+            gridLoop()
+          } 
           parentListener.command.done = true 
           if(browser && window.renderGrid) window.renderGrid()
           return 

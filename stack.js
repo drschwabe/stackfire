@@ -94,17 +94,16 @@ stack.fire = (path, callback) => {
     stack.commands.push(matchingCommand)
   }
 
-
-
   //Store the parameters, which are included as part of the result of route.match
   //we did previously: 
   stack.state.params = matchedRoute
 
   if(callback) { //If a callback was supplied, add it to the end of this command's listeners: 
+    //but only if it has not already been added:
+    if(_.last( matchingCommand.listeners ).func.toString() != callback.toString() ) {
     matchingCommand.listeners.push({ func : callback, path: stack.state.path })  
   }
-
-  //Is this fire from an existing callback already in progress on the grid? 
+  }
   
   var column 
 

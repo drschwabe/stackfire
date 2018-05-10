@@ -114,7 +114,6 @@ stack.fire = (path, callback) => {
 
     //find the leftmost available cell: 
     column = gg.nextOpenColumn(stack.grid, 0)
-    command.column = column
 
     command.listeners.forEach((listener, index) => { 
 
@@ -126,6 +125,8 @@ stack.fire = (path, callback) => {
         if(_.isNaN(column)) column = gg.nextOpenColumn(stack.grid, 0) 
         //^ If there wasn't already an open column, now we have one.   
       }
+
+      command.column = column
 
       var cell 
 

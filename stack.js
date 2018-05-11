@@ -333,11 +333,15 @@ stack.fire = (path, callback) => {
           //[x y -]
           //[x y -] < invalid
           //[x - -] < valid
+
+          //(also valid is [ z x - - - ] where z is a completed command/listener )
+
           var nextRowValid = _.every(nextRowCells, (cell) => {
             var enty = gg.examine(stack.grid, cell)
             if(enty) { //if this enty is of the same command, its OK 
               //(cause it will get pushed down too)
               if(enty.command == command) return true
+              if(enty.command.done && gg.indexToXy(stack.grid, enty.cell)[1] <  gg.indexToXy(stack.grid, startCell)[1]) return true 
               else return false
             } else {
               return true 

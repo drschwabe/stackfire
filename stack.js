@@ -183,7 +183,7 @@ stack.fire = (path, callback) => {
       var nextCellEast = gg.examine( stack.grid,  gg.nextCellEast(stack.grid, cell.num) ) 
       if(nextCellEast) { 
         //If there is, an updateGridColumn / re-arrangement is required: 
-        updateGridColumn(cell.enties[0].command)
+        updateGridColumn(cell.enties[0].command, column)
         gridLoop() //< and restart the gridLoop (TODO: implement a startCell so we could start
         //back here)
         return 
@@ -257,7 +257,7 @@ stack.fire = (path, callback) => {
           })
           if(remainingCommandListeners.length) {
             stack.state.path = remainingCommandListeners[0].command.route.spec            
-            updateGridColumn(remainingCommandListeners[0].command)
+            updateGridColumn(remainingCommandListeners[0].command, column)
             gridLoop()
           } 
           parentListener.command.done = true 
@@ -284,7 +284,7 @@ stack.fire = (path, callback) => {
     })
   }
 
-  const updateGridColumn = (command) => {
+  const updateGridColumn = (command, column) => {
     //The 'live' version of this command's listeners are already assigned
     //and in the grid (stack.grid.enties), 
     //the command however is a re-usable 'on the shelf' version; so 
@@ -297,7 +297,8 @@ stack.fire = (path, callback) => {
     //originally assigned to the grid)
 
     command.listeners.forEach((listener, index) => {       
-      var liveListener = _.findWhere( stack.grid.enties, {func : listener.func })
+      var thisColumnEnties = gg.columnEnties(stack.grid.enties, [0, column])  
+      var liveListener = _.find(thisColumnEnties, (enty) => enty.command.route.spec == listener.path && listener.func == enty.func)
       if(liveListener.done) return
 
       var nextOccupiedCellEast =  gg.nextOccupiedCellEast(stack.grid, liveListener.cell )

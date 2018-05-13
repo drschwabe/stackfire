@@ -321,8 +321,12 @@ stack.fire = (path, callback) => {
     //originally assigned to the grid)
 
     command.listeners.forEach((listener, index) => {       
-      var thisColumnEnties = gg.columnEnties(stack.grid.enties, [0, column])  
-      var liveListener = _.find(thisColumnEnties, (enty) => enty.command.route.spec == listener.path && listener.func == enty.func)
+      var thisColumnEnties = gg.columnEnties(stack.grid, [0, column])  
+      var liveListener = _.find(thisColumnEnties, (enty) => {
+        var match = enty.command.route.spec == listener.path && listener.func == enty.func
+        return match
+      })
+      if(!liveListener) return console.log('no liveListener!?')
       if(liveListener.done) return
 
       var nextOccupiedCellEast =  gg.nextOccupiedCellEast(stack.grid, liveListener.cell )

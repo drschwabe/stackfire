@@ -129,7 +129,6 @@ var testObj = {
         console.log(stack.state.path) 
         t.ok(stack.state, 'root level listener invoked from a nested fire')
         t.equal(stack.state.path, '/bannana', "state.path equals the path of the current 'on' listener.")
-        debugger
         //at this point, apple should be done too
       })
       console.log('about to fire /apple')
@@ -137,7 +136,7 @@ var testObj = {
       t.ok( stack.grid.cells[0].enties[0].done )
     })
 
-    newTest.only("stack.fire nested within stack.on (complex)", (t) => {
+    newTest("stack.fire nested within stack.on (complex)", (t) => {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -327,6 +326,7 @@ var testObj = {
       })
 
       stack.fire('green')
+
 
     })
 
@@ -730,7 +730,7 @@ var testObj = {
       })
     })
 
-    newTest('Catch all wildcard listener', (t) => {
+    test.skip('Catch all wildcard listener', (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -749,7 +749,7 @@ var testObj = {
     })
 
 
-    newTest('Catch all wildcard listener (wildcard listener defined after specific listener)', (t) => {
+    test.skip('Catch all wildcard listener (wildcard listener defined after specific listener)', (t) => {
       t.plan(7)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -784,7 +784,7 @@ var testObj = {
 
     })
 
-    newTest('Catch all wildcard listener (using callbacks)', (t) => {
+    test.skip('Catch all wildcard listener (using callbacks)', (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -803,7 +803,7 @@ var testObj = {
 
     })
 
-    newTest("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
+    test.skip("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
       t.plan(2)
@@ -827,29 +827,29 @@ var testObj = {
     })
 
     //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same. 
-    // newTest("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
+    test.skip("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
 
-    //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-    //   if(process.browser) window.stack = stack
-    //   t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(2)
 
-    //   stack.on('heart', () => {
-    //     t.fail("listener ('heart') which was never explicitly fired was invoked!")
-    //   })
+      stack.on('heart', () => {
+        t.fail("listener ('heart') which was never explicitly fired was invoked!")
+      })
 
-    //   stack.on('diamond', () => {
-    //     t.pass('diamond listener invoked')    
-    //   })
+      stack.on('diamond', () => {
+        t.pass('diamond listener invoked')    
+      })
 
-    //   //Establish wildcard after diamond: 
-    //   stack.on('*wild', () => {
-    //     t.pass('*wild listener invoked')
-    //   })  
+      //Establish wildcard after diamond: 
+      stack.on('*wild', () => {
+        t.pass('*wild listener invoked')
+      })  
 
-    //   stack.fire('diamond')
-    // })
+      stack.fire('diamond')
+    })
 
-    newTest("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
+    test.skip("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -980,50 +980,51 @@ var testObj = {
 
     })
 
-    // newTest("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
-    //   t.plan(5)
+    newTest.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+      t.plan(5)
 
-    //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-    //   if(process.browser) window.stack = stack  
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack  
 
-    //   stack.on('warning-alarm', () => {
-    //     console.log('you have 2 seconds to comply')
-    //     setTimeout(()=> {
-    //       console.log('wait 2 seconds')
-    //       //stack.next()
-    //     }, 2000)  
-    //   })
+      stack.on('warning-alarm', (next) => {
+        console.log('you have 2 seconds to comply')
+        setTimeout(()=> {
+          console.log('wait 2 seconds')
+          //stack.next()
+          next() 
+        }, 2000)  
+      })
 
-    //   stack.fire('warning-alarm', () => {
-    //     t.pass('warning alarm finished')
-    //     //stack.next() 
-    //   }) 
+      stack.fire('warning-alarm', () => {
+        t.pass('warning alarm finished')
+        //stack.next() 
+      }) 
 
-    //   stack.fire('fire-turret', () => {
-    //     console.log('fire turret!') 
-    //     //The following should apply to state 
-    //     //only AFTER warning alarm completes: 
-    //     stack.state.firing_turret = true
-    //     //t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
-    //     //nextFire() < We don't call nextFire()
-    //   })
+      stack.fire('fire-turret', () => {
+        console.log('fire turret!') 
+        //The following should apply to state 
+        //only AFTER warning alarm completes: 
+        stack.state.firing_turret = true
+        //t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
+        //nextFire() < We don't call nextFire()
+      })
 
-    //   //Wait one second and check state: 
-    //   setTimeout( () => {
-    //     t.notOk(stack.state.firing_turret, 'Turret is not firing yet')
-    //   }, 500 )
+      //Wait one second and check state: 
+      setTimeout( () => {
+        t.notOk(stack.state.firing_turret, 'Turret is not firing yet')
+      }, 500 )
 
-    //   //Wait 2.5 seconds and check state: 
-    //   setTimeout( () => {
-    //     t.ok(stack.state.firing_turret, 'Turret is now firing!')    
-    //     t.notOk(stack.grid.enties[1].command.done, 'Fire turret command is not done cause we never called nextFire()') 
-    //   }, 2500)
-
-
-    // })
+      //Wait 2.5 seconds and check state: 
+      setTimeout( () => {
+        t.ok(stack.state.firing_turret, 'Turret is now firing!')    
+        t.notOk(stack.grid.enties[1].command.done, 'Fire turret command is not done cause we never called nextFire()') 
+      }, 2500)
 
 
-    newTest("Commands not issued should not fire (using wildcard commands)", (t) => {
+    })
+
+
+    test.skip("Commands not issued should not fire (using wildcard commands)", (t) => {
       t.plan(3)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

@@ -54,13 +54,18 @@ stack.on = (path, callback) => {
 stack.state.row = 0
 
 stack.fire = (path, callback) => {  
-
   stack.next = null //< null this to ensure stack.next is not called from 
   //synchronous callbacks that have a nested stack.fire call
 
   if(!_.isString(path)) return console.error('path is not a string')
 
+  //TODO: some better logic to prevent 'rapid fires'; fires interrupting other fires
+  
+  //IF a sibling fire (not a parent) is underway and NOT finished, 
+  //this needs to be queued - or put in a different queue...
+
   stack.state.path = prefixPath(path)
+
 
   //check for wildcard *
   //if its a wildcard, we need to add it to a list of wildcards
@@ -77,8 +82,24 @@ stack.fire = (path, callback) => {
     return matchedRoute
   })
 
-  if(!matchingCommand && !callback) return
-  if(!matchingCommand && callback) return callback() 
+
+  if(!matchingCommand && !callback) {
+    console.log('there are no listeners (or callback) existing for this command')
+    return
+  }
+  if(!matchingCommand && callback) {
+    //make the callback a listener; register it now: 
+    stack.on(stack.state.path, callback)
+    //now match it: 
+    var matchedRoute
+    var matchingCommand = _.find(stack.commands, (command) => {
+      matchedRoute = command.route.match(stack.state.path)
+      return matchedRoute
+    })
+    //set a flag that this is one_time
+    //(do not keep this listener for subsequent fires of the same path)
+    matchingCommand.listeners[0].one_time = true 
+  }
 
   //^ Just run the callback if there are no listeners
   //(note this is lazy in that it doesn't register the command to the grid but probably OK)
@@ -89,6 +110,8 @@ stack.fire = (path, callback) => {
     //create a new copy, this time with a uid...
     //matchingCommand = clone(matchingCommand)
     matchingCommand = _.clone(matchingCommand)    
+    matchingCommand.listeners = _.without(matchingCommand.listeners, (listener => listener.one_time))
+    debugger
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
     stack.commands.push(matchingCommand)
@@ -101,9 +124,10 @@ stack.fire = (path, callback) => {
   if(callback) { //If a callback was supplied, add it to the end of this command's listeners: 
     //but only if it has not already been added:
     if(_.last( matchingCommand.listeners ).func.toString() != callback.toString() ) {
-    matchingCommand.listeners.push({ func : callback, path: stack.state.path })  
+      matchingCommand.listeners.push({ func : callback, path: stack.state.path, one_time : true }) 
   }
-  }
+  } //TODO ^ check if the above is necessary; new ue of one_time may 
+  //make this part of the code unnecessary/never run 
   
   var column 
 

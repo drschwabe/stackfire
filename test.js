@@ -980,7 +980,23 @@ var testObj = {
 
     })
 
-    newTest.only("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
+
+    newTest('stack.fire invoked with a path which has no listeners results in a one time listener being inserted into grid', (t) => {
+      t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      stack.fire('silence', () => {
+        console.log('no listeners except for this callback')
+      })
+
+      t.ok(stack.grid.cells[0].enties[0] && stack.grid.cells[0].enties[0].command.route.spec == '/silence')
+
+      t.pass() 
+
+    })
+
+    newTest("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
       t.plan(5)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

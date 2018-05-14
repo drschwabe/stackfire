@@ -721,7 +721,8 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      stack.fire('/take-off', () => {
+
+      stack.fire('/take-off', (next) => {
         t.equals(stack.state, stack.state, 'stack.state equals the newly returned state')
         stack.state.flying = true 
         stack.fire('/autopilot', () => {
@@ -997,7 +998,7 @@ var testObj = {
     })
 
     newTest("A subsequent fire waits until the current stack is finished before becoming fired", (t) => {
-      t.plan(5)
+      t.plan(4)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack  
@@ -1016,13 +1017,13 @@ var testObj = {
         //stack.next() 
       }) 
 
-      stack.fire('fire-turret', () => {
+      stack.fire('fire-turret', (next) => {
         console.log('fire turret!') 
         //The following should apply to state 
         //only AFTER warning alarm completes: 
         stack.state.firing_turret = true
         //t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
-        //nextFire() < We don't call nextFire()
+        //next() 
       })
 
       //Wait one second and check state: 
@@ -1033,9 +1034,8 @@ var testObj = {
       //Wait 2.5 seconds and check state: 
       setTimeout( () => {
         t.ok(stack.state.firing_turret, 'Turret is now firing!')    
-        t.notOk(stack.grid.enties[1].command.done, 'Fire turret command is not done cause we never called nextFire()') 
+        t.notOk(stack.commands[1].done, 'Fire turret command is not done cause we never called the trailing next') 
       }, 2500)
-
 
     })
 

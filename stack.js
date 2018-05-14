@@ -130,28 +130,39 @@ stack.fire = (pathname, callback) => {
   } //TODO ^ check if the above is necessary; new ue of one_time may 
   //make this part of the code unnecessary/never run 
 
-
   //Pre-grid modification check to see if this command should be queued or not: 
   //if there is a path active: 
+
+  var commandToRunNow
+
   if(!_.isNull(stack.state.path) && stack.grid.enties.length) {
     //if it is queued, we will mark it as such: 
     matchingCommand.queued = true
     stack.queue.push(matchingCommand) 
     return 
+  } else if(stack.queue.length) {
+    commandToRunNow = stack.queue.pop() 
+  } else {
+    commandToRunNow = matchingCommand
   }
 
-  //debugger
+  return runCommand(commandToRunNow)
+
+}
+
+const runCommand = (commandToRun) => {
 
   //and now begin modifying state of stack; and the grid: 
+  delete commandToRun.queued
 
   stack.next = null //< null this to ensure stack.next is not called from 
   //synchronous callbacks that have a nested stack.fire call
 
   //Store the parameters, which are included as part of the result of route.match
   //we did previously: 
-  stack.state.params = matchedRoute
+  stack.state.params = commandToRun.route.match(commandToRun.route.spec)
 
-  stack.state.path = pathname
+  stack.state.path = commandToRun.route.spec
   
   var column 
 
@@ -285,10 +296,9 @@ stack.fire = (pathname, callback) => {
         //if no incomplete listeners, exit the loop.... 
         //first reset path and complete the matching command:  
         stack.state.path = null 
-        matchingCommand.done = true
+        commandToRun.done = true
         //reset the row back to 0
         stack.state.row = 0
-        //stack.commands_completed.push(matchingCommand)
         if(browser && window.renderGrid) window.renderGrid()
 
         //is there a callback underway? If so, it is the parent of this command; so 
@@ -314,13 +324,18 @@ stack.fire = (pathname, callback) => {
           //if parentListener is done, we still need to check other commands.. 
           if(column > 0) column--; 
           gridLoop() 
-          return 
+          if(!stack.queue.length) return
+          return runCommand( stack.queue.pop() )  
         } else {
           _.findWhere(stack.commands, { column : column }).done = true 
           if(browser && window.renderGrid) window.renderGrid()
-          return           
+
+          //Are there any commands queued? 
+          if(!stack.queue.length) return
+          return runCommand( stack.queue.pop() ) 
         }
-        return 
+        if(!stack.queue.length) return
+        return runCommand( stack.queue.pop() ) 
       }
 
       //run the incomplete listener/callback by calling gridLoop again...
@@ -330,6 +345,8 @@ stack.fire = (pathname, callback) => {
 
       updateGridColumn(incompleteListeners[0].command)
       gridLoop()
+      if(!stack.queue.length) return
+      return runCommand( stack.queue.pop() )       
     })
   }
 
@@ -441,7 +458,7 @@ stack.fire = (pathname, callback) => {
     if(browser && window.renderGrid) window.renderGrid()
   }
 
-  initGridWithListeners(matchingCommand)
+  initGridWithListeners(commandToRun)
 
   gridLoop() 
 }

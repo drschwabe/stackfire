@@ -53,18 +53,24 @@ stack.on = (path, callback) => {
 
 stack.state.row = 0
 
-stack.fire = (path, callback) => {  
-  stack.next = null //< null this to ensure stack.next is not called from 
-  //synchronous callbacks that have a nested stack.fire call
+stack.fire = (pathname, callback) => {  
 
-  if(!_.isString(path)) return console.error('path is not a string')
+
+  if(!_.isString(pathname)) return console.error('path is not a string')
 
   //TODO: some better logic to prevent 'rapid fires'; fires interrupting other fires
   
   //IF a sibling fire (not a parent) is underway and NOT finished, 
   //this needs to be queued - or put in a different queue...
 
-  stack.state.path = prefixPath(path)
+  debugger 
+
+  //might need another 'pre grid loop logic' here or 
+  //a 'rehearsal' grid layout/assignment at this point
+
+  //or just move up the grid layout assingment stuff before changing stack.state.path here:
+
+  var pathname = prefixPath(pathname)
 
 
   //check for wildcard *
@@ -74,14 +80,12 @@ stack.fire = (path, callback) => {
   //however, we do want the wildcard to run AT the time it is defined for a given commmand
   //so may have to maintain an extra index
 
-
   //Prepare the new command object: 
   var matchedRoute
   var matchingCommand = _.find(stack.commands, (command) => {
-    matchedRoute = command.route.match(stack.state.path)
+    matchedRoute = command.route.match(pathname)
     return matchedRoute
   })
-
 
   if(!matchingCommand && !callback) {
     console.log('there are no listeners (or callback) existing for this command')
@@ -89,11 +93,11 @@ stack.fire = (path, callback) => {
   }
   if(!matchingCommand && callback) {
     //make the callback a listener; register it now: 
-    stack.on(stack.state.path, callback)
+    stack.on(pathname, callback)
     //now match it: 
     var matchedRoute
     var matchingCommand = _.find(stack.commands, (command) => {
-      matchedRoute = command.route.match(stack.state.path)
+      matchedRoute = command.route.match(pathname)
       return matchedRoute
     })
     //set a flag that this is one_time
@@ -109,7 +113,7 @@ stack.fire = (path, callback) => {
     console.log('do not "do" another command...')
     //create a new copy, this time with a uid...
     //matchingCommand = clone(matchingCommand)
-    matchingCommand = _.clone(matchingCommand)    
+    matchingCommand = _.clone(matchingCommand) 
     matchingCommand.listeners = _.without(matchingCommand.listeners, (listener => listener.one_time))
     debugger
     matchingCommand._id = _.uniqueId() + Date.now()
@@ -117,17 +121,37 @@ stack.fire = (path, callback) => {
     stack.commands.push(matchingCommand)
   }
 
-  //Store the parameters, which are included as part of the result of route.match
-  //we did previously: 
-  stack.state.params = matchedRoute
 
   if(callback) { //If a callback was supplied, add it to the end of this command's listeners: 
     //but only if it has not already been added:
     if(_.last( matchingCommand.listeners ).func.toString() != callback.toString() ) {
-      matchingCommand.listeners.push({ func : callback, path: stack.state.path, one_time : true }) 
-  }
+      matchingCommand.listeners.push({ func : callback, path: pathname, one_time : true }) 
+    }
   } //TODO ^ check if the above is necessary; new ue of one_time may 
   //make this part of the code unnecessary/never run 
+
+
+  //Pre-grid modification check to see if this command should be queued or not: 
+  //if there is a path active: 
+  if(!_.isNull(stack.state.path) && stack.grid.enties.length) {
+    //if it is queued, we will mark it as such: 
+    matchingCommand.queued = true
+    stack.queue.push(matchingCommand) 
+    return 
+  }
+
+  //debugger
+
+  //and now begin modifying state of stack; and the grid: 
+
+  stack.next = null //< null this to ensure stack.next is not called from 
+  //synchronous callbacks that have a nested stack.fire call
+
+  //Store the parameters, which are included as part of the result of route.match
+  //we did previously: 
+  stack.state.params = matchedRoute
+
+  stack.state.path = pathname
   
   var column 
 
@@ -197,6 +221,7 @@ stack.fire = (path, callback) => {
       if(!cell.enties.length || cell.enties[0].done) return callback()
       var thisColumnsCells = gg.columnCells(stack.grid, column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
+      //debugger
       if(cell.enties[0].underway) {  //If its already underway, mark as done: 
         delete cell.enties[0].underway  
         cell.enties[0].done = true
@@ -320,7 +345,7 @@ stack.fire = (path, callback) => {
     //below any sibling commands that were fired after these listeners were
     //originally assigned to the grid)
 
-    command.listeners.forEach((listener, index) => {       
+    command.listeners.forEach((listener, index) => {  
       var thisColumnEnties = gg.columnEnties(stack.grid, [0, column])  
       var liveListener = _.find(thisColumnEnties, (enty) => {
         var match = enty.command.route.spec == listener.path && listener.func == enty.func
@@ -339,7 +364,7 @@ stack.fire = (path, callback) => {
         var loopCount = 0
         var findNextValidRow = (startCell) => {
           //find the next row down which is not occupied with cells from another command... 
-          var nextOpenRow = gg.nextOpenRow(stack.grid, startCell )
+          var nextOpenRow = gg.nextOpenRow(stack.grid, startCell)
 
           if(!nextOpenRow) { //expand the grid: 
             //convert startCell to xy so it can convert to the new grid : 

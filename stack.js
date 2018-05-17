@@ -133,13 +133,43 @@ stack.fire = (pathname, callback) => {
   //Pre-grid modification check to see if this command should be queued or not: 
   //if there is a path active: 
 
+  var callee = arguments.callee, 
+      caller
+        
+  if(arguments.callee.caller) caller = arguments.callee.caller.toString()    
+  matchingCommand.caller = caller 
+  matchingCommand.callee = callee
+
+  debugger
+
   var commandToRunNow
 
   if(!_.isNull(stack.state.path) && stack.grid.enties.length) {
-    //if it is queued, we will mark it as such: 
-    matchingCommand.queued = true
-    stack.queue.push(matchingCommand) 
-    return 
+
+    //determine if matchingCommand has been called from the current command's column, 
+    //in which case - we should run it now:
+    var liveListener = _.find(stack.grid.enties, (enty) => enty.underway)     
+    var liveCommand = _.find(stack.grid.enties, (enty) => enty.underway).command 
+    //might want to update this to also facto rin column; to ensure we are choosing
+    //from rightmost such that multiple underway listeners don't interferer here
+    debugger
+    //if(matchingCommand.callee == liveCommand.callee) {
+    if(!liveListener.async) {
+            commandToRunNow = matchingCommand
+
+      // if(matchingCommand.callee == liveListener.callee) {
+      //   debugger
+      // }
+
+      //if the command is async, we wait - otherwise, run now: 
+      //i think callee and caller need to be on the listeners; not the command
+      //seems like all commands may share the same callee ? 
+    } else {
+      //it should then be queued, so mark and push it: 
+      matchingCommand.queued = true
+      stack.queue.push(matchingCommand) 
+      return       
+    }
   } else if(stack.queue.length) {
     commandToRunNow = stack.queue.pop() 
   } else {
@@ -256,8 +286,18 @@ const runCommand = (commandToRun) => {
 
       //if func has 'next' we assume this is an async... 
 
+      var callee = arguments.callee, 
+          caller
+          
+      if(arguments.callee.caller) caller = arguments.callee.caller.toString()    
+      cell.enties[0].caller = caller 
+      cell.enties[0].callee = callee
+
+      var entyFuncArgs = fnArgs( cell.enties[0].func  ) 
+      if( entyFuncArgs.length ) cell.enties[0].async = true  
+
       //for now, just make them all async
-      stack.next = _.wrap( callback, (callbackFunc) => {
+      stack.next = _.wrap( callback, (callbackFunc, optionalNext) => {
         delete cell.enties[0].underway      
         cell.enties[0].done = true  
         if(browser && window.renderGrid) window.renderGrid()  
@@ -271,15 +311,20 @@ const runCommand = (commandToRun) => {
 
         //Note this does not yet accommodate for async! 
         if(browser && window.renderGrid) window.renderGrid()  
+
+        //possibly we will run any queued commands at this point... 
+
+        debugger
+        if(optionalNext) return callbackFunc(optionalNext)
         return callbackFunc()
       })
 
+      debugger
       cell.enties[0].func(stack.next) //< Execute the function! (synchronously)
  
       //Wait for stack.next to be called, unless the user did not supply it
       //Ie- usage is: stack.on(next, function) //< wait for next (async)
       //stack.on(function) //< don't wait for next (synchronous) 
-      var entyFuncArgs = fnArgs( cell.enties[0].func  ) 
       if(!entyFuncArgs.length && stack.next) stack.next()
       //callback()
     }, () => {
@@ -460,7 +505,10 @@ const runCommand = (commandToRun) => {
 
   initGridWithListeners(commandToRun)
 
-  gridLoop() 
+  gridLoop()
+
+  const liveListener = () => _.find(stack.grid.enties, (enty) => enty.underway)     
+  const liveCommand = () => liveListener().command    
 }
 
 const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path

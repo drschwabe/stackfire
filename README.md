@@ -47,5 +47,14 @@ A special property added to your state object to keep track of the current comma
 Any number of parameters on the command itself (ie: `/do-something/:time` are made available as a property of the `stack.state._command` object (ie: `stack.state._command.time`). 
 
 
+### Techniques
+
+
+To fire from within an asyncronous listener, use this technique: 
+
+stack.on('/apple', (next) => {
+  next( stack.fire('/bannana') )
+})
+
 #### License
 MIT

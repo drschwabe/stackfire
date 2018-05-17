@@ -155,8 +155,7 @@ stack.fire = (pathname, callback) => {
     debugger
     //if(matchingCommand.callee == liveCommand.callee) {
     if(!liveListener.async) {
-            commandToRunNow = matchingCommand
-
+      commandToRunNow = matchingCommand
       // if(matchingCommand.callee == liveListener.callee) {
       //   debugger
       // }
@@ -164,7 +163,14 @@ stack.fire = (pathname, callback) => {
       //if the command is async, we wait - otherwise, run now: 
       //i think callee and caller need to be on the listeners; not the command
       //seems like all commands may share the same callee ? 
+    } else if(liveListener.async && stack.next_firing) {
+      commandToRunNow = matchingCommand
+      //the only time we fire a command from within an async 
+      //listener function in progress is when it is called via 
+      //stack.fire.next('command-path')
     } else {
+      //if this has been fired within a 'next' we should run it now... 
+      
       //it should then be queued, so mark and push it: 
       matchingCommand.queued = true
       stack.queue.push(matchingCommand) 
@@ -302,6 +308,7 @@ const runCommand = (commandToRun) => {
         cell.enties[0].done = true  
         if(browser && window.renderGrid) window.renderGrid()  
 
+
         var allCallbacksDone = _.chain(stack.grid.enties)
              .filter((enty) => enty.command.route.spec == cell.enties[0].command.route.spec)
              .every((enty) => enty.done)
@@ -315,10 +322,19 @@ const runCommand = (commandToRun) => {
         //possibly we will run any queued commands at this point... 
 
         debugger
-        if(optionalNext) return callbackFunc(optionalNext)
+        if(cell.enties[0].async) stack.async_nexting = true         
+        if(optionalNext) {
+          stack.optional_next = true 
+          return callbackFunc(optionalNext)
+        } 
         return callbackFunc()
       })
 
+      stack.next.fire = (path) => {
+        console.log('we are firing from within stack.next.fire: ' + path )         
+        stack.next_firing = true 
+        stack.fire(path)
+      }
       debugger
       cell.enties[0].func(stack.next) //< Execute the function! (synchronously)
  

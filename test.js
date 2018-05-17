@@ -122,7 +122,8 @@ var testObj = {
         console.log('/apple "on" (listener function in progress).')
         t.equal(stack.state.path, '/apple', "state.path equals the path of the current 'on' listener.")        
         //stack.fire('/bannana', (next) => next)
-        next( stack.fire('/bannana') )
+        debugger
+        next('/bannana')
       })
 
       stack.on('/bannana', () => {     
@@ -155,8 +156,10 @@ var testObj = {
 
       stack.on('orange', (next) => {
         console.log('/orange yet again!')
-        t.ok(stack.state.path, '/orange')        
-        next(  stack.fire('grapefruit') ) 
+        t.ok(stack.state.path, '/orange')    
+        debugger    
+        //next(  stack.fire('grapefruit') ) 
+        next.fire('grapefruit')
       })        
 
       stack.on('/grapefruit', () => {     

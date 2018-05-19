@@ -494,7 +494,7 @@ const runCommand = (commandToRun) => {
               console.log('possible grid expansion is necessary?')
 
 
-              var currentRow = liveListener.xy[0]
+              var currentRow = gg.indexToXy( stack.grid, liveListener.cell )[0]
 
               console.log('listener index: ' + index)
               console.log('currentRow: ' + currentRow)

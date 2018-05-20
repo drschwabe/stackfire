@@ -1,6 +1,6 @@
 // #### STACK 3 ####
 
-const async = require('async'), 
+const async = require('neo-async'), 
     routeParser = require('route-parser')
     _ = require('underscore'), 
     gg = require('gg'), 

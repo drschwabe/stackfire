@@ -144,12 +144,12 @@ stack.fire = (pathname, callback) => {
 
     //determine if matchingCommand has been called from the current command's column, 
     //in which case - we should run it now:
-    var liveListener = _.find(stack.grid.enties, (enty) => enty.underway)     
+    //var liveListener = _.find(stack.grid.enties, (enty) => enty.underway)     
     var liveCommand = _.find(stack.grid.enties, (enty) => enty.underway).command 
     //might want to update this to also facto rin column; to ensure we are choosing
     //from rightmost such that multiple underway listeners don't interferer here
     //if(matchingCommand.callee == liveCommand.callee) {
-    if(!liveListener.async) {
+    if(!liveListener().async) {
       commandToRunNow = matchingCommand
       // if(matchingCommand.callee == liveListener.callee) {
       //   debugger
@@ -158,7 +158,7 @@ stack.fire = (pathname, callback) => {
       //if the command is async, we wait - otherwise, run now: 
       //i think callee and caller need to be on the listeners; not the command
       //seems like all commands may share the same callee ? 
-    } else if(liveListener.async && stack.next_firing) {
+    } else if(liveListener().async && stack.next_firing) {
       commandToRunNow = matchingCommand
       stack.next_firing = false 
       //the only time we fire a command from within an async 
@@ -423,14 +423,20 @@ const runCommand = (commandToRun) => {
 
     command.listeners.forEach((listener, index) => {  
       var thisColumnEnties = gg.columnEnties(stack.grid, [0, column])  
-      var liveListener = _.find(thisColumnEnties, (enty) => {
-        var match = enty.command.route.spec == listener.path && listener.func == enty.func
-        return match
-      })
-      if(!liveListener) return console.log('no liveListener!?')
-      if(liveListener.done) return
+      // var liveListener = _.find(thisColumnEnties, (enty) => {
+      //   var match = enty.command.route.spec == listener.path && listener.func == enty.func
+      //   return match
+      // })
+      if(!liveListener()) {
+        console.log('no liveListener!?')
+        //maybe moving TOO fast? 
+        //var liveListener2 = liveListener() 
+        //setTimeout(() => )
+        return 
+      } 
+      if(liveListener().done) return
 
-      var nextOccupiedCellEast =  gg.nextOccupiedCellEast(stack.grid, liveListener.cell )
+      var nextOccupiedCellEast =  gg.nextOccupiedCellEast(stack.grid, liveListener().cell )
       //Any occupied cells to the east? 
       //or listeners that share this same row... 
 
@@ -470,6 +476,7 @@ const runCommand = (commandToRun) => {
             if(enty) { //if this enty is of the same command, its OK 
               //(cause it will get pushed down too)
               if(enty.command == command) return true
+              if(!enty.command) return console.log("what the fack")
               if(enty.command.done && gg.indexToXy(stack.grid, enty.cell)[1] <  gg.indexToXy(stack.grid, startCell)[1]) return true 
               else return false
             } else {
@@ -478,7 +485,7 @@ const runCommand = (commandToRun) => {
           })
           if(nextRowValid) {
             //find all commands in this column... 
-            var columnCells = gg.columnCells(stack.grid, liveListener.cell ) 
+            var columnCells = gg.columnCells(stack.grid, liveListener().cell ) 
             var entiesToMove = []
             var lastCompletedCommandInThisColumn
             columnCells.forEach((cell, index) => {
@@ -494,7 +501,7 @@ const runCommand = (commandToRun) => {
               console.log('possible grid expansion is necessary?')
 
 
-              var currentRow = gg.indexToXy( stack.grid, liveListener.cell )[0]
+              var currentRow = gg.indexToXy( stack.grid, liveListener().cell )[0]
 
               console.log('listener index: ' + index)
               console.log('currentRow: ' + currentRow)
@@ -546,10 +553,10 @@ const runCommand = (commandToRun) => {
           } else {
             loopCount++ 
             console.log('checking next row...')
-            findNextValidRow(liveListener.cell + (loopCount * stack.grid.width))
+            findNextValidRow(liveListener().cell + (loopCount * stack.grid.width))
           }
         }
-        findNextValidRow(liveListener.cell) 
+        findNextValidRow(liveListener().cell) 
       }
     })
     stack.grid = gg.populateCells(stack.grid)
@@ -561,9 +568,11 @@ const runCommand = (commandToRun) => {
 
   gridLoop()
 
-  const liveListener = () => _.find(stack.grid.enties, (enty) => enty.underway)     
-  const liveCommand = () => liveListener().command    
 }
+
+const liveListener = () => _.find(stack.grid.enties, (enty) => enty.underway)     
+
+const liveCommand = () => liveListener().command    
 
 const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path
 

@@ -93,16 +93,22 @@ var testObj = {
     })
 
     newTest("Different commands align into different columns (and fire in order)", (t) => {
-      t.plan(5)
+      t.plan(7)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
       stack.on('/boot', () => t.ok(stack.state.path == '/boot', 'first boot listener ran'))
 
-      stack.on('/boot', () => t.ok(stack.state.path == '/boot', 'second boot listener ran'))
+      stack.on('/boot', () => {
+        t.pass('second boot listener ran')
+        t.equal(stack.state.path, '/boot', 'path is /boot')
+      })
 
-      stack.on('/boot', () => t.ok(stack.state.path == '/boot', 'third boot listener ran'))
+      stack.on('/boot', () => {
+        t.pass('third boot listener ran')
+        t.equal(stack.state.path, '/boot', 'path is /boot')
+      })
 
       stack.on('/strap', () => t.ok(stack.state.path == '/strap', 'first "strap" listener ran'))
 
@@ -123,7 +129,7 @@ var testObj = {
         t.equal(stack.state.path, '/apple', "state.path equals the path of the current 'on' listener.")        
         //stack.fire('/bannana', (next) => next)
         debugger
-        next('/bannana')
+        next.fire('/bannana')
       })
 
       stack.on('/bannana', () => {     
@@ -139,7 +145,7 @@ var testObj = {
       t.ok( stack.grid.cells[0].enties[0].done , 'Original command is done')
     })
 
-    newTest.only("stack.fire nested within stack.on (complex)", (t) => {
+    newTest("stack.fire nested within stack.on (complex)", (t) => {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -223,7 +229,7 @@ var testObj = {
         console.log('/orange yet again!')
         t.ok(stack.state.path, '/orange')  
         debugger              
-        stack.fire('grapefruit')
+        next.fire('grapefruit')
       })        
 
       stack.on('/grapefruit', () => {     
@@ -268,13 +274,13 @@ var testObj = {
       t.plan(3)      
       stack.on('green', (next) => {
         t.pass("green listener's callback invoked")
-        stack.fire('blue')
+        next.fire('blue')
       })
 
       stack.on('blue', (next) => {
         t.pass("blue listener's callback invoked")
         debugger
-        stack.fire('red')
+        next.fire('red')
       })
 
       stack.on('red', () => {
@@ -305,7 +311,7 @@ var testObj = {
 
       stack.on('green', (next) => {
         t.pass("green listener's fourth callback invoked")
-        stack.fire('blue')
+        next.fire('blue')
       })
 
       stack.on('green', () => {
@@ -323,7 +329,7 @@ var testObj = {
 
       stack.on('blue', (next) => {
         t.pass("blue listener's third callback invoked")
-        stack.fire('red')
+        next.fire('red')
       })
 
       stack.on('red', () => {
@@ -354,7 +360,7 @@ var testObj = {
 
       stack.on('green', (next) => {
         t.pass("green listener's fourth callback invoked")
-        stack.fire('blue')
+        next.fire('blue')
       })
 
       stack.on('green', () => {
@@ -373,7 +379,7 @@ var testObj = {
       stack.on('blue', (next) => {
         t.pass("blue listener's third callback invoked")
         debugger
-        stack.fire('red')
+        next.fire('red')
       })
 
       stack.on('red', () => {
@@ -461,7 +467,7 @@ var testObj = {
 
       stack.fire('purple', (next) => {
         t.pass('purple callback is executed')
-        stack.fire('pink')
+        next.fire('pink')
       })  
 
     })
@@ -730,7 +736,7 @@ var testObj = {
       stack.fire('/take-off', (next) => {
         t.equals(stack.state, stack.state, 'stack.state equals the newly returned state')
         stack.state.flying = true 
-        stack.fire('/autopilot', () => {
+        next.fire('/autopilot', () => {
           t.ok(stack.state.flying, 'We are flying.')
         })    
       })
@@ -1107,7 +1113,7 @@ var testObj = {
       })  
     })
 
-    newTest('Robot assembly line', (t) => {
+    test.skip('Robot assembly line', (t) => {
       t.plan(4)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

@@ -1,6 +1,8 @@
 // #### STACK 3 ####
 
-const async = require('neo-async'), 
+//const async = require('neo-async').safe(),
+//const async = require('neo-async'), 
+const async = require('async'),
     routeParser = require('route-parser')
     _ = require('underscore'), 
     gg = require('gg'), 
@@ -149,7 +151,7 @@ stack.fire = (pathname, callback) => {
     //might want to update this to also facto rin column; to ensure we are choosing
     //from rightmost such that multiple underway listeners don't interferer here
     //if(matchingCommand.callee == liveCommand.callee) {
-    if(!liveListener().async) {
+    if(!liveListener() || !liveListener().async) {
       commandToRunNow = matchingCommand
       // if(matchingCommand.callee == liveListener.callee) {
       //   debugger
@@ -196,31 +198,30 @@ const runCommand = (commandToRun) => {
 
   stack.state.path = commandToRun.route.spec
   
-  var column 
 
   const initGridWithListeners = (command) => {
 
     //Prepare the grid / queue listener callbacks for this command...
 
     //find the leftmost available cell: 
-    column = gg.nextOpenColumn(stack.grid, 0)
+    stack.state.column = gg.nextOpenColumn(stack.grid, 0)
 
     command.listeners.forEach((listener, index) => { 
 
       //Do a pre grid expansion if necessary: 
-      if( _.isNaN(column) || column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid) ) {        
+      if( _.isNaN(stack.state.column) || stack.state.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid) ) {        
         stack.grid = gg.expandGrid(stack.grid)
         stack.grid = gg.populateCells(stack.grid)  
         if(browser && window.renderGrid) window.renderGrid()
-        if(_.isNaN(column)) column = gg.nextOpenColumn(stack.grid, 0) 
+        if(_.isNaN(stack.state.column)) stack.state.column = gg.nextOpenColumn(stack.grid, 0) 
         //^ If there wasn't already an open column, now we have one.   
       }
 
-      command.column = column
+      command.column = stack.state.column
 
       var cell 
 
-      var nextCellSouth = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [stack.state.row, column]))
+      var nextCellSouth = gg.nextCellSouth(stack.grid,  gg.xyToIndex(stack.grid, [stack.state.row, stack.state.column]))
 
       var nextCell
 
@@ -230,9 +231,9 @@ const runCommand = (commandToRun) => {
 
       if(index === 0 && stack.state.row === 0) { 
         //(this is a first callback of a first row command)
-        cell = gg.xyToIndex(stack.grid, [0, column])
+        cell = gg.xyToIndex(stack.grid, [0, stack.state.column])
       } else if(index == 0) { //< this is first callback of a queud (fired) command
-        cell = gg.xyToIndex(stack.grid, [stack.state.row, column] )
+        cell = gg.xyToIndex(stack.grid, [stack.state.row, stack.state.column] )
       } else {
         cell = nextCellSouth
       } 
@@ -257,12 +258,12 @@ const runCommand = (commandToRun) => {
     //Loop over each cell and execute the function it now contains: 
 
     async.eachSeries(stack.grid.cells, (cell, callback) => {
-      if(cell < startCell) return callback() 
+      if(cell < startCell) return async.setImmediate(callback) 
       stack.state.cell = cell    
-      if( _.indexOf(stack.grid.cells, cell) < 0) return callback()  
+      if( _.indexOf(stack.grid.cells, cell) < 0) return async.setImmediate(callback)   
       cell.num = _.indexOf(stack.grid.cells, cell)  
-      if(!cell.enties.length || cell.enties[0].done) return callback()
-      var thisColumnsCells = gg.columnCells(stack.grid, column)
+      if(!cell.enties.length || cell.enties[0].done) return async.setImmediate(callback) 
+      var thisColumnsCells = gg.columnCells(stack.grid, stack.state.column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
       //debugger
       if(cell.enties[0].underway) {  //If its already underway, mark as done: 
@@ -275,7 +276,7 @@ const runCommand = (commandToRun) => {
       var nextCellEast = gg.examine( stack.grid,  gg.nextCellEast(stack.grid, cell.num) ) 
       if(nextCellEast) { 
         //If there is, an updateGridColumn / re-arrangement is required: 
-        updateGridColumn(cell.enties[0].command, column)
+        updateGridColumn(cell.enties[0].command, stack.state.column)
         gridLoop() //< and restart the gridLoop (TODO: implement a startCell so we could start
         //back here)
         return 
@@ -329,17 +330,17 @@ const runCommand = (commandToRun) => {
 
       stack.next.fire = (path, callback) => {
         console.log('we are firing from within stack.next.fire: ' + path )       
-        debugger  
         stack.next_firing = true 
         if(callback) return stack.fire(path, callback)
         stack.fire(path)
       }
-      cell.enties[0].func(stack.next) //< Execute the function! (synchronously)
+      async.ensureAsync ( cell.enties[0].func(stack.next) ) //< Execute the function! (synchronously)
  
       //Wait for stack.next to be called, unless the user did not supply it
       //Ie- usage is: stack.on(next, function) //< wait for next (async)
       //stack.on(function) //< don't wait for next (synchronous) 
-      if(!entyFuncArgs.length && stack.next) stack.next()
+      if(!entyFuncArgs.length && stack.next) async.ensureAsync ( stack.next()  ) 
+      //if(!entyFuncArgs.length && stack.next) stack.next()     
       //callback()
     }, () => {
       //this runs x number of times gridLoop (async.series specfically) 
@@ -348,16 +349,19 @@ const runCommand = (commandToRun) => {
       //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command): 
       var incompleteListeners = _.filter(stack.grid.enties, (enty) => {
-        return !enty.done && gg.column(stack.grid, enty.cell) == column
+        return !enty.done && gg.column(stack.grid, enty.cell) == stack.state.column
       })
 
       if(!incompleteListeners.length) {
         //if no incomplete listeners, exit the loop.... 
         //first reset path and complete the matching command:  
         stack.state.path = null 
+        debugger
         commandToRun.done = true
         //reset the row back to 0
         stack.state.row = 0
+        //reset the current column back 
+        if(stack.state.column > 0) stack.state.column-- 
         if(browser && window.renderGrid) window.renderGrid()
 
         //is there a callback underway? If so, it is the parent of this command; so 
@@ -367,7 +371,7 @@ const runCommand = (commandToRun) => {
         if(parentListener) {
           delete parentListener.underway
           parentListener.done = true 
-          column = gg.column(stack.grid, parentListener.cell)
+          stack.state.column = gg.column(stack.grid, parentListener.cell)
           if(browser && window.renderGrid) window.renderGrid()
           //remaining listeners? 
           var remainingCommandListeners = _.filter(stack.grid.enties, (listener) => {
@@ -375,18 +379,18 @@ const runCommand = (commandToRun) => {
           })
           if(remainingCommandListeners.length) {
             stack.state.path = remainingCommandListeners[0].command.route.spec            
-            updateGridColumn(remainingCommandListeners[0].command, column)
+            updateGridColumn(remainingCommandListeners[0].command, stack.state.column)
             gridLoop()
           } 
           parentListener.command.done = true 
           if(browser && window.renderGrid) window.renderGrid()
           //if parentListener is done, we still need to check other commands.. 
-          if(column > 0) column--; 
+          if(stack.state.column > 0) stack.state.column--; 
           gridLoop() 
           if(!stack.queue.length) return
           return runCommand( stack.queue.pop() )  
         } else {
-          _.findWhere(stack.commands, { column : column }).done = true 
+          _.findWhere(stack.commands, { column : stack.state.column }).done = true 
           if(browser && window.renderGrid) window.renderGrid()
 
           //Are there any commands queued? 
@@ -399,8 +403,9 @@ const runCommand = (commandToRun) => {
 
       //run the incomplete listener/callback by calling gridLoop again...
       //first, update the path:
-      stack.state.path = _.find( stack.grid.enties, (enty) => gg.column(stack.grid, enty.cell) == column)
+      stack.state.path = _.find( stack.grid.enties, (enty) => gg.column(stack.grid, enty.cell) == stack.state.column)
         .command.route.spec
+      debugger
 
       updateGridColumn(incompleteListeners[0].command)
       gridLoop()
@@ -410,6 +415,8 @@ const runCommand = (commandToRun) => {
   }
 
   const updateGridColumn = (command, column) => {
+    if(!column) column = command.column
+    stack.state.column = column 
     //The 'live' version of this command's listeners are already assigned
     //and in the grid (stack.grid.enties), 
     //the command however is a re-usable 'on the shelf' version; so 
@@ -422,11 +429,7 @@ const runCommand = (commandToRun) => {
     //originally assigned to the grid)
 
     command.listeners.forEach((listener, index) => {  
-      var thisColumnEnties = gg.columnEnties(stack.grid, [0, column])  
-      // var liveListener = _.find(thisColumnEnties, (enty) => {
-      //   var match = enty.command.route.spec == listener.path && listener.func == enty.func
-      //   return match
-      // })
+      var thisColumnEnties = gg.columnEnties(stack.grid, [0, stack.state.column])  
       var currentListener = _.find(thisColumnEnties, (enty) => {
         var match = enty.command.route.spec == listener.path && listener.func == enty.func
         return match
@@ -435,7 +438,11 @@ const runCommand = (commandToRun) => {
         console.log('no currentListener!?')
         //maybe moving TOO fast? 
         //var liveListener2 = liveListener() 
-        //setTimeout(() => )
+        //setTimeout(() => )path
+        debugger
+
+        //TODO: return early from this loop
+
         return 
       } 
       if(currentListener.done) return
@@ -480,7 +487,11 @@ const runCommand = (commandToRun) => {
             if(enty) { //if this enty is of the same command, its OK 
               //(cause it will get pushed down too)
               if(enty.command == command) return true
-              if(!enty.command) return console.log("what the fack")
+              if(!enty.command) {
+                console.log("what the fack")
+                debugger
+                return
+              } 
               if(enty.command.done && gg.indexToXy(stack.grid, enty.cell)[1] <  gg.indexToXy(stack.grid, startCell)[1]) return true 
               else return false
             } else {

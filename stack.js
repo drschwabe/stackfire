@@ -329,7 +329,6 @@ const runCommand = (commandToRun) => {
       })
 
       stack.next.fire = (path, callback) => {
-        console.log('we are firing from within stack.next.fire: ' + path )       
         stack.next_firing = true 
         if(callback) return stack.fire(path, callback)
         stack.fire(path)

@@ -120,7 +120,7 @@ var testObj = {
     })
 
     newTest("stack.fire nested within stack.on", (t) => {
-      t.plan(4)
+      t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
@@ -142,7 +142,10 @@ var testObj = {
       })
       console.log('about to fire /apple')
       stack.fire('apple')
-      t.ok( stack.grid.cells[0].enties[0].done , 'Original command is done')
+      t.ok( stack.grid.cells[0].enties[0].done , 'Original command is immediately done')    
+      setTimeout( () => {
+        t.ok( stack.grid.cells[0].enties[0].done , 'Original command is done (after checking again with some setTimeout delay)')
+      }, 2)
     })
 
     newTest("stack.fire nested within stack.on (complex)", (t) => {

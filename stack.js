@@ -258,11 +258,11 @@ const runCommand = (commandToRun) => {
     //Loop over each cell and execute the function it now contains: 
 
     async.eachSeries(stack.grid.cells, (cell, callback) => {
-      if(cell < startCell) return async.setImmediate(callback) 
+      if(cell < startCell) return callback()
       stack.state.cell = cell    
-      if( _.indexOf(stack.grid.cells, cell) < 0) return async.setImmediate(callback)   
+      if( _.indexOf(stack.grid.cells, cell) < 0) return callback()   
       cell.num = _.indexOf(stack.grid.cells, cell)  
-      if(!cell.enties.length || cell.enties[0].done) return async.setImmediate(callback) 
+      if(!cell.enties.length || cell.enties[0].done) return callback () 
       var thisColumnsCells = gg.columnCells(stack.grid, stack.state.column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
       //debugger
@@ -334,12 +334,14 @@ const runCommand = (commandToRun) => {
         if(callback) return stack.fire(path, callback)
         stack.fire(path)
       }
-      async.ensureAsync ( cell.enties[0].func(stack.next) ) //< Execute the function! (synchronously)
- 
+      //async.ensureAsync ( cell.enties[0].func(stack.next) ) //< Execute the function! (synchronously)
+
+      cell.enties[0].func(stack.next)
+      
       //Wait for stack.next to be called, unless the user did not supply it
       //Ie- usage is: stack.on(next, function) //< wait for next (async)
       //stack.on(function) //< don't wait for next (synchronous) 
-      if(!entyFuncArgs.length && stack.next) async.ensureAsync ( stack.next()  ) 
+      if(!entyFuncArgs.length && stack.next)  stack.next()
       //if(!entyFuncArgs.length && stack.next) stack.next()     
       //callback()
     }, () => {

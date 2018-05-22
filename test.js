@@ -1697,30 +1697,27 @@ var testObj = {
 
       stack.on('cherry', () => {
         t.pass('put a cherry on top')
-        //stack.next() 
       })
 
-      stack.fire('apple', () => {
+      stack.fire('apple', (next) => {
         t.pass('apple fire callback reached')
-        //stack.next()
-        stack.fire('bannana-shake')
-        stack.fire('cherry')
-        //stack.next()
+        next.fire('bannana-shake', (next) => {
+          next.fire('cherry')
+        })
       })
 
       setTimeout(() => {
         //apple command completes cause stack.fire without callback 
         //inexplicilty advance the stack: 
         var firstCellCommand = gg.examine(stack.grid, [0,0]).command
-        t.ok( firstCellcommand.route.spec = '/apple' &&  gg.examine(stack.grid, [0,0]).command.done, 'First command /apple is done')
+        t.ok( firstCellCommand.route.spec = '/apple' &&  gg.examine(stack.grid, [0,0]).command.done, 'First command /apple is done')
       }, 3000)
 
     })
 
 
-
     newTest('inadvertent next calls pt3', (t) => {
-      t.plan(4)
+      t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack  
       let gg = process.browser ? require('gg') : requireUncached('gg')  
@@ -1729,21 +1726,23 @@ var testObj = {
         console.log('brrshh-zzzzzze....')
         setTimeout(() => {
           next() 
-        }, 2000)
+        }, 500)
       })
 
-      stack.on('cherry', () => {
+      stack.on('cherry', (next) => {
         t.pass('put a cherry on top')
+        next() 
       })
 
-      stack.fire('apple', () => {
+
+      stack.fire('apple', (next) => {
         t.pass('apple fire callback reached')
-        //stack.next()
-        stack.fire('bannana-shake')
-        stack.fire('cherry', () => {
-          t.pass('cherry fire callback reached')
-          console.log('do not finish apple') //< By invoking a callback that does not
-          //call stack.next() we block the stack; apple will never complete. 
+        next.fire('bannana-shake', (next) => {
+         next.fire('cherry', (next) => {
+            t.pass('cherry fire callback reached')
+            console.log('do not finish cherry') //< By invoking a callback that does not
+            //call next() we block the stack; apple will never complete. 
+          })
         })
       })
 
@@ -1751,11 +1750,15 @@ var testObj = {
         //apple command should not complete cause we provided a callback
         //and did not expliclitly call stack.next() to advance the stack: 
         var appleCommand = gg.examine(stack.grid, [0,0]).command
-        t.notOk(gg.examine(stack.grid, [0,0]).command.done, 'First command /apple is not done')
-      }, 3000)
+        t.notOk(appleCommand.done, 'First command /apple is not done')
+        var cherryListener = gg.examine(stack.grid, [1,2]) 
+        console.log(cherryListener)
+        t.ok(cherryListener.done, "Third command '/cherry', first listener  is done")
+        var cherryCommand = gg.examine(stack.grid, [1,2]).command          
+        t.notOk(cherryCommand.done, 'Third command /cherry is not done')
+      }, 600)
 
     })
-
 
     test.skip('rows of siblings', (t) => {
       t.plan(8)

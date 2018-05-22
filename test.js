@@ -1533,7 +1533,7 @@ var testObj = {
     })
 
     newTest('Incomplete garden', (t) => {
-      t.plan(4)
+      t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack 
       let gg = process.browser ? require('gg') : requireUncached('gg')    
@@ -1555,9 +1555,19 @@ var testObj = {
       })
 
       setTimeout(() => { //Ensure each of the commands exist on the first row: 
-        t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/dig', 'first cell is /dig') 
-        t.equals ( stack.grid.cells[gg.xyToIndex(stack.grid, [0,1])].enties[0].command.route.spec, '/plant', 'next column over is /plant' )
-        t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [0,2])].enties[0].command.route.spec, '/water', 'next column after that is /water')         
+        var rowZeroColumnZero = stack.grid.cells[0]
+        t.equals( rowZeroColumnZero.enties[0].command.route.spec, '/dig', 'first cell is /dig')
+        //There should be no enties in 0,1: 
+        var rowZeroColumnOne = stack.grid.cells[gg.xyToIndex(stack.grid, [0,1])]
+        t.notOk ( rowZeroColumnOne.enties[0] )
+
+        //0,2 should not exist: 
+        var rowZeroColumnTwo = stack.grid.cells[gg.xyToIndex(stack.grid, [0,2])]  
+        t.notOk( rowZeroColumnTwo ) 
+
+        //The queue should have the following commands: 
+        t.equals(stack.queue[0].route.spec, '/plant')  
+        t.equals(stack.queue[1].route.spec, '/water')                    
       }, 100)
 
       //Future shorthand: 

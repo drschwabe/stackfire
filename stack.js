@@ -365,7 +365,6 @@ const runCommand = (commandToRun) => {
         //if no incomplete listeners, exit the loop.... 
         //first reset path and complete the matching command:  
         stack.state.path = null 
-        debugger
         commandToRun.done = true
         //reset the row back to 0
         stack.state.row = 0
@@ -396,17 +395,17 @@ const runCommand = (commandToRun) => {
           //if parentListener is done, we still need to check other commands.. 
           if(stack.state.column > 0) stack.state.column--; 
           gridLoop() 
-          if(!stack.queue.length) return
+          if(!stack.queue.length) return trimGrid()
           return runCommand( stack.queue.pop() )  
         } else {
           _.findWhere(stack.commands, { column : stack.state.column }).done = true 
           if(browser && window.renderGrid) window.renderGrid()
 
           //Are there any commands queued? 
-          if(!stack.queue.length) return
+          if(!stack.queue.length) return trimGrid()
           return runCommand( stack.queue.pop() ) 
         }
-        if(!stack.queue.length) return
+        if(!stack.queue.length) return trimGrid()
         return runCommand( stack.queue.pop() ) 
       }
 
@@ -417,8 +416,9 @@ const runCommand = (commandToRun) => {
 
       updateGridColumn(incompleteListeners[0].command)
       gridLoop()
-      if(!stack.queue.length) return
-      return runCommand( stack.queue.pop() )       
+      //these will never run? 
+      // if(!stack.queue.length) return trimGrid()
+      // return runCommand( stack.queue.pop() )       
     })
   }
 
@@ -447,7 +447,6 @@ const runCommand = (commandToRun) => {
         //maybe moving TOO fast? 
         //var liveListener2 = liveListener() 
         //setTimeout(() => )path
-        debugger
 
         //TODO: return early from this loop
 
@@ -497,7 +496,6 @@ const runCommand = (commandToRun) => {
               if(enty.command == command) return true
               if(!enty.command) {
                 console.log("what the fack")
-                debugger
                 return
               } 
               if(enty.command.done && gg.indexToXy(stack.grid, enty.cell)[1] <  gg.indexToXy(stack.grid, startCell)[1]) return true 
@@ -536,7 +534,6 @@ const runCommand = (commandToRun) => {
               console.log('currentRow + nextOpenRow + entiestoMove.length: ' + (currentRow + nextOpenRow + entiesToMove.length))
               console.log('(nextOpenRow - currentRow) + entiesToMove.length: ' + ((nextOpenRow - currentRow) + entiesToMove.length))
 
-              debugger        
               if( (nextOpenRow - currentRow) + entiesToMove.length >= stack.grid.height ) {
 
               //if( currentRow + entiesToMove.length + nextOpenRow 
@@ -546,7 +543,6 @@ const runCommand = (commandToRun) => {
 
                 //now expand the grid to meet that criteria
                 //keep in mind this is executing PER listener... 
-                debugger
 
                 _.range(newRowsNeeded).forEach(() => {
                   stack.grid = gg.expandGrid(stack.grid)
@@ -557,8 +553,6 @@ const runCommand = (commandToRun) => {
                 // stack.grid = gg.populateCells(stack.grid) 
 
                 if(browser && window.renderGrid) window.renderGrid()
-
-                debugger 
 
               }
 
@@ -590,7 +584,6 @@ const runCommand = (commandToRun) => {
   initGridWithListeners(commandToRun)
 
   gridLoop()
-
 }
 
 const liveListener = () => _.find(stack.grid.enties, (enty) => enty.underway)     
@@ -598,5 +591,18 @@ const liveListener = () => _.find(stack.grid.enties, (enty) => enty.underway)
 const liveCommand = () => liveListener().command    
 
 const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path
+
+//Trim the grid of all completed commands: 
+const trimGrid = () => {
+  debugger
+  stack.grid.enties = [] 
+  delete stack.cells
+  stack.grid = gg.populateCells(stack.grid) 
+  stack.state.cell = null 
+  stack.state.column = 0 
+  stack.state.row = 0
+  stack.state.path = null 
+  if(browser && window.renderGrid) window.renderGrid()  
+}
 
 module.exports = stack

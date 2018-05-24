@@ -256,15 +256,25 @@ const runCommand = (commandToRun) => {
 
   const gridLoop = (startCell) => {
     //Loop over each cell and execute the function it now contains: 
-
+    var blankCellCount = 0 //< Used to return early if we loop over
+    //a few complete rows (ie- nothing further below)
     async.eachSeries(stack.grid.cells, (cell, callback) => {
-      if(cell < startCell) return callback()
+      blankCellCount++;
+      console.log(blankCellCount)
+      if(cell < startCell) {
+        return callback()
+      }
+      if(blankCellCount > stack.grid.width * 10) {
+        blankCellCount = 0
+        return callback(true) //< Early exit; nothing further below.
+      }
       stack.state.cell = cell    
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()   
       cell.num = _.indexOf(stack.grid.cells, cell)  
       if(!cell.enties.length || cell.enties[0].done) return callback () 
       var thisColumnsCells = gg.columnCells(stack.grid, stack.state.column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
+      blankCellCount = 0
       //debugger
       if(cell.enties[0].underway) {  //If its already underway, mark as done: 
         delete cell.enties[0].underway  
@@ -335,15 +345,18 @@ const runCommand = (commandToRun) => {
       }
       //async.ensureAsync ( cell.enties[0].func(stack.next) ) //< Execute the function! (synchronously)
 
+
       cell.enties[0].func(stack.next)
       
       //Wait for stack.next to be called, unless the user did not supply it
       //Ie- usage is: stack.on(next, function) //< wait for next (async)
       //stack.on(function) //< don't wait for next (synchronous) 
       if(!entyFuncArgs.length && stack.next)  stack.next()
+      //blankCellCount = 0        
       //if(!entyFuncArgs.length && stack.next) stack.next()     
       //callback()
-    }, () => {
+    }, (earlyExit) => {
+      if(earlyExit) return 
       //this runs x number of times gridLoop (async.series specfically) 
       //is called, so the logic needs to return early unless... 
 

@@ -2374,6 +2374,19 @@ var testObj = {
       state.keydown = 'ESC'
       stack.fire('keyboard/keydown') //ESC
 
+      //Create another note! 
+      //TODO: fix failing / max call stack size exceeded.... 
+      setTimeout(() => {
+        stack.fire('create-note') 
+
+        stack.fire('keyboard/keydown') //T
+        stack.fire('keyboard/keydown') //E
+        stack.fire('keyboard/keydown') //S
+        stack.fire('keyboard/keydown') //T
+
+        state.keydown = 'ESC'
+        stack.fire('keyboard/keydown') //ESC      
+      }, 1000)
 
     })
 

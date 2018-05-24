@@ -256,23 +256,27 @@ const runCommand = (commandToRun) => {
 
   const gridLoop = (startCell) => {
 
-    var cellCount = 0
+    var cellCount = -1
     async.eachSeries(stack.grid.cells, (cell, callback) => {
       cellCount++; 
 
-      cell.num = _.indexOf(stack.grid.cells, cell)  
+      cell.num = cellCount  
+
+      debugger
 
       if(!cell.enties.length) {
         //also do a check to see if there are any enties left at all: 
         var highestCellWithEnty = _.max( stack.grid.enties, (enty) => enty.cell ).cell
-        if(cellCount > highestCellWithEnty) return callback(true) //if so, return early! 
-        return callback()
+        console.log('cellCount: ' + cellCount)
+        console.log('highestCellWithEnty: ' + highestCellWithEnty)        
+        if( _.isUndefined(highestCellWithEnty) || cellCount > highestCellWithEnty) return callback(true) //if so, return early!
+        return callback() 
       }
 
       if(cell < startCell) return callback()
       stack.state.cell = cell    
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()   
-      if(!cell.enties.length || cell.enties[0].done) return callback () 
+      if(cell.enties[0].done) return callback () 
       var thisColumnsCells = gg.columnCells(stack.grid, stack.state.column)
       if(!_.contains(thisColumnsCells, cell.num)) return callback() 
       if(cell.enties[0].underway) {  //If its already underway, mark as done: 
@@ -560,7 +564,6 @@ const runCommand = (commandToRun) => {
         findNextValidRow(currentListener.cell) 
       }
     })
-    stack.grid = gg.populateCells(stack.grid)
     stack.grid = gg.xyCells(stack.grid) //< make sure all cells are xY'ed    
     if(browser && window.renderGrid) window.renderGrid()
   }
@@ -581,11 +584,13 @@ const trimGrid = () => {
   if(!stack.trimming) return
   stack.grid.enties = [] 
   delete stack.cells
-  stack.grid = gg.populateCells(stack.grid) 
+  //stack.grid = gg.populateCells(stack.grid) 
   stack.state.cell = null 
   stack.state.column = 0 
   stack.state.row = 0
   stack.state.path = null 
+  delete stack.grid 
+  stack.grid = gg.populateCells(gg.createGrid(1,1))
   if(browser && window.renderGrid) window.renderGrid()  
 }
 

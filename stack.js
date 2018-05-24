@@ -257,28 +257,21 @@ const runCommand = (commandToRun) => {
   const gridLoop = (startCell) => {
 
     var cellCount = -1
-    async.eachSeries(stack.grid.cells, (cell, callback) => {
-      cellCount++; 
 
-      cell.num = cellCount  
+    var thisColumnsCells = gg.columnCells(stack.grid, stack.state.column)
 
-      debugger
+    async.eachSeries(thisColumnsCells, (cell, callback) => {
 
-      if(!cell.enties.length) {
-        //also do a check to see if there are any enties left at all: 
-        var highestCellWithEnty = _.max( stack.grid.enties, (enty) => enty.cell ).cell
-        console.log('cellCount: ' + cellCount)
-        console.log('highestCellWithEnty: ' + highestCellWithEnty)        
-        if( _.isUndefined(highestCellWithEnty) || cellCount > highestCellWithEnty) return callback(true) //if so, return early!
-        return callback() 
-      }
+      var cell = stack.grid.cells[cell]
 
+      cell.num = _.indexOf(stack.grid.cells, cell)  
+
+      if(!cell.enties.length) return callback()
       if(cell < startCell) return callback()
       stack.state.cell = cell    
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()   
       if(cell.enties[0].done) return callback () 
-      var thisColumnsCells = gg.columnCells(stack.grid, stack.state.column)
-      if(!_.contains(thisColumnsCells, cell.num)) return callback() 
+
       if(cell.enties[0].underway) {  //If its already underway, mark as done: 
         delete cell.enties[0].underway  
         cell.enties[0].done = true
@@ -571,7 +564,9 @@ const runCommand = (commandToRun) => {
   initGridWithListeners(commandToRun)
 
   gridLoop()
+
 }
+
 
 const liveListener = () => _.find(stack.grid.enties, (enty) => enty.underway)     
 

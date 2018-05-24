@@ -16,7 +16,8 @@ const stack = {
   commands : [],
   queue : [], 
   grid : gg.populateCells(gg.createGrid(1,1)), 
-  utils : [] //< For third party mods to execute at each hook
+  utils : [],  //< For third party mods to execute at each hook
+  trimming : false //< Do not clear the grid after every command (slower)
 }
 
 //Listener creation function:
@@ -577,6 +578,7 @@ const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path
 
 //Trim the grid of all completed commands: 
 const trimGrid = () => {
+  if(!stack.trimming) return
   stack.grid.enties = [] 
   delete stack.cells
   stack.grid = gg.populateCells(stack.grid) 

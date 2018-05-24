@@ -2285,11 +2285,13 @@ var testObj = {
     })
 
 
-    newTest.only('High volume of commands/listeners', (t) => {
+    newTest('High volume of commands/listeners', (t) => {
       t.plan(1)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack 
+
+      stack.trimming = true
 
       var state = {}
 

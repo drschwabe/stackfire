@@ -72,6 +72,8 @@ stack.fire = (pathname, callback) => {
 
   var pathname = prefixPath(pathname)
 
+  console.log(pathname)
+
 
   //check for wildcard *
   //if its a wildcard, we need to add it to a list of wildcards
@@ -259,8 +261,6 @@ const runCommand = (commandToRun) => {
     var blankCellCount = 0 //< Used to return early if we loop over
     //a few complete rows (ie- nothing further below)
     async.eachSeries(stack.grid.cells, (cell, callback) => {
-      blankCellCount++;
-      console.log(blankCellCount)
       if(cell < startCell) {
         return callback()
       }
@@ -268,6 +268,11 @@ const runCommand = (commandToRun) => {
         blankCellCount = 0
         return callback(true) //< Early exit; nothing further below.
       }
+      blankCellCount++; //keep tweaking the math there
+      //just have to get more intelligent about how many rows we calculating...
+      //just want to find out when we are looping over cells endlessly...
+      //another strat is to just kill the previous commands ! might be quick fix
+      console.log(blankCellCount)      
       stack.state.cell = cell    
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()   
       cell.num = _.indexOf(stack.grid.cells, cell)  
@@ -318,7 +323,6 @@ const runCommand = (commandToRun) => {
         cell.enties[0].done = true  
         if(browser && window.renderGrid) window.renderGrid()  
 
-
         var allCallbacksDone = _.chain(stack.grid.enties)
              .filter((enty) => enty.command.route.spec == cell.enties[0].command.route.spec)
              .every((enty) => enty.done)
@@ -345,7 +349,6 @@ const runCommand = (commandToRun) => {
       }
       //async.ensureAsync ( cell.enties[0].func(stack.next) ) //< Execute the function! (synchronously)
 
-
       cell.enties[0].func(stack.next)
       
       //Wait for stack.next to be called, unless the user did not supply it
@@ -356,7 +359,8 @@ const runCommand = (commandToRun) => {
       //if(!entyFuncArgs.length && stack.next) stack.next()     
       //callback()
     }, (earlyExit) => {
-      if(earlyExit) return 
+      if(earlyExit) return //maybe returning tooo early... 
+        //cause this is just for the column 
       //this runs x number of times gridLoop (async.series specfically) 
       //is called, so the logic needs to return early unless... 
 

@@ -112,7 +112,7 @@ stack.fire = (pathname, callback) => {
 
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
-    console.log('do not "do" another command...')
+    //console.log('do not "do" another command...')
     //create a new copy, this time with a uid...
     //matchingCommand = clone(matchingCommand)
     matchingCommand = _.clone(matchingCommand) 
@@ -155,9 +155,6 @@ stack.fire = (pathname, callback) => {
     //if(matchingCommand.callee == liveCommand.callee) {
     if(!liveListener() || !liveListener().async) {
       commandToRunNow = matchingCommand
-      // if(matchingCommand.callee == liveListener.callee) {
-      //   debugger
-      // }
 
       //if the command is async, we wait - otherwise, run now: 
       //i think callee and caller need to be on the listeners; not the command
@@ -261,7 +258,6 @@ const runCommand = (commandToRun) => {
     var cellCount = 0
     async.eachSeries(stack.grid.cells, (cell, callback) => {
       cellCount++; 
-      console.log(cellCount)  
 
       cell.num = _.indexOf(stack.grid.cells, cell)  
 
@@ -519,21 +515,9 @@ const runCommand = (commandToRun) => {
             if(entiesToMove.length > 1) {
               //determine how many available cells are below the current row: 
               //gg.openCellsDown(stack.grid, gg.index( nextRowCells[0] ) )
-              console.log('possible grid expansion is necessary?')
-
 
               var currentRow = gg.indexToXy( stack.grid, currentListener.cell )[0]
-
-              console.log('listener index: ' + index)
-              console.log('currentRow: ' + currentRow)
-              console.log('entiesToMove: ' + entiesToMove.length)
-              console.log('nextOpenRow: ' + nextOpenRow)
-              console.log('current grid height: ' + stack.grid.height)
-
-              console.log('currentRow + entiestoMove.length: ' + (currentRow + entiesToMove.length))
-              console.log('currentRow + nextOpenRow + entiestoMove.length: ' + (currentRow + nextOpenRow + entiesToMove.length))
-              console.log('(nextOpenRow - currentRow) + entiesToMove.length: ' + ((nextOpenRow - currentRow) + entiesToMove.length))
-
+      
               if( (nextOpenRow - currentRow) + entiesToMove.length >= stack.grid.height ) {
 
               //if( currentRow + entiesToMove.length + nextOpenRow 
@@ -569,7 +553,6 @@ const runCommand = (commandToRun) => {
             if(browser && window.renderGrid) window.renderGrid()
           } else {
             loopCount++ 
-            console.log('checking next row...')
             findNextValidRow(currentListener.cell + (loopCount * stack.grid.width))
           }
         }
@@ -594,7 +577,6 @@ const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path
 
 //Trim the grid of all completed commands: 
 const trimGrid = () => {
-  debugger
   stack.grid.enties = [] 
   delete stack.cells
   stack.grid = gg.populateCells(stack.grid) 

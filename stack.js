@@ -267,13 +267,8 @@ const runCommand = (commandToRun) => {
 
       if(!cell.enties.length) {
         //also do a check to see if there are any enties left at all: 
-        var someEntiesLeft = _.some( stack.grid.cells, (gridCell, index) => {
-          console.log(index)
-          if(cell.num > index) return false 
-          return gridCell.enties.length 
-        })
-        debugger //if not, exitEarly: 
-        if(!someEntiesLeft) return callback(exitEarly)
+        var highestCellWithEnty = _.max( stack.grid.enties, (enty) => enty.cell ).cell
+        if(cellCount > highestCellWithEnty) return callback(true) //if so, return early! 
         return callback()
       }
 
@@ -358,7 +353,7 @@ const runCommand = (commandToRun) => {
       //stack.on(function) //< don't wait for next (synchronous) 
       if(!entyFuncArgs.length && stack.next)  stack.next()
 
-    }, () => {
+    }, (returningEarly) => {
 
       //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command): 
@@ -419,7 +414,6 @@ const runCommand = (commandToRun) => {
       //first, update the path:
       stack.state.path = _.find( stack.grid.enties, (enty) => gg.column(stack.grid, enty.cell) == stack.state.column)
         .command.route.spec
-      debugger
 
       updateGridColumn(incompleteListeners[0].command)
       gridLoop()

@@ -2286,7 +2286,7 @@ var testObj = {
 
 
     newTest.only('High volume of commands/listeners', (t) => {
-      t.plan(2)
+      t.plan(1)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack 
@@ -2385,7 +2385,10 @@ var testObj = {
         stack.fire('keyboard/keydown') //T
 
         state.keydown = 'ESC'
-        stack.fire('keyboard/keydown') //ESC      
+        stack.fire('keyboard/keydown') //ESC  
+
+        t.pass('finshed without crashing')
+
       }, 1000)
 
     })

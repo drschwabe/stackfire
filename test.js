@@ -2284,6 +2284,99 @@ var testObj = {
 
     })
 
+
+    newTest.only('High volume of commands/listeners', (t) => {
+      t.plan(2)
+
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack 
+
+      var state = {}
+
+      stack.on('selected-doc/selected', () => console.log('selected-doc/selected 1') )
+
+      stack.on('selected-doc/selected', () => console.log('selected-doc/selected 2') )
+
+      stack.on('selected-doc/selected', () => console.log('selected-doc/selected 3') )
+
+      stack.on('save-note', (next) => {
+        console.log('save-note 1')
+        next.fire('docs', (next) => next.fire('selected-doc/selected') )
+      })
+
+      stack.on('save-note', () => console.log('save-note 2'))
+
+      stack.on('save-note', () => console.log('save-note 3'))
+
+      stack.on('keyboard/keydown', (next) => {
+        console.log('keyboard/keydown 1') 
+        if(state.keydown === 'ESC') return next.fire('save-note')
+        next() 
+      })  
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 2') )        
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 3') )        
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 4') )        
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 5') )        
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 6') )        
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 7') )        
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 8') )        
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 9') )        
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 10') )        
+
+      stack.on('create-note', () => console.log('create-note 1') )
+
+      stack.on('create-note', () => console.log('create-note 2') )
+
+      stack.on('create-note', () => console.log('create-note 3') )
+
+      stack.on('docs', () => console.log('docs 1'))
+
+      stack.on('docs', () => console.log('docs 2'))
+
+      stack.on('docs', () => console.log('docs 3'))
+
+      stack.on('go-to-folder', (next) => {
+        console.log('go-to-folder 1')
+        next.fire('docs')
+      })
+
+      stack.on('go-to-folder', () => {
+        console.log('go-to-folder 2')
+      })
+
+      stack.on('init', () => {
+        console.log('init 1')
+      })
+
+      stack.on('init', (next) => {
+        console.log('init 2')
+        next.fire('go-to-folder')
+      })
+
+      stack.on('ready', (next) => {
+        console.log('ready 1')
+        next.fire('init')
+      })
+
+      stack.on('ready', () => {
+        console.log('ready 2')
+      })
+
+      stack.fire('ready')
+
+      stack.fire('create-note') 
+
+      stack.fire('keyboard/keydown') //T
+      stack.fire('keyboard/keydown') //E
+      stack.fire('keyboard/keydown') //S
+      stack.fire('keyboard/keydown') //T
+
+      state.keydown = 'ESC'
+      stack.fire('keyboard/keydown') //ESC
+
+
+    })
+
     if(run) { 
       console.log('run tests...')
       if(testObj.only) { //Only run the one test: 

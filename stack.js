@@ -325,7 +325,12 @@ const runCommand = (commandToRun) => {
         if(browser && window.renderGrid) window.renderGrid()  
 
         //possibly we will run any queued commands at this point... 
-        if(cell.enties[0].async) stack.async_nexting = true      
+        if(cell.enties[0].async) stack.async_nexting = true   
+
+        cell.enties[0].end_time = new Date()
+
+        cell.enties[0].total_time = cell.enties[0].end_time - cell.enties[0].start_time //in ms
+
         if(optionalNext) {
           stack.optional_next = true 
           return callbackFunc(optionalNext)
@@ -340,6 +345,7 @@ const runCommand = (commandToRun) => {
       }
 
       //Execute the function!
+      cell.enties[0].start_time = new Date()
       cell.enties[0].func(stack.next)
       
       //Wait for stack.next to be called, unless the user did not supply it
@@ -577,6 +583,7 @@ const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path
 //Trim the grid of all completed commands: 
 const trimGrid = () => {
   if(!stack.trimming) return
+  debugger
   stack.grid.enties = [] 
   delete stack.cells
   //stack.grid = gg.populateCells(stack.grid) 
@@ -587,6 +594,24 @@ const trimGrid = () => {
   delete stack.grid 
   stack.grid = gg.populateCells(gg.createGrid(1,1))
   if(browser && window.renderGrid) window.renderGrid()  
+}
+
+
+var startTime, endTime;
+
+function start() {
+  startTime = new Date();
+};
+
+function end() {
+  endTime = new Date();
+  var timeDiff = endTime - startTime; //in ms
+  // strip the ms
+  timeDiff /= 1000;
+
+  // get seconds 
+  var seconds = Math.round(timeDiff);
+  console.log(seconds + " seconds");
 }
 
 module.exports = stack

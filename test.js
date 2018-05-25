@@ -39,7 +39,8 @@ var testObj = {
 
       stack.on('/do-something', () => {
         t.ok(stack.state, 'listener invoked and stack state established') 
-        t.equal(stack.state.path, '/do-something', "state.path equals '/do-something'")
+        t.equal(stack.path, '/do-something', "state.path equals '/do-something'")
+        debugger
       })
 
       stack.fire('/do-something')
@@ -53,12 +54,12 @@ var testObj = {
       if(process.browser) window.stack = stack
 
       stack.on('/boot', () => {
-        t.ok(stack.state.path == '/boot', 'first boot listener ran')
+        t.ok(stack.path == '/boot', 'first boot listener ran')
         stack.state.booting = true 
       })
 
       stack.on('/boot', () => {
-        t.ok(stack.state.path == '/boot', 'second boot listener ran')
+        t.ok(stack.path == '/boot', 'second boot listener ran')
         t.ok(stack.state.booting, 'variable set on state during first listener exists with expected value')
       })
 
@@ -71,15 +72,15 @@ var testObj = {
       if(process.browser) window.stack = stack
 
       stack.on('/boot', () => {
-        t.ok(stack.state.path == '/boot', 'first boot listener ran')
+        t.ok(stack.path == '/boot', 'first boot listener ran')
       })
 
       stack.on('/boot', () => {
-        t.ok(stack.state.path == '/boot', 'second boot listener ran')
+        t.ok(stack.path == '/boot', 'second boot listener ran')
       })
 
       stack.on('/boot', () => {
-        t.ok(stack.state.path == '/boot', 'third boot listener ran')
+        t.ok(stack.path == '/boot', 'third boot listener ran')
       })      
 
       stack.fire('/boot')
@@ -98,21 +99,21 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      stack.on('/boot', () => t.ok(stack.state.path == '/boot', 'first boot listener ran'))
+      stack.on('/boot', () => t.ok(stack.path == '/boot', 'first boot listener ran'))
 
       stack.on('/boot', () => {
         t.pass('second boot listener ran')
-        t.equal(stack.state.path, '/boot', 'path is /boot')
+        t.equal(stack.path, '/boot', 'path is /boot')
       })
 
       stack.on('/boot', () => {
         t.pass('third boot listener ran')
-        t.equal(stack.state.path, '/boot', 'path is /boot')
+        t.equal(stack.path, '/boot', 'path is /boot')
       })
 
-      stack.on('/strap', () => t.ok(stack.state.path == '/strap', 'first "strap" listener ran'))
+      stack.on('/strap', () => t.ok(stack.path == '/strap', 'first "strap" listener ran'))
 
-      stack.on('/strap', () => t.ok(stack.state.path == '/strap', 'second "strap" listener ran'))
+      stack.on('/strap', () => t.ok(stack.path == '/strap', 'second "strap" listener ran'))
 
       stack.fire('/boot')
 
@@ -126,7 +127,7 @@ var testObj = {
 
       stack.on('/apple', (next) => {
         console.log('/apple "on" (listener function in progress).')
-        t.equal(stack.state.path, '/apple', "state.path equals the path of the current 'on' listener.")        
+        t.equal(stack.path, '/apple', "state.path equals the path of the current 'on' listener.")        
         //stack.fire('/bannana', (next) => next)
         debugger
         next.fire('/bannana')
@@ -134,9 +135,9 @@ var testObj = {
 
       stack.on('/bannana', () => {     
         console.log('/bannana "on" listener in progress. state.path:')
-        console.log(stack.state.path) 
+        console.log(stack.path) 
         t.ok(stack.state, 'root level listener invoked from a nested fire')
-        t.equal(stack.state.path, '/bannana', "state.path equals the path of the current 'on' listener.")
+        t.equal(stack.path, '/bannana', "state.path equals the path of the current 'on' listener.")
         //next() 
         //at this point, apple should be done too
       })
@@ -152,20 +153,22 @@ var testObj = {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
+
 
       stack.on('orange', () => {
         console.log('/orange "on" (listener function in progress)')
-        t.ok(stack.state.path, '/orange')
+        t.ok(stack.path, '/orange')
       })
 
       stack.on('orange', () => {
         console.log('/orange again')
-        t.ok(stack.state.path, '/orange')
+        t.ok(stack.path, '/orange')
       })
 
       stack.on('orange', (next) => {
         console.log('/orange yet again!')
-        t.ok(stack.state.path, '/orange')    
+        t.ok(stack.path, '/orange')    
         debugger    
         //next(  stack.fire('grapefruit') ) 
         next.fire('grapefruit')
@@ -174,27 +177,27 @@ var testObj = {
       stack.on('/grapefruit', () => {     
         console.log('/grapefruit "on" listener in progress.')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
-        t.ok(stack.state.path, '/grapefruit')
+        t.ok(stack.path, '/grapefruit')
         //next() 
       })
 
       stack.on('/grapefruit', () => {     
         console.log('/grapefruit again')
-        t.equal(stack.state.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
+        t.equal(stack.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
         //next() 
       })  
       
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
-        t.ok(stack.state.path, '/orange')
+        t.ok(stack.path, '/orange')
         debugger   
-        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [4,0]), 'orange first listener after grapefruit command assigned to correct cell')
+        t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [4,0]), 'orange first listener after grapefruit command assigned to correct cell')
       })
 
       stack.on('orange', () => {
         console.log('/orange last time!')
-        t.ok(stack.state.path, '/orange')  
-        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [5,0]), 'orange second listener after grapefruit assigned to correct cell')        
+        t.ok(stack.path, '/orange')  
+        t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [5,0]), 'orange second listener after grapefruit assigned to correct cell')        
       })
 
       console.log('about to fire /orange')
@@ -211,6 +214,7 @@ var testObj = {
       t.plan(11)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('strawberry', () => {
         console.log('/strawberry "on" (listener function in progress)')   
@@ -219,18 +223,18 @@ var testObj = {
 
       stack.on('orange', () => {
         console.log('/orange "on" (listener function in progress)')
-        t.ok(stack.state.path, '/orange')
+        t.ok(stack.path, '/orange')
       })
 
       stack.on('orange', () => {
         console.log('/orange again')
-        t.ok(stack.state.path, '/orange')
+        t.ok(stack.path, '/orange')
         debugger
       })
 
       stack.on('orange', (next) => {
         console.log('/orange yet again!')
-        t.ok(stack.state.path, '/orange')  
+        t.ok(stack.path, '/orange')  
         debugger              
         next.fire('grapefruit')
       })        
@@ -243,20 +247,20 @@ var testObj = {
 
       stack.on('/grapefruit', () => {     
         console.log('/grapefruit again')
-        t.equal(stack.state.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
+        t.equal(stack.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
         debugger
       })  
       
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
-        t.ok(stack.state.path, '/orange')   
-        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [4,1]), 'orange first listener after grapefruit command assigned to correct cell')
+        t.ok(stack.path, '/orange')   
+        t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [4,1]), 'orange first listener after grapefruit command assigned to correct cell')
       })
 
       stack.on('orange', () => {
         console.log('/orange last time!')
-        t.ok(stack.state.path, '/orange')  
-        t.equal(stack.state.cell.num, gg.xyToIndex(stack.grid, [5,1]), 'orange second listener after grapefruit assigned to correct cell')        
+        t.ok(stack.path, '/orange')  
+        t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [5,1]), 'orange second listener after grapefruit assigned to correct cell')        
       })
 
       console.log('about to fire /strawberry')
@@ -562,7 +566,7 @@ var testObj = {
       stack.on('/apple', () => {
         debugger
         console.log('/apple "on" (middleware in progress).  state.path:')
-        console.log(stack.state.path)  
+        console.log(stack.path)  
         console.log('about to run .5 second timeout before firing /bannana...')
         //Nested async fire: 
         setTimeout(() => {
@@ -571,7 +575,7 @@ var testObj = {
             debugger
             t.pass('/bannana reaches its callback')
             console.log('/bannana fired (its final callback in progress)')
-            console.log(stack.state.path)  
+            console.log(stack.path)  
             console.log("/bannana's callback will immediately call nextFire()")   
           })
         }, 500)
@@ -580,10 +584,10 @@ var testObj = {
       debugger
       stack.on('/bannana', () => {         
         console.log('/bannana "on" middleware in progress. state.path:')
-        console.log(stack.state.path) 
+        console.log(stack.path) 
         console.log('(this should not execute until after 0.5 seconds)')  
         t.ok(stack.state, 'root level listener invoked from a nested fire')
-        t.equal(stack.state.path, '/bannana', "state.path equals the path of the current 'on' listener.")       
+        t.equal(stack.path, '/bannana', "state.path equals the path of the current 'on' listener.")       
         console.log('/bannana middleware will now call stack.next()')
         //stack.next() 
         debugger
@@ -597,7 +601,7 @@ var testObj = {
         //something is causing the apple callback to be called twice
         // _.command.callback = _.once()  ?        
         console.log('/apple fired (its final callback in progress). state.path:')
-        console.log(stack.state.path)    
+        console.log(stack.path)    
         console.log('about to run 1 second timeout before calling stack.next)')
         setTimeout(() => {
           t.pass('reached end of the original fire (/apple)')
@@ -647,7 +651,7 @@ var testObj = {
       t.plan(2)
 
       stack.on('/go', () => {
-        t.equals(stack.state.path, '/go', 'expected listener invoked')
+        t.equals(stack.path, '/go', 'expected listener invoked')
       })
 
       //This should not run: 
@@ -671,7 +675,7 @@ var testObj = {
       t.plan(2)
 
       stack.on('/go/somewhere', () => {
-        t.equals(stack.state.path, '/go/somewhere', 'expected listener invoked')
+        t.equals(stack.path, '/go/somewhere', 'expected listener invoked')
       })
 
       //This should not run: 
@@ -692,7 +696,7 @@ var testObj = {
 
       stack.on('/inventory/:item/deliver', () => {
         debugger
-        t.equals(stack.state.path, '/inventory/widget/deliver', 'expected listener invoked')
+        t.equals(stack.path, '/inventory/widget/deliver', 'expected listener invoked')
         t.ok(stack.state.params.item, 'parameter is included on the command')
       })
 
@@ -716,7 +720,7 @@ var testObj = {
       t.plan(2)
 
       stack.on('/go/:destination/:time', () => {
-        t.equals(stack.state.path, '/go/Brisbane/tomorrow', 'expected listener invoked')
+        t.equals(stack.path, '/go/Brisbane/tomorrow', 'expected listener invoked')
       })
 
       //This should not run: 
@@ -752,7 +756,7 @@ var testObj = {
 
       stack.on('*wild', () => {
         t.pass('wildcard listener ran')
-        t.equals(stack.state.path, '/anything')
+        t.equals(stack.path, '/anything')
         debugger
       })
 
@@ -771,13 +775,13 @@ var testObj = {
 
       stack.on('anything', () => {
         t.pass('specific listener ran')
-        t.equals(stack.state.path, '/anything')
+        t.equals(stack.path, '/anything')
         debugger        
       })
 
       stack.on('*wild', () => {
         t.pass('wildcard listener ran')
-        t.equals(stack.state.path, '/anything')
+        t.equals(stack.path, '/anything')
         debugger
       })
 
@@ -829,7 +833,7 @@ var testObj = {
 
       //Establish wildcard before diamond: 
       stack.on('*wild', () => {
-        console.log(stack.state.path)
+        console.log(stack.path)
         t.pass('*wild listener invoked')
       })
 
@@ -964,6 +968,8 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
+        
       
       stack.on('apple', () => {
         console.log('first apple callback')
@@ -1076,7 +1082,7 @@ var testObj = {
       //This should not run! 
       stack.on('/execute-prisoner', () => {
         //workaround by manually checking: 
-        //if(stack.state.path != '/execute-prisoner') return stack.next()
+        //if(stack.path != '/execute-prisoner') return stack.next()
         t.fail('listener invoked when it should not have')
         //stack.next()
       })
@@ -1124,11 +1130,11 @@ var testObj = {
 
       stack.on('robot/assemble/:product', (next) => {
         console.log('"robot/assemble/:product" on!')    
-        t.equals(stack.state.path, '/robot/assemble/box')    
+        t.equals(stack.path, '/robot/assemble/box')    
 
         stack.fire('robot/box', () => {
           console.log('"robot/box" fire complete')
-          console.log(`state._command.route.spec is: ${stack.state.path}
+          console.log(`state._command.route.spec is: ${stack.path}
           `)
           // stack.next()
           // stack.next() 
@@ -1137,21 +1143,21 @@ var testObj = {
 
       stack.on('robot/:product', () => {
         console.log('"robot/:product" on!')    
-        console.log(`state.path is: ${stack.state.path}
+        console.log(`state.path is: ${stack.path}
         `)  
-        t.equals(stack.state.path, '/robot/box')
+        t.equals(stack.path, '/robot/box')
         //stack.next()   
       })
 
       stack.fire('robot/assemble/box', () => {
         console.log('"robot/assemble/box" fire complete')
         debugger
-        t.equals(stack.state.path, '/robot/assemble/box')
+        t.equals(stack.path, '/robot/assemble/box')
         //stack.next()
       })
 
       console.log('command is nulled?')
-      t.equals(stack.state.path, null)
+      t.equals(stack.path, null)
 
     })
 
@@ -1292,10 +1298,10 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack  
       stack.on('bake-cookie', () => {
-        t.ok(stack.state.path, '/bake-cookie')
+        t.ok(stack.path, '/bake-cookie')
       })
       stack.fire('bake-cookie')
-      t.equals(null, stack.state.path, 'command path finished/is null')
+      t.equals(null, stack.path, 'command path finished/is null')
     })
 
 
@@ -2216,6 +2222,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack 
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('ready', (next) => {
         next.fire('init', next)
@@ -2394,6 +2401,14 @@ var testObj = {
       }, 1000)
 
     })
+
+    newTest('stack.fire executes syncronously if all listeners are syncronous', (t) => {
+
+    })
+
+    newTest('stack.fire executes asyncronously if next is used in a listener', (t) => {
+      
+    })    
 
     if(run) { 
       console.log('run tests...')

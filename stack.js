@@ -186,6 +186,10 @@ stack.fire = (pathname, callback) => {
 
 const runCommand = (commandToRun) => {
 
+  commandToRun.start_time = new Date()
+
+  console.log('run command: ' + commandToRun.route.spec)
+
   //and now begin modifying state of stack; and the grid: 
   delete commandToRun.queued
 
@@ -275,6 +279,9 @@ const runCommand = (commandToRun) => {
       if(cell.enties[0].underway) {  //If its already underway, mark as done: 
         delete cell.enties[0].underway  
         cell.enties[0].done = true
+        cell.enties[0].end_time = new Date()
+        cell.enties[0].total_time = cell.enties[0].end_time - cell.enties[0].start_time
+
         if(browser && window.renderGrid) window.renderGrid()
         return callback()           
       }
@@ -312,6 +319,8 @@ const runCommand = (commandToRun) => {
       stack.next = _.wrap( callback, (callbackFunc, optionalNext) => {
         delete cell.enties[0].underway      
         cell.enties[0].done = true  
+        cell.enties[0].end_time = new Date()
+        cell.enties[0].total_time = cell.enties[0].end_time - cell.enties[0].start_time        
         if(browser && window.renderGrid) window.renderGrid()  
 
         var allCallbacksDone = _.chain(stack.grid.enties)
@@ -319,7 +328,11 @@ const runCommand = (commandToRun) => {
              .every((enty) => enty.done)
              .value() 
 
-        if(allCallbacksDone) cell.enties[0].command.done = true 
+        if(allCallbacksDone) {
+          cell.enties[0].command.done = true 
+          cell.enties[0].command.end_time = new Date()
+          cell.enties[0].command.total_time = cell.enties[0].command.end_time - cell.enties[0].command.start_time     
+        }     
 
         //Note this does not yet accommodate for async! 
         if(browser && window.renderGrid) window.renderGrid()  
@@ -327,9 +340,6 @@ const runCommand = (commandToRun) => {
         //possibly we will run any queued commands at this point... 
         if(cell.enties[0].async) stack.async_nexting = true   
 
-        cell.enties[0].end_time = new Date()
-
-        cell.enties[0].total_time = cell.enties[0].end_time - cell.enties[0].start_time //in ms
 
         if(optionalNext) {
           stack.optional_next = true 
@@ -366,6 +376,9 @@ const runCommand = (commandToRun) => {
         //first reset path and complete the matching command:  
         stack.state.path = null 
         commandToRun.done = true
+        commandToRun.end_time = new Date()
+        commandToRun.total_time = commandToRun.end_time - commandToRun.start_time      
+             
         //reset the row back to 0
         stack.state.row = 0
         //reset the current column back 
@@ -379,6 +392,9 @@ const runCommand = (commandToRun) => {
         if(parentListener) {
           delete parentListener.underway
           parentListener.done = true 
+          parentListener.end_time = new Date()
+          parentListener.total_time = parentListener.end_time - parentListener.start_time      
+
           stack.state.column = gg.column(stack.grid, parentListener.cell)
           if(browser && window.renderGrid) window.renderGrid()
           //remaining listeners? 
@@ -391,6 +407,9 @@ const runCommand = (commandToRun) => {
             gridLoop()
           } 
           parentListener.command.done = true 
+          parentListener.command.end_time = new Date()
+          parentListener.command.total_time = parentListener.command.end_time - parentListener.command.start_time
+
           if(browser && window.renderGrid) window.renderGrid()
           //if parentListener is done, we still need to check other commands.. 
           if(stack.state.column > 0) stack.state.column--; 
@@ -583,9 +602,12 @@ const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path
 //Trim the grid of all completed commands: 
 const trimGrid = () => {
   if(!stack.trimming) return
+  if(!stack.grid.cells[0].enties[0]) return 
+  console.log('total time to complete: ' + stack.grid.cells[0].enties[0].command.route.spec )
+  console.log(stack.grid.cells[0].enties[0].command.total_time)
   debugger
   stack.grid.enties = [] 
-  delete stack.cells
+  delete stack.grid.cells
   //stack.grid = gg.populateCells(stack.grid) 
   stack.state.cell = null 
   stack.state.column = 0 

@@ -268,6 +268,8 @@ const runCommand = (commandToRun) => {
 
       var cell = stack.grid.cells[cell]
 
+      if(_.isUndefined(cell)) return callback(true)
+
       cell.num = _.indexOf(stack.grid.cells, cell)  
 
       if(!cell.enties.length) return callback()

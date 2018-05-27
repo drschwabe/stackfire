@@ -367,7 +367,7 @@ const runCommand = (commandToRun) => {
 
       //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command): 
-      var incompleteListeners = _.filter(stack.grid.enties, (enty) => {
+      var incompleteListeners = _.filter(thisColumnsCells, (enty) => {        
         return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
       })
 

@@ -2091,7 +2091,8 @@ var testObj = {
       let gg = process.browser ? require('gg') : requireUncached('gg') 
 
       stack.on('/favvorite-main-save', (next) => {
-        next.fire('elements/render', next)
+        //next.fire('elements/render', next) //< TODO accommodate for this syntax
+        next.fire('elements/render', (next) => next())
       })
 
       stack.on('/favvorite-main-save', () => {
@@ -2402,13 +2403,35 @@ var testObj = {
 
     })
 
-    newTest('stack.fire executes syncronously if all listeners are syncronous', (t) => {
+    test.skip('stack.fire executes syncronously if all listeners are syncronous', (t) => {
 
     })
 
-    newTest('stack.fire executes asyncronously if next is used in a listener', (t) => {
+    test.skip('stack.fire executes asyncronously if next is used in a listener', (t) => {
       
-    })    
+    })  
+
+
+    newTest('One time callback is executed only once', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack 
+
+
+      t.plan(1)
+
+      stack.on('eat', () => {
+        console.log('eating')
+      })
+
+      stack.fire('eat', () => {
+        console.log('eat a little more... but only one time')
+        t.pass()
+      })
+
+      stack.fire('eat')
+
+    })
+
 
     if(run) { 
       console.log('run tests...')

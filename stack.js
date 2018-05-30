@@ -54,10 +54,25 @@ stack.on = (path, callback) => {
   return
 }
 
+stack.once = (path, callback) => {
+  //Same code as stack.on...
+  path = prefixPath(path) 
+  let route = new routeParser(path) 
+  const existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
+  const newListener = { func : callback, path: path }   
+  newListener.one_time = true //< ...only diff is we set this flag 
+  if(!existingCommand) {
+    let command = { route: route, listeners: [newListener] }
+    stack.commands.push(command)
+  } else {
+    existingCommand.listeners.push(newListener)
+  }
+  return  
+}
+
 stack.row = 0
 
 stack.fire = (pathname, callback) => {  
-
 
   if(!_.isString(pathname)) return console.error('path is not a string')
 
@@ -105,32 +120,27 @@ stack.fire = (pathname, callback) => {
     })
     //set a flag that this is one_time
     //(do not keep this listener for subsequent fires of the same path)
+    debugger
     matchingCommand.listeners[0].one_time = true 
+  } else if(callback) {
+    console.log('run only once')
+    stack.once(pathname, callback)
   }
-
-  //^ Just run the callback if there are no listeners
-  //(note this is lazy in that it doesn't register the command to the grid but probably OK)
 
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
-    //console.log('do not "do" another command...')
+    console.log('matching commmand is done')
     //create a new copy, this time with a uid...
-    //matchingCommand = clone(matchingCommand)
     matchingCommand = _.clone(matchingCommand) 
-    matchingCommand.listeners = _.without(matchingCommand.listeners, (listener => listener.one_time))
+    matchingCommand.listeners = _.chain(matchingCommand.listeners)
+      .map(listener => listener.one_time ? false : listener)
+      .compact()
+      .value() 
+    console.log(matchingCommand.listeners)
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
     stack.commands.push(matchingCommand)
   }
-
-
-  if(callback) { //If a callback was supplied, add it to the end of this command's listeners: 
-    //but only if it has not already been added:
-    if(_.last( matchingCommand.listeners ).func.toString() != callback.toString() ) {
-      matchingCommand.listeners.push({ func : callback, path: pathname, one_time : true }) 
-    }
-  } //TODO ^ check if the above is necessary; new ue of one_time may 
-  //make this part of the code unnecessary/never run 
 
   //Pre-grid modification check to see if this command should be queued or not: 
   //if there is a path active: 

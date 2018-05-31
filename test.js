@@ -2416,7 +2416,6 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack 
 
-
       t.plan(1)
 
       stack.on('eat', () => {
@@ -2431,6 +2430,29 @@ var testObj = {
       stack.fire('eat')
 
     })
+
+
+    newTest('One time callback is executed again if included again', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack 
+
+      t.plan(2)
+
+      stack.on('eat', () => {
+        console.log('eating')
+      })
+
+      var fireEat = () => {
+        stack.fire('eat', () => {
+          console.log('eat a little more... but only one time')
+          t.pass()
+          //(test ensures this last callback is never skipped)
+        })
+      }
+
+      fireEat() 
+      fireEat() 
+    })    
 
 
     if(run) { 

@@ -54,11 +54,18 @@ stack.on = (path, callback) => {
   return
 }
 
-stack.once = (path, callback) => {
-  //Same code as stack.on...
-  path = prefixPath(path) 
-  let route = new routeParser(path) 
-  const existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
+stack.once = (pathOrCommand, callback) => {
+  var path, route, existingCommand
+  if(_.isObject(pathOrCommand)) {
+    console.log('isObject')
+    existingCommand = pathOrCommand
+    path = existingCommand.route.spec
+  } else {
+    console.log('isString')
+    path = prefixPath(pathOrCommand)
+    route = new routeParser(path) 
+    existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))  
+  }
   const newListener = { func : callback, path: path }   
   newListener.one_time = true //< ...only diff is we set this flag 
   if(!existingCommand) {
@@ -139,6 +146,8 @@ stack.fire = (pathname, callback) => {
     console.log(matchingCommand.listeners)
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
+    //add the callback if one was provided: 
+    if(callback) stack.once(matchingCommand, callback)
     stack.commands.push(matchingCommand)
   }
 

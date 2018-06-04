@@ -226,13 +226,21 @@ const runCommand = (commandToRun) => {
 
     //Prepare the grid / queue listener callbacks for this command...
 
-    //find the leftmost available cell: 
+    //Do a pre pre grid expansion if necessary: 
+    if( _.isNaN(stack.column) || stack.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid )  || gg.someEntyIsOnRightEdge(stack.grid) ) {        
+      stack.grid = gg.expandGrid(stack.grid)
+      stack.grid = gg.populateCells(stack.grid)  
+      if(browser && window.renderGrid) window.renderGrid()
+      if(_.isNaN(stack.column)) stack.column = gg.nextOpenColumn(stack.grid, 0) 
+      //^ If there wasn't already an open column, now we have one.   
+    }
+
     stack.column = gg.nextOpenColumn(stack.grid, 0)
 
     command.listeners.forEach((listener, index) => { 
 
       //Do a pre grid expansion if necessary: 
-      if( _.isNaN(stack.column) || stack.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid) ) {        
+      if( _.isNaN(stack.column) || stack.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid)  || gg.someEntyIsOnRightEdge(stack.grid)) {        
         stack.grid = gg.expandGrid(stack.grid)
         stack.grid = gg.populateCells(stack.grid)  
         if(browser && window.renderGrid) window.renderGrid()

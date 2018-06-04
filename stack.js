@@ -127,7 +127,6 @@ stack.fire = (pathname, callback) => {
     })
     //set a flag that this is one_time
     //(do not keep this listener for subsequent fires of the same path)
-    debugger
     matchingCommand.listeners[0].one_time = true 
   } else if(callback) {
     console.log('run only once')
@@ -369,11 +368,11 @@ const runCommand = (commandToRun) => {
         //possibly we will run any queued commands at this point... 
         if(cell.enties[0].async) stack.async_nexting = true   
 
-
         if(optionalNext) {
           stack.optional_next = true 
           return callbackFunc(optionalNext)
         }
+        if(_.isNull(stack.path)) return null //< no need to call anything further 
         return callbackFunc()
       })
 
@@ -385,12 +384,24 @@ const runCommand = (commandToRun) => {
 
       //Execute the function!
       cell.enties[0].start_time = new Date()
+
+      // console.log('calling this func:')
+      // console.log(cell.enties[0].func)
+
+      if(!cell.enties[0].func) {
+        return console.log('something funced happened')
+      }
+
       cell.enties[0].func(stack.next)
       
       //Wait for stack.next to be called, unless the user did not supply it
       //Ie- usage is: stack.on(next, function) //< wait for next (async)
       //stack.on(function) //< don't wait for next (synchronous) 
-      if(!entyFuncArgs.length && stack.next)  stack.next()
+      
+      if(!entyFuncArgs.length && stack.next)  {
+        console.log('calling stack.next()')
+        return stack.next()
+      }
 
     }, (returningEarly) => {
 
@@ -484,7 +495,7 @@ const runCommand = (commandToRun) => {
     //below any sibling commands that were fired after these listeners were
     //originally assigned to the grid)
 
-    command.listeners.forEach((listener, index) => {  
+    command.listeners.every((listener, index) => {  
       var thisColumnEnties = gg.columnEnties(stack.grid, [0, stack.column])  
       var currentListener = _.find(thisColumnEnties, (enty) => {
         var match = enty.command.route.spec == listener.path && listener.func == enty.func
@@ -497,10 +508,10 @@ const runCommand = (commandToRun) => {
         //setTimeout(() => )path
 
         //TODO: return early from this loop
-
-        return 
+        
+        return false 
       } 
-      if(currentListener.done) return
+      if(currentListener.done) return true
 
       var nextOccupiedCellEast =  gg.nextOccupiedCellEast(stack.grid, currentListener.cell )
       //Any occupied cells to the east? 
@@ -515,6 +526,7 @@ const runCommand = (commandToRun) => {
           var nextOpenRow = gg.nextOpenRow(stack.grid, startCell)
 
           if(!nextOpenRow) { //expand the grid: 
+            console.log('do grid expansion')
             //convert startCell to xy so it can convert to the new grid : 
             var startCellRC = gg.indexToXy(stack.grid, startCell)
             stack.grid = gg.expandGrid(stack.grid)
@@ -544,7 +556,7 @@ const runCommand = (commandToRun) => {
               if(enty.command == command) return true
               if(!enty.command) {
                 console.log("what the fack")
-                return
+                return false
               } 
               if(enty.command.done && gg.indexToXy(stack.grid, enty.cell)[1] <  gg.indexToXy(stack.grid, startCell)[1]) return true 
               else return false
@@ -629,11 +641,11 @@ const liveCommand = () => liveListener().command
 const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path
 
 //Trim the grid of all completed commands: 
-const trimGrid = () => {
+const trimGrid = (force) => {
   if(!stack.grid.cells[0].enties[0]) return 
-  console.log('total time to complete: ' + stack.grid.cells[0].enties[0].command.route.spec )
-  console.log(stack.grid.cells[0].enties[0].command.total_time)
-  if(!stack.trimming) return  
+  //console.log('total time to complete: ' + stack.grid.cells[0].enties[0].command.route.spec )
+  //console.log(stack.grid.cells[0].enties[0].command.total_time)
+  if(!force && !stack.trimming) return  
   stack.grid.enties = [] 
   delete stack.grid.cells
   stack.cell = null 
@@ -661,7 +673,7 @@ function end() {
 
   // get seconds 
   var seconds = Math.round(timeDiff);
-  console.log(seconds + " seconds");
+  //console.log(seconds + " seconds");
 }
 
 module.exports = stack

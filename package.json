@@ -26,6 +26,7 @@
   "dependencies": {
     "detect-node": "^2.0.3",
     "function-arguments": "^1.0.8",
+    "is-electron": "^2.1.0",
     "lodash": "^4.17.4",
     "neo-async": "^2.5.1",
     "route-parser": "0.0.5",

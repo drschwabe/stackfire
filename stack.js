@@ -357,23 +357,35 @@ const runCommand = (commandToRun) => {
              .every((enty) => enty.done)
              .value() 
 
-        if(allCallbacksDone) {
+        if(allCallbacksDone || _.isNull(stack.path)) {
           cell.enties[0].command.done = true 
           cell.enties[0].command.end_time = new Date()
           cell.enties[0].command.total_time = cell.enties[0].command.end_time - cell.enties[0].command.start_time     
+          //if(stack.column > 0) stack.column--           
         }     
 
         //Note this does not yet accommodate for async! 
         if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()  
 
         //possibly we will run any queued commands at this point... 
-        if(cell.enties[0].async) stack.async_nexting = true   
+        if(cell.enties[0].async) {
+          console.log('is async...')
+          stack.async_nexting = true   
+        }
 
+        if(_.isNull(stack.path)) {
+          console.log('stack.path is null')
+          //return null //< no need to call anything further 
+          stack.next = null 
+          console.log(callbackFunc)
+          debugger
+        }
         if(optionalNext) {
           stack.optional_next = true 
+          console.log('running optional next')
           return callbackFunc(optionalNext)
         }
-        if(_.isNull(stack.path)) return null //< no need to call anything further 
+        if(_.isNull(stack.path)) return null
         return callbackFunc()
       })
 
@@ -409,7 +421,10 @@ const runCommand = (commandToRun) => {
 
       //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command): 
-      var incompleteListeners = _.filter(thisColumnsCells, (enty) => {        
+      var incompleteListeners = _.filter(thisColumnsCells, (cell) => { 
+        console.log('cell is: ' + cell + ' and column is: ' + stack.column) 
+        var enty = gg.examine(stack.grid, cell) 
+        if(!enty) return false   
         return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
       })
 

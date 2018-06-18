@@ -17,7 +17,7 @@ const stack = {
   commands : [],
   queue : [], 
   grid : gg.populateCells(gg.createGrid(1,1)), 
-  utils : [],  //< For third party mods to execute at each hook
+  utils : [],  //< For third party mods to execute at each hook  
   trimming : false //< Do not clear the grid after every command (slower)
 }
 
@@ -230,7 +230,7 @@ const runCommand = (commandToRun) => {
     if( _.isNaN(stack.column) || stack.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid )  || gg.someEntyIsOnRightEdge(stack.grid) ) {        
       stack.grid = gg.expandGrid(stack.grid)
       stack.grid = gg.populateCells(stack.grid)  
-      if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+      if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
       if(_.isNaN(stack.column)) stack.column = gg.nextOpenColumn(stack.grid, 0) 
       //^ If there wasn't already an open column, now we have one.   
     }
@@ -243,7 +243,7 @@ const runCommand = (commandToRun) => {
       if( _.isNaN(stack.column) || stack.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid)  || gg.someEntyIsOnRightEdge(stack.grid)) {        
         stack.grid = gg.expandGrid(stack.grid)
         stack.grid = gg.populateCells(stack.grid)  
-        if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+        if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
         if(_.isNaN(stack.column)) stack.column = gg.nextOpenColumn(stack.grid, 0) 
         //^ If there wasn't already an open column, now we have one.   
       }
@@ -281,7 +281,7 @@ const runCommand = (commandToRun) => {
       stack.row = gg.indexToXy(stack.grid, listenerEnty.cell)[0]
 
       //#debugging: render the grid if we using browser: 
-      if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+      if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
     })    
   }
 
@@ -311,7 +311,7 @@ const runCommand = (commandToRun) => {
         cell.enties[0].end_time = new Date()
         cell.enties[0].total_time = cell.enties[0].end_time - cell.enties[0].start_time
 
-        if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+        if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
         return callback()           
       }
       //check the neighboor; we need to make sure nothing is there 
@@ -328,7 +328,7 @@ const runCommand = (commandToRun) => {
       // }
       stack.row = gg.indexToXy(stack.grid, cell.num)[0]      
       cell.enties[0].underway = true  
-      if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()  
+      if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())   
 
       //needs to happen after the listener's callback is executed: 
 
@@ -350,7 +350,7 @@ const runCommand = (commandToRun) => {
         cell.enties[0].done = true  
         cell.enties[0].end_time = new Date()
         cell.enties[0].total_time = cell.enties[0].end_time - cell.enties[0].start_time        
-        if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()  
+        if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())   
 
         var allCallbacksDone = _.chain(stack.grid.enties)
              .filter((enty) => enty.command.route.spec == cell.enties[0].command.route.spec)
@@ -365,7 +365,7 @@ const runCommand = (commandToRun) => {
         }     
 
         //Note this does not yet accommodate for async! 
-        if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()  
+        if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())   
 
         //possibly we will run any queued commands at this point... 
         if(cell.enties[0].async) {
@@ -378,7 +378,6 @@ const runCommand = (commandToRun) => {
           //return null //< no need to call anything further 
           stack.next = null 
           console.log(callbackFunc)
-          debugger
         }
         if(optionalNext) {
           stack.optional_next = true 
@@ -413,7 +412,6 @@ const runCommand = (commandToRun) => {
       
       if(!entyFuncArgs.length && stack.next)  {
         console.log('calling stack.next()')
-        debugger
         return stack.next()
       }
 
@@ -440,7 +438,7 @@ const runCommand = (commandToRun) => {
         stack.row = 0
         //reset the current column back 
         if(stack.column > 0) stack.column-- 
-        if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+        if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
 
         //is there a callback underway? If so, it is the parent of this command; so 
         //we just complete it and then move on... 
@@ -453,7 +451,7 @@ const runCommand = (commandToRun) => {
           parentListener.total_time = parentListener.end_time - parentListener.start_time      
 
           stack.column = gg.column(stack.grid, parentListener.cell)
-          if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+          if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
           //remaining listeners? 
           var remainingCommandListeners = _.filter(stack.grid.enties, (listener) => {
             return listener.command.route.spec == parentListener.command.route.spec && !listener.done
@@ -467,7 +465,7 @@ const runCommand = (commandToRun) => {
           parentListener.command.end_time = new Date()
           parentListener.command.total_time = parentListener.command.end_time - parentListener.command.start_time
 
-          if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+          if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
           //if parentListener is done, we still need to check other commands.. 
           if(stack.column > 0) stack.column--; 
           gridLoop() 
@@ -475,7 +473,7 @@ const runCommand = (commandToRun) => {
           return runCommand( stack.queue.pop() )  
         } else {
           _.findWhere(stack.commands, { column : stack.column }).done = true 
-          if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+          if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
 
           //Are there any commands queued? 
           if(!stack.queue.length) return trimGrid()
@@ -548,7 +546,7 @@ const runCommand = (commandToRun) => {
             var startCellRC = gg.indexToXy(stack.grid, startCell)
             stack.grid = gg.expandGrid(stack.grid)
             stack.grid = gg.populateCells(stack.grid)  
-            if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()  
+            if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())   
             startCell = gg.xyToIndex(stack.grid, startCellRC)
             nextOpenRow = gg.nextOpenRow(stack.grid, startCell )             
           }
@@ -617,7 +615,7 @@ const runCommand = (commandToRun) => {
                 // stack.grid = gg.expandGrid(stack.grid)
                 // stack.grid = gg.populateCells(stack.grid) 
 
-                if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+                if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
 
               }
 
@@ -631,7 +629,7 @@ const runCommand = (commandToRun) => {
               enty.cell =  gg.xyToIndex( stack.grid, [targetRow  + index, targetColumn])
             })
             stack.grid = gg.populateCells(stack.grid)
-            if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+            if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
           } else {
             loopCount++ 
             findNextValidRow(currentListener.cell + (loopCount * stack.grid.width))
@@ -641,7 +639,7 @@ const runCommand = (commandToRun) => {
       }
     })
     stack.grid = gg.xyCells(stack.grid) //< make sure all cells are xY'ed    
-    if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()
+    if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
   }
 
   initGridWithListeners(commandToRun)
@@ -671,7 +669,7 @@ const trimGrid = (force) => {
   stack.path = null 
   delete stack.grid 
   stack.grid = gg.populateCells(gg.createGrid(1,1))
-  if(browser && window.renderGrid || electron && window.renderGrid) window.renderGrid()  
+  if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())  
 }
 
 stack.trimGrid = trimGrid

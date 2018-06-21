@@ -472,7 +472,8 @@ const runCommand = (commandToRun) => {
           if(!stack.queue.length) return trimGrid()
           return runCommand( stack.queue.pop() )  
         } else {
-          _.findWhere(stack.commands, { column : stack.column }).done = true 
+          var commandInCurrentColumn = _.findWhere(stack.commands, { column : stack.column })
+          if(commandInCurrentColumn) commandInCurrentColumn.done = true 
           if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
 
           //Are there any commands queued? 

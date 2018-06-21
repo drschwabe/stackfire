@@ -2454,6 +2454,26 @@ var testObj = {
       fireEat() 
     })    
 
+    newTest('ttt', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let gg = process.browser ? require('gg') : requireUncached('gg')      
+      if(process.browser) window.stack = stack 
+
+      t.plan(3)        
+
+      stack.on('something', () => t.pass('something happened'))
+
+      stack.fire('something', (next) => {
+        t.pass('something finshed')
+        next() 
+      })
+
+      //check that something command is done
+
+      t.ok( _.every(stack.commands, (command) => command.done), 'all commands are done') 
+
+    })
+
 
     if(run) { 
       console.log('run tests...')

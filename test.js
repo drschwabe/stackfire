@@ -2403,9 +2403,33 @@ var testObj = {
 
     })
 
-    test.skip('stack.fire executes syncronously if all listeners are syncronous', (t) => {
+    newTest('stack.fire executes syncronously if all listeners are synchronous', (t) => { 
+      t.plan(1) 
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
+      if(process.browser) window.stack = stack  
+ 
+      var going = false 
+      var stillGoing = false  
+ 
+      var executeSyncly = () => { 
+        console.log('executed syncly') 
+        going = true  
+      } 
+      var executeSynclyAgain = () => { 
+        stillGoing = true  
+        console.log('executed syncly (again)') 
+      }       
+ 
+      stack.on('go', executeSyncly ) 
+      stack.on('go', executeSynclyAgain ) 
+ 
+      stack.fire('go') 
+ 
+      t.ok(going && stillGoing) 
+        
+    }) 
 
-    })
+
 
     test.skip('stack.fire executes asyncronously if next is used in a listener', (t) => {
       

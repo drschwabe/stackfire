@@ -78,6 +78,22 @@ stack.once = (pathOrCommand, callback) => {
   return  
 }
 
+//A listener to execute: 
+//stack.every = (pathOrCommand, frequency, priority, callback) => {
+//for now just make it on all commands, frequency: command, priority: last 
+//(end of every command) 
+stack.every = (callback) => {
+  stack.commands.forEach((command) => {
+    command.listeners.push({
+      func: callback, 
+      path : command.route.spec
+    })
+  })
+}
+
+//For now set this as last cause there is no way to determine all listeners.. 
+//unless stack.on is updated to check for any stack.every's ? hmmm
+
 stack.row = 0
 
 stack.fire = (pathname, callback) => {  

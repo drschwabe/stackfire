@@ -112,9 +112,6 @@ stack.fire = (pathname, callback) => {
 
   var pathname = prefixPath(pathname)
 
-  console.log(pathname)
-
-
   //check for wildcard *
   //if its a wildcard, we need to add it to a list of wildcards
   //and then for every command, before it runs - we add the wildcard callback
@@ -146,20 +143,18 @@ stack.fire = (pathname, callback) => {
     //(do not keep this listener for subsequent fires of the same path)
     matchingCommand.listeners[0].one_time = true 
   } else if(callback) {
-    console.log('run only once')
+    //console.log('run only once')
     stack.once(pathname, callback)
   }
 
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
-    console.log('matching commmand is done')
     //create a new copy, this time with a uid...
     matchingCommand = _.clone(matchingCommand) 
     matchingCommand.listeners = _.chain(matchingCommand.listeners)
       .map(listener => listener.one_time ? false : listener)
       .compact()
       .value() 
-    console.log(matchingCommand.listeners)
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
     //add the callback if one was provided: 
@@ -223,7 +218,7 @@ const runCommand = (commandToRun) => {
 
   commandToRun.start_time = new Date()
 
-  console.log('run command: ' + commandToRun.route.spec)
+  //console.log('run command: ' + commandToRun.route.spec)
 
   //and now begin modifying state of stack; and the grid: 
   delete commandToRun.queued
@@ -385,19 +380,19 @@ const runCommand = (commandToRun) => {
 
         //possibly we will run any queued commands at this point... 
         if(cell.enties[0].async) {
-          console.log('is async...')
+          //console.log('is async...')
           stack.async_nexting = true   
         }
 
         if(_.isNull(stack.path)) {
-          console.log('stack.path is null')
+          //console.log('stack.path is null')
           //return null //< no need to call anything further 
           stack.next = null 
-          console.log(callbackFunc)
+          //console.log(callbackFunc)
         }
         if(optionalNext) {
           stack.optional_next = true 
-          console.log('running optional next')
+          //console.log('running optional next')
           return callbackFunc(optionalNext)
         }
         if(_.isNull(stack.path)) return null
@@ -427,7 +422,7 @@ const runCommand = (commandToRun) => {
       //stack.on(function) //< don't wait for next (synchronous) 
       
       if(!entyFuncArgs.length && stack.next)  {
-        console.log('calling stack.next()')
+        //console.log('calling stack.next()')
         return stack.next()
       }
 
@@ -436,7 +431,7 @@ const runCommand = (commandToRun) => {
       //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command): 
       var incompleteListeners = _.filter(thisColumnsCells, (cell) => { 
-        console.log('cell is: ' + cell + ' and column is: ' + stack.column) 
+        //console.log('cell is: ' + cell + ' and column is: ' + stack.column) 
         var enty = gg.examine(stack.grid, cell) 
         if(!enty) return false   
         return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
@@ -534,7 +529,7 @@ const runCommand = (commandToRun) => {
         return match
       })
       if(!currentListener) {
-        console.log('no currentListener!?')
+        //console.log('no currentListener!?')
         //maybe moving TOO fast? 
         //var liveListener2 = liveListener() 
         //setTimeout(() => )path
@@ -558,7 +553,7 @@ const runCommand = (commandToRun) => {
           var nextOpenRow = gg.nextOpenRow(stack.grid, startCell)
 
           if(!nextOpenRow) { //expand the grid: 
-            console.log('do grid expansion')
+           // console.log('do grid expansion')
             //convert startCell to xy so it can convert to the new grid : 
             var startCellRC = gg.indexToXy(stack.grid, startCell)
             stack.grid = gg.expandGrid(stack.grid)
@@ -587,7 +582,7 @@ const runCommand = (commandToRun) => {
               //(cause it will get pushed down too)
               if(enty.command == command) return true
               if(!enty.command) {
-                console.log("what the fack")
+                //console.log("what the fack")
                 return false
               } 
               if(enty.command.done && gg.indexToXy(stack.grid, enty.cell)[1] <  gg.indexToXy(stack.grid, startCell)[1]) return true 

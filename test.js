@@ -2476,7 +2476,7 @@ var testObj = {
 
       fireEat() 
       fireEat() 
-    })    
+    })       
 
     newTest('ttt', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -2497,6 +2497,29 @@ var testObj = {
       t.ok( _.every(stack.commands, (command) => command.done), 'all commands are done') 
 
     })
+
+    newTest('stack.every fires everytime', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let gg = process.browser ? require('gg') : requireUncached('gg')      
+      if(process.browser) window.stack = stack 
+
+      t.plan(3)        
+
+      stack.on('something', () => console.log('something happened'))
+
+      stack.on('another-thing', () => console.log('another thing happened'))
+
+      stack.on('yet another-thing', () => console.log('yet another thing happened'))
+
+      stack.every(() => t.pass() )
+
+      stack.fire('something') 
+
+      stack.fire('another-thing') 
+
+      stack.fire('yet another-thing')
+
+    })    
 
 
     if(run) { 

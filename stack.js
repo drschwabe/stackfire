@@ -549,30 +549,32 @@ const runCommand = (commandToRun) => {
       if(nextOccupiedCellEast) {
         var loopCount = 0
         var findNextValidRow = (startCell) => {
+
+          //determine how many new rows we need... 
+          var columnCells = gg.columnCells(stack.grid, currentListener.cell ) 
+          var entiesToMove = []
+          var lastCompletedCommandInThisColumn
+          columnCells.forEach((cell, index) => {
+            var enty = gg.examine(stack.grid, cell)
+            if(enty && enty.command && !enty.done) {
+              entiesToMove.push(enty)
+            }
+          })
+
           //find the next row down which is not occupied with cells from another command... 
-          var nextOpenRow = gg.nextOpenRow(stack.grid, startCell)
+          var nextOpenRow = gg.nextOpenRow(stack.grid, startCell + (entiesToMove.length * stack.grid.width))
+          //^ accommodate for each enty to move (one new row required)
 
           if(!nextOpenRow) { //expand the grid: 
            // console.log('do grid expansion')
 
-            //determine how many new rows we need... 
-            var columnCells = gg.columnCells(stack.grid, currentListener.cell ) 
-            var entiesToMove = []
-            var lastCompletedCommandInThisColumn
-            columnCells.forEach((cell, index) => {
-              var enty = gg.examine(stack.grid, cell)
-              if(enty && enty.command && !enty.done) {
-                entiesToMove.push(enty)
-              }
-            })
-
             //convert startCell to xy so it can convert to the new grid : 
             var startCellRC = gg.indexToXy(stack.grid, startCell)
 
-            _.times(entiesToMove.length, () => {
-            stack.grid = gg.expandGrid(stack.grid)
-            stack.grid = gg.populateCells(stack.grid)  
-            if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())   
+            _.times(entiesToMove.length + 1, () => {
+              stack.grid = gg.expandGrid(stack.grid)
+              stack.grid = gg.populateCells(stack.grid)  
+              if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())   
             })
 
             startCell = gg.xyToIndex(stack.grid, startCellRC)

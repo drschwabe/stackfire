@@ -2519,7 +2519,54 @@ var testObj = {
 
       stack.fire('yet another-thing')
 
-    })    
+    })   
+
+    newTest.only('Grid expands to accommodate multiple incomplete listeners', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let gg = process.browser ? require('gg') : requireUncached('gg')      
+      if(process.browser) window.stack = stack 
+
+      t.plan(10)   
+
+      stack.on('one', () => t.pass('one listened'))
+
+      stack.on('two', () => {
+        t.pass('listened for two')
+      })
+
+      stack.on('two', () => {
+        stack.fire('two B')
+      })
+
+      stack.on('two B', () => {
+        t.pass('listened for two B')        
+        stack.fire('two C')
+      })    
+
+      stack.on('two B', () => {
+        t.pass('listened for two B again')
+      })   
+
+      stack.on('two B', () => {
+        t.pass('listened for two B yet again')
+        //^ if grid doesn't expand by multiple rows this one will get missed
+      })
+
+      stack.on('two C', () => t.pass('two C listened'))
+
+      stack.on('two C', () => t.pass('two C listened again'))
+
+      stack.on('two C', () => t.pass('two C listened yet again'))
+
+      stack.on('two C', () => t.pass('two C listened even one more time'))
+
+
+      stack.fire('one') 
+
+      stack.fire('two') 
+
+
+    })         
 
 
     if(run) { 

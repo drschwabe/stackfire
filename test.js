@@ -2272,7 +2272,7 @@ var testObj = {
         console.log(stack.grid.cells[13])
 
         //var fourthInit = gg.examine(stack.grid, [3, 1] )   
-        var fourthInit = stack.grid.cells[13].enties[0]
+        var fourthInit = stack.grid.cells[gg.xyToIndex(stack.grid, 5, 1)].enties[0]
         //TODO figure out why stack.grid, [3, 1] doesnt work... maybe gg.examine
         //is looking for column row and not row column... 
 

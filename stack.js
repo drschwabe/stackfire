@@ -91,6 +91,31 @@ stack.every = (callback) => {
   })
 }
 
+stack.buffer = (callback) => {
+  stack.commands.forEach((command) => {
+    var bufferListener = {
+      func: callback, 
+      path : command.route.spec, 
+      buffer : true //Not being applied ?? 
+    }
+    var listenersWithBuffers = [bufferListener]
+    command.listeners.forEach((listener) => {
+      listenersWithBuffers.push(listener)
+      listenersWithBuffers.push(bufferListener)
+    })
+    command.listeners = listenersWithBuffers
+  })
+
+  // stack.grid.enties.forEach((enty) => {
+  //   debugger //Not sure why this hack needed, 
+  //   //but ensures that the buffer property is reflected in the grid. 
+  //   if(enty.func.toString() == callback.toString()) {
+  //     enty.buffer = true 
+  //   }
+  // })
+  //stack.grid = gg.populateCells(stack.grid)
+}
+
 //For now set this as last cause there is no way to determine all listeners.. 
 //unless stack.on is updated to check for any stack.every's ? hmmm
 
@@ -151,6 +176,7 @@ stack.fire = (pathname, callback) => {
   if(matchingCommand.done) {
     //create a new copy, this time with a uid...
     matchingCommand = _.clone(matchingCommand) 
+    debugger 
     matchingCommand.listeners = _.chain(matchingCommand.listeners)
       .map(listener => listener.one_time ? false : listener)
       .compact()
@@ -250,6 +276,8 @@ const runCommand = (commandToRun) => {
 
     command.listeners.forEach((listener, index) => { 
 
+      debugger 
+
       //Do a pre grid expansion if necessary: 
       if( _.isNaN(stack.column) || stack.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid)  || gg.someEntyIsOnRightEdge(stack.grid)) {        
         stack.grid = gg.expandGrid(stack.grid)
@@ -280,8 +308,12 @@ const runCommand = (commandToRun) => {
         cell = nextCellSouth
       } 
 
-      //Create a grid enty containing the command, cell, and the listener's unique function:  
+      //Create a grid enty extending the original listener with cell #
+      //(and command... this latter prop may or may not be necessary)
+      //var listenerEnty  = _.extend(listener, { command:  command, cell : cell, func: listener.func }) 
       var listenerEnty  = { command:  command, cell : cell, func: listener.func }
+      //listenerEnty = _.extend(listener, listenerEnty) 
+      if(listener.buffer) listenerEnty.buffer = true 
       stack.grid = gg.insertEnty(stack.grid, listenerEnty)
    
       //Populate cells of the grid: 

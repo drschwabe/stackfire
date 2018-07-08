@@ -58,11 +58,11 @@ stack.on = (path, callback) => {
 stack.once = (pathOrCommand, callback) => {
   var path, route, existingCommand
   if(_.isObject(pathOrCommand)) {
-    console.log('isObject')
+    //console.log('isObject')
     existingCommand = pathOrCommand
     path = existingCommand.route.spec
   } else {
-    console.log('isString')
+    //console.log('isString')
     path = prefixPath(pathOrCommand)
     route = new routeParser(path) 
     existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))  

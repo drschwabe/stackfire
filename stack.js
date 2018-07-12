@@ -500,6 +500,7 @@ const runCommand = (commandToRun) => {
             return listener.command.route.spec == parentListener.command.route.spec && !listener.done
           })
           if(remainingCommandListeners.length) {
+            debugger
             stack.path = remainingCommandListeners[0].command.route.spec            
             updateGridColumn(remainingCommandListeners[0].command, stack.column)
             gridLoop()
@@ -628,12 +629,14 @@ const runCommand = (commandToRun) => {
 
           var nextValidRow 
 
+          stack.grid = gg.rcCells(stack.grid)
+
           var nextRowValid = _.every(nextRowCells, (cell) => {
             var enty = gg.examine(stack.grid, cell)
             if(enty) { //if this enty is of the same command, its OK 
               //(cause it will get pushed down too)
               if(enty.command == command) {
-                nextValidRow = enty.rc[0]
+                nextValidRow = gg.indexToRc(stack.grid, cell)[0]
                 return true
               }
               if(!enty.command) {
@@ -644,10 +647,10 @@ const runCommand = (commandToRun) => {
               if(enty.command.done) {
                 //if this command is done and it is in a previosu column...
                 //that is OK: 
-                var entyColumn = enty.rc[0]
+                var entyColumn = gg.indexToRc(stack.grid, enty.cell)[0]
                 var currentCommandColum = gg.indexToRc(stack.grid, startCell)[1]
                 if( currentCommandColum > entyColumn ) {
-                  nextValidRow = enty.rc[0]
+                  nextValidRow = gg.indexToRc(stack.grid, cell)[0]
                   return true
                 }  
                 else return false 
@@ -688,10 +691,10 @@ const runCommand = (commandToRun) => {
                 //keep in mind this is executing PER listener... 
 
                 //this necessary I think in some situations if there was no check for 'nextvalid row'
-                // _.range(newRowsNeeded).forEach(() => {
-                //   stack.grid = gg.expandGrid(stack.grid)
-                //   stack.grid = gg.populateCells(stack.grid)              
-                // })
+                _.range(newRowsNeeded).forEach(() => {
+                  stack.grid = gg.expandGrid(stack.grid)
+                  stack.grid = gg.populateCells(stack.grid)              
+                })
 
                 //(but disabling for now)
 

@@ -626,18 +626,36 @@ const runCommand = (commandToRun) => {
 
           //(also valid is [ z x - - - ] where z is a completed command/listener )
 
+          var nextValidRow 
+
           var nextRowValid = _.every(nextRowCells, (cell) => {
             var enty = gg.examine(stack.grid, cell)
             if(enty) { //if this enty is of the same command, its OK 
               //(cause it will get pushed down too)
-              if(enty.command == command) return true
+              if(enty.command == command) {
+                nextValidRow = enty.rc[0]
+                return true
+              }
               if(!enty.command) {
                 //console.log("what the fack")
                 return false
               } 
-              if(enty.command.done && gg.indexToXy(stack.grid, enty.cell)[1] <  gg.indexToXy(stack.grid, startCell)[1]) return true 
-              else return false
+              //I believe this line checks to make sure the column is behind and not ahead... 
+              if(enty.command.done) {
+                //if this command is done and it is in a previosu column...
+                //that is OK: 
+                var entyColumn = enty.rc[0]
+                var currentCommandColum = gg.indexToRc(stack.grid, startCell)[1]
+                if( currentCommandColum > entyColumn ) {
+                  nextValidRow = enty.rc[0]
+                  return true
+                }  
+                else return false 
+              } else {
+                return false 
+              }
             } else {
+              nextValidRow = gg.indexToRc(stack.grid, cell)[0]
               return true 
             }
           })
@@ -669,10 +687,13 @@ const runCommand = (commandToRun) => {
                 //now expand the grid to meet that criteria
                 //keep in mind this is executing PER listener... 
 
-                _.range(newRowsNeeded).forEach(() => {
-                  stack.grid = gg.expandGrid(stack.grid)
-                  stack.grid = gg.populateCells(stack.grid)              
-                })
+                //this necessary I think in some situations if there was no check for 'nextvalid row'
+                // _.range(newRowsNeeded).forEach(() => {
+                //   stack.grid = gg.expandGrid(stack.grid)
+                //   stack.grid = gg.populateCells(stack.grid)              
+                // })
+
+                //(but disabling for now)
 
                 // stack.grid = gg.expandGrid(stack.grid)
                 // stack.grid = gg.populateCells(stack.grid) 
@@ -687,8 +708,9 @@ const runCommand = (commandToRun) => {
             entiesToMove.forEach((enty, index) => {
               var commandCell = _.findWhere(stack.grid.enties, { command:  command }).cell
               var targetColumn = gg.indexToXy(stack.grid, commandCell)[1]
-              var targetRow = gg.indexToXy(stack.grid, nextRowCells[0])[0]  
-              enty.cell =  gg.xyToIndex( stack.grid, [targetRow  + index, targetColumn])
+              //var targetRow = gg.indexToXy(stack.grid, nextRowCells[0])[0] 
+              debugger  
+              enty.cell =  gg.xyToIndex( stack.grid, [nextValidRow  + index, targetColumn])
             })
             stack.grid = gg.populateCells(stack.grid)
             if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 

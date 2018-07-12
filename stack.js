@@ -176,7 +176,6 @@ stack.fire = (pathname, callback) => {
   if(matchingCommand.done) {
     //create a new copy, this time with a uid...
     matchingCommand = _.clone(matchingCommand) 
-    debugger 
     matchingCommand.listeners = _.chain(matchingCommand.listeners)
       .map(listener => listener.one_time ? false : listener)
       .compact()
@@ -275,8 +274,6 @@ const runCommand = (commandToRun) => {
     stack.column = gg.nextOpenColumn(stack.grid, 0)
 
     command.listeners.forEach((listener, index) => { 
-
-      debugger 
 
       //Do a pre grid expansion if necessary: 
       if( _.isNaN(stack.column) || stack.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid)  || gg.someEntyIsOnRightEdge(stack.grid)) {        
@@ -502,7 +499,6 @@ const runCommand = (commandToRun) => {
             return listener.command.route.spec == parentListener.command.route.spec && !listener.done
           })
           if(remainingCommandListeners.length) {
-            debugger
             stack.path = remainingCommandListeners[0].command.route.spec            
             updateGridColumn(remainingCommandListeners[0].command, stack.column)
             gridLoop()
@@ -714,7 +710,6 @@ const runCommand = (commandToRun) => {
               var commandCell = _.findWhere(stack.grid.enties, { command:  command }).cell
               var targetColumn = gg.indexToXy(stack.grid, commandCell)[1]
               //var targetRow = gg.indexToXy(stack.grid, nextRowCells[0])[0] 
-              debugger  
               enty.cell =  gg.xyToIndex( stack.grid, [nextValidRow  + index, targetColumn])
             })
             stack.grid = gg.populateCells(stack.grid)

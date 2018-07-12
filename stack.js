@@ -387,6 +387,8 @@ const runCommand = (commandToRun) => {
       var entyFuncArgs = fnArgs( cell.enties[0].func  ) 
       if( entyFuncArgs.length ) cell.enties[0].async = true  
 
+      if(_.isNull(stack.path)) stack.path = cell.enties[0].command.route.spec
+
       //for now, just make them all async
       stack.next = _.wrap( callback, (callbackFunc, optionalNext) => {
         delete cell.enties[0].underway      

@@ -2566,7 +2566,81 @@ var testObj = {
       stack.fire('two') 
 
 
-    })         
+    })  
+
+    newTest('All listeners run (after a re-stack)', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      //let gg = process.browser ? require('gg') : requireUncached('gg')      
+      if(process.browser) window.stack = stack 
+
+      t.plan(12)   
+
+      stack.on('keyboard/keydown', () => {
+        stack.fire('create-note/save')
+        t.pass('runs')  
+      })
+
+      stack.on('create-note/save', () => {
+        console.log('create-note/save')  
+        stack.fire('docs')
+        t.pass('runs')  
+      })
+
+      //These ones were not running correctly... 
+      stack.on('create-note/save', () => {
+        console.log('create-note/save #2') //< this one would just repeat
+        t.pass('runs')
+      })
+
+      stack.on('create-note/save', () => {
+        console.log('create-note/save #3')
+        t.pass('runs')
+      })
+
+      stack.on('create-note/save', () => {
+        console.log('create-note/save #4')
+        t.pass('runs')
+      })
+
+      stack.on('docs', () => {
+        console.log('docs')
+        t.pass('runs')  
+      })
+
+      stack.on('docs', () => {
+        console.log('docs #2')
+        t.pass('runs')  
+      })
+
+      stack.on('docs', () => {
+        console.log('docs #3')
+        stack.fire('selected-doc/selected')
+        t.pass('runs')  
+      })
+
+      stack.on('selected-doc/selected', () => {
+        console.log('selected-doc/selected')
+        t.pass('runs')  
+      })
+
+      stack.on('selected-doc/selected', () => {
+        console.log('selected-doc/selected #2')
+        t.pass('runs')  
+      })
+
+      stack.on('selected-doc/selected', () => {
+        console.log('selected-doc/selected #3')
+        t.pass('runs')  
+      })
+
+      stack.on('selected-doc/selected', () => {
+        console.log('selected-doc/selected #4')
+        t.pass('runs')  
+      })
+
+      stack.fire('keyboard/keydown')
+
+    })       
 
 
     if(run) { 

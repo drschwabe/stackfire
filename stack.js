@@ -116,6 +116,38 @@ stack.buffer = (callback) => {
   //stack.grid = gg.populateCells(stack.grid)
 }
 
+stack.endCommand = (next) => { 
+ 
+  var thisColumnsCells = gg.columnCells(stack.grid, stack.column) 
+ 
+  var incompleteListeners = _.chain(thisColumnsCells)
+    .map((cell) => {  
+      var enty = gg.examine(stack.grid, cell)  
+      if(!enty) return false 
+      if(!enty.done && gg.column(stack.grid, enty.cell) == stack.column  ) {
+        return enty 
+      }
+      return false 
+    })
+    .compact() 
+    .value()  
+ 
+  if(incompleteListeners.length) {
+    incompleteListeners.forEach((listener) => { 
+      listener.done = true  
+      listener.skipped = true  
+    }) 
+  }
+  if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc()) 
+
+  stack.path = null 
+
+  if(stack.queue.length) runCommand( stack.queue.pop() )  
+  return //(otherwise do nothing) 
+} 
+ 
+
+
 //For now set this as last cause there is no way to determine all listeners.. 
 //unless stack.on is updated to check for any stack.every's ? hmmm
 
@@ -311,6 +343,7 @@ const runCommand = (commandToRun) => {
       var listenerEnty  = { command:  command, cell : cell, func: listener.func }
       //listenerEnty = _.extend(listener, listenerEnty) 
       if(listener.buffer) listenerEnty.buffer = true 
+      
       stack.grid = gg.insertEnty(stack.grid, listenerEnty)
    
       //Populate cells of the grid: 

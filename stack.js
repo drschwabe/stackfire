@@ -409,13 +409,23 @@ const runCommand = (commandToRun) => {
 
       var callee = arguments.callee, 
           caller
-          
-      if(arguments.callee.caller) caller = arguments.callee.caller.toString()    
-      cell.enties[0].caller = caller 
+
       cell.enties[0].callee = callee
+      //cell.enties[0].callee_str = callee.toString()
+
+      if(arguments.callee.caller) {
+        caller = arguments.callee.caller.toString()
+        cell.enties[0].caller = caller                 
+      }
 
       var entyFuncArgs = fnArgs( cell.enties[0].func  ) 
       if( entyFuncArgs.length ) cell.enties[0].async = true  
+
+
+      cell.enties[0].func_str = cell.enties[0].func.toString() 
+
+      cell.enties[0].test = true
+
 
       if(_.isNull(stack.path)) stack.path = cell.enties[0].command.route.spec
 

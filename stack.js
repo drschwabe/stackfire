@@ -6,7 +6,8 @@ var async = require('async'),
     routeParser = require('route-parser'), 
     _ = require('underscore'), 
     gg = require('gg'), 
-    fnArgs = require('function-arguments') 
+    fnArgs = require('function-arguments'), 
+    uuid = require('uuid')
 
 var browser, electron //< Variable to indicate if we running in Node or browser: 
 require('detect-node') ? browser = false : browser = true
@@ -39,7 +40,7 @@ stack.on = (path, callback) => {
   //Either way, we will create a listener entry;  
   //with two properties: an async handler function 
   //(which calls a callback) and the raw path...
-  const newListener = { func : callback, path: path }   
+  const newListener = { func : callback, path: path, _id : uuid.v4()  }   
 
   if(!existingCommand) {
     //No existing command, so let's define one now, 
@@ -67,7 +68,7 @@ stack.once = (pathOrCommand, callback) => {
     route = new routeParser(path) 
     existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))  
   }
-  const newListener = { func : callback, path: path }   
+  const newListener = { func : callback, path: path, _id : uuid.v4() }   
   newListener.one_time = true //< ...only diff is we set this flag 
   if(!existingCommand) {
     let command = { route: route, listeners: [newListener] }
@@ -86,20 +87,28 @@ stack.every = (callback) => {
   stack.commands.forEach((command) => {
     command.listeners.push({
       func: callback, 
-      path : command.route.spec
+      path : command.route.spec, 
+      every : true, 
+      _id : uuid.v4()
     })
   })
 }
 
 stack.buffer = (callback) => {
-  stack.commands.forEach((command) => {
-    var bufferListener = {
-      func: callback, 
-      path : command.route.spec, 
-      buffer : true //Not being applied ?? 
-    }
-    var listenersWithBuffers = [bufferListener]
+  stack.commands.forEach((command) => {    
+    var listenersWithBuffers = [{
+        func: callback, 
+        path : command.route.spec, 
+        buffer : true, 
+        _id : uuid.v4()  
+      }]
     command.listeners.forEach((listener) => {
+      var bufferListener = {
+        func: callback, 
+        path : command.route.spec, 
+        buffer : true, 
+        _id : uuid.v4()  
+      }
       listenersWithBuffers.push(listener)
       listenersWithBuffers.push(bufferListener)
     })
@@ -340,10 +349,17 @@ const runCommand = (commandToRun) => {
       //Create a grid enty extending the original listener with cell #
       //(and command... this latter prop may or may not be necessary)
       //var listenerEnty  = _.extend(listener, { command:  command, cell : cell, func: listener.func }) 
-      var listenerEnty  = { command:  command, cell : cell, func: listener.func }
+      var listenerEnty  = { 
+        command:  command, 
+        cell : cell, 
+        func: listener.func
+      }
       //listenerEnty = _.extend(listener, listenerEnty) 
       if(listener.buffer) listenerEnty.buffer = true 
-      
+      if(listener.every) listenerEnty.every = true 
+      listenerEnty._id = listener._id
+
+
       stack.grid = gg.insertEnty(stack.grid, listenerEnty)
    
       //Populate cells of the grid: 
@@ -598,9 +614,9 @@ const runCommand = (commandToRun) => {
 
     command.listeners.every((listener, index) => {  
       var thisColumnEnties = gg.columnEnties(stack.grid, [0, stack.column])  
-      var currentListener = _.find(thisColumnEnties, (enty) => {
-        var match = enty.command.route.spec == listener.path && listener.func == enty.func
-        return match
+      var currentListener = _.find(thisColumnEnties, (enty) => { 
+        var match = enty._id == listener._id 
+        return match 
       })
       if(!currentListener) {
         //console.log('no currentListener!?')

@@ -801,6 +801,13 @@ const prefixPath = (path) => path.substr(0, 1) != '/' ? '/' + path : path
 //Trim the grid of all completed commands: 
 const trimGrid = (force) => {
   if(!stack.grid.cells[0].enties[0]) return 
+  var incompleteListeners = _.filter(stack.grid.enties, (enty) => { 
+    return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
+  })
+  if(incompleteListeners.length && !force) return //< Only trim if force flag is on...
+  //ie: do not trim grid if there are incomplete enties cause 
+  //this means there could be an async listener underway
+
   //console.log('total time to complete: ' + stack.grid.cells[0].enties[0].command.route.spec )
   //console.log(stack.grid.cells[0].enties[0].command.total_time)
   if(!force && !stack.trimming) return  

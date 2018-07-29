@@ -1,7 +1,5 @@
 // #### STACK 3 ####
 
-//const async = require('neo-async').safe(),
-//const async = require('neo-async'), 
 var async = require('async'),
     routeParser = require('route-parser'), 
     _ = require('underscore'), 

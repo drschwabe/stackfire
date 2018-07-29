@@ -1,5 +1,5 @@
 {
-  "name": "stack3",
+  "name": "stackfire",
   "description": "A command driven middleware stack for managing control flow / application state",
   "keywords": [
     "router",
@@ -10,9 +10,11 @@
     "service bus",
     "pubsub",
     "stack",
-    "command stack"
+    "command stack",
+    "fire",
+    "stack fire"
   ],
-  "version": "3.0.0-beta",
+  "version": "3.0.0-alpha",
   "contributors": [
     "Derrick Schwabe <admin@nerdbusiness.com>"
   ],
@@ -24,11 +26,11 @@
   "bugs": "http://github.com/drschwabe/stack/issues",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.6.1",
     "detect-node": "^2.0.3",
     "function-arguments": "^1.0.8",
     "is-electron": "^2.1.0",
     "lodash": "^4.17.4",
-    "neo-async": "^2.5.1",
     "route-parser": "0.0.5",
     "underscore": "1.8.3",
     "uuid": "^3.3.2"

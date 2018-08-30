@@ -2640,8 +2640,34 @@ var testObj = {
 
       stack.fire('keyboard/keydown')
 
-    })       
+    })    
 
+    newTest('stack.endCommand ends a command early', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      t.plan(3)
+
+      stack.on('green', () => {
+        t.pass('listener 1')
+      })
+      stack.on('green', () => {
+        t.pass('listener 2')
+      })
+      stack.on('green', () => {
+        t.pass('listener 3')
+        stack.endCommand()
+      })
+      stack.on('green', () => {
+        t.fail('listener 4 (should not run!)')
+      })      
+      stack.on('green', () => {
+        t.fail('listener 5 (should not run!)')
+      })
+
+      stack.fire('green')
+
+    })
 
     if(run) { 
       console.log('run tests...')

@@ -123,6 +123,13 @@ stack.buffer = (callback) => {
   //stack.grid = gg.populateCells(stack.grid)
 }
 
+stack.removeBuffer = (callback) => {
+  stack.commands.forEach((command) => {  
+    var listenersWithoutBuffers = _.reject(command.listeners, (listener) => listener.buffer)
+    command.listeners = listenersWithoutBuffers
+  })
+}
+
 stack.endCommand = (next) => { 
  
   var thisColumnsCells = gg.columnCells(stack.grid, stack.column) 

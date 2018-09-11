@@ -229,12 +229,28 @@ stack.fire = (pathname, callback) => {
   }
 
   //Sort the command's listeners; same order but with everything labelled with .before at the top;
-  matchingCommand.listeners = _.map(matchingCommand.listeners, (listener, index) => {
+  matchingCommand.listeners = _.chain(matchingCommand.listeners)
+  .map((listener, index) => {
     listener.priority = index
     return listener 
   })
+  .sortBy('priority')
+  .value() 
 
   //now sort based on index and 'before'
+  //listeners that have a 'before' property
+
+  var listenersBefore = _.where((listener) => listener.before )
+
+  if(listenersBefore) {
+    //remove these from the mathcingCommand.listeners 
+    //then re-insert to the top,
+    //then ensure they are sorted based on prioirity: 
+
+    console.log('listeners before!!')
+    listenersBefore = _.sortBy(listenersBefore, 'priority')
+
+  }
 
   //...
 

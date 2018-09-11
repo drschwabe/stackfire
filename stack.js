@@ -83,7 +83,7 @@ stack.before = (path, callback) => {
   existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
   const newListener = { func : callback, path: path, _id : uuid.v4() }   
   newListener.before = true
-  let command = { route: route, listeners: [newListener] }
+  existingCommand.listeners.unshift(newListener)
   stack.commands.push(command)  
 }
 
@@ -228,36 +228,6 @@ stack.fire = (pathname, callback) => {
     stack.once(pathname, callback)
   }
 
-  //Sort the command's listeners; same order but with everything labelled with .before at the top;
-  matchingCommand.listeners = _.chain(matchingCommand.listeners)
-  .map((listener, index) => {
-    listener.priority = index
-    return listener 
-  })
-  .sortBy('priority')
-  .value() 
-
-  //now sort based on index and 'before'
-  //listeners that have a 'before' property
-
-  var listenersBefore = _.where((listener) => listener.before )
-
-  if(listenersBefore) {
-    //remove these from the mathcingCommand.listeners 
-    //then re-insert to the top,
-    //then ensure they are sorted based on prioirity: 
-
-    console.log('listeners before!!')
-    listenersBefore = _.sortBy(listenersBefore, 'priority')
-
-  }
-
-  //...
-
-  //then sort again this time for just the befores; based on index: 
-
-
-  //...
 
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {

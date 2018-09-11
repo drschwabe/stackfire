@@ -2669,6 +2669,30 @@ var testObj = {
 
     })
 
+    newTest('stack.before ensures listener runs before previously established listeners', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(2)
+
+      var count = 0 
+
+      stack.on('one', () => {
+        console.log('one')
+        count++; 
+        t.ok(count == 2)
+      })
+
+      stack.before('one', () => {
+        console.log('zero')
+        count++; 
+        t.ok(count == 1)
+      })
+
+      stack.fire('one')
+
+    })
+
+
     if(run) { 
       console.log('run tests...')
       if(testObj.only) { //Only run the one test: 

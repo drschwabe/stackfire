@@ -78,13 +78,13 @@ stack.once = (pathOrCommand, callback) => {
 }
 
 stack.before = (path, callback) => {
-  path = prefixPath(pathOrCommand)
+  path = prefixPath(path)
   route = new routeParser(path) 
   existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
   const newListener = { func : callback, path: path, _id : uuid.v4() }   
   newListener.before = true
   existingCommand.listeners.unshift(newListener)
-  stack.commands.push(command)  
+  stack.commands.push(existingCommand)  
 }
 
 //A listener to execute: 

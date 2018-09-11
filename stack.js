@@ -77,6 +77,16 @@ stack.once = (pathOrCommand, callback) => {
   return  
 }
 
+stack.before = (path, callback) => {
+  path = prefixPath(pathOrCommand)
+  route = new routeParser(path) 
+  existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
+  const newListener = { func : callback, path: path, _id : uuid.v4() }   
+  newListener.before = true
+  let command = { route: route, listeners: [newListener] }
+  stack.commands.push(command)  
+}
+
 //A listener to execute: 
 //stack.every = (pathOrCommand, frequency, priority, callback) => {
 //for now just make it on all commands, frequency: command, priority: last 
@@ -217,6 +227,21 @@ stack.fire = (pathname, callback) => {
     //console.log('run only once')
     stack.once(pathname, callback)
   }
+
+  //Sort the command's listeners; same order but with everything labelled with .before at the top;
+  matchingCommand.listeners = _.map(matchingCommand.listeners, (listener, index) => {
+    listener.priority = index
+    return listener 
+  })
+
+  //now sort based on index and 'before'
+
+  //...
+
+  //then sort again this time for just the befores; based on index: 
+
+
+  //...
 
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
@@ -362,6 +387,7 @@ const runCommand = (commandToRun) => {
       //listenerEnty = _.extend(listener, listenerEnty) 
       if(listener.buffer) listenerEnty.buffer = true 
       if(listener.every) listenerEnty.every = true 
+      if(listener.before) listenerEnty.before = true         
       listenerEnty._id = listener._id
 
 

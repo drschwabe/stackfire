@@ -208,7 +208,7 @@ stack.fire = (pathname, callback) => {
   })
 
   if(!matchingCommand && !callback) {
-    console.log('there are no listeners (or callback) existing for this command')
+    console.log("there are no listeners (or callback) existing for this command '" + pathname + "'") 
     return
   }
   if(!matchingCommand && callback) {

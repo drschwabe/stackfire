@@ -21,7 +21,15 @@ const stack = {
 }
 
 //Listener creation function:
-stack.on = (path, callback) => { 
+stack.on = (pathOrPaths, callback) => { 
+
+  //If an array...
+  if(_.isArray(pathOrPaths)) { //just re-call this function with each path: 
+    pathOrPaths.forEach( (path) => stack.on(path, callback) ) 
+    return
+  } else { //otherwise continue with the single path: 
+    path = pathOrPaths
+  }
 
   //Ensure path always is prefixed with a slash: 
   path = prefixPath(path) 

@@ -2692,6 +2692,13 @@ var testObj = {
 
     })
 
+    newTest('can supply an array of commands', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+      stack.on(['jump-around', 'jumping'], () => t.pass('a jump has occurred')) 
+      stack.fire('jumping')
+    }) 
 
     if(run) { 
       console.log('run tests...')

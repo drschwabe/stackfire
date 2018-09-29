@@ -1,11 +1,12 @@
-// #### STACK 3 ####
+// #### STACKFIRE ####
 
 var async = require('async'),
     routeParser = require('route-parser'), 
     _ = require('underscore'), 
     gg = require('gg'), 
     fnArgs = require('function-arguments'), 
-    uuid = require('uuid')
+    uuid = require('uuid'), 
+    _s = require('underscore.string')    
 
 var browser, electron //< Variable to indicate if we running in Node or browser: 
 require('detect-node') ? browser = false : browser = true
@@ -22,6 +23,8 @@ const stack = {
 
 //Listener creation function:
 stack.on = (pathOrPaths, callback) => { 
+
+  var path 
 
   //If an array...
   if(_.isArray(pathOrPaths)) { //just re-call this function with each path: 
@@ -40,7 +43,12 @@ stack.on = (pathOrPaths, callback) => {
   //Determine if this path corresponds to a command
   //already defined (via a previous stack.on call) in our stack: 
   const existingCommand = _.find(stack.commands, (existingCommand) => {
-    return existingCommand.route.match(path)
+    var commandIsWild = _s.include(existingCommand.route.spec, "*")
+    var matchedRoute = route.match(existingCommand.route.spec)
+    var reversedRoute = route.reverse(path)
+    if(matchedRoute) return true 
+    if(reversedRoute && commandIsWild) return true 
+    return false  
   })
 
   //Either way, we will create a listener entry;  

@@ -44,10 +44,14 @@ stack.on = (pathOrPaths, callback) => {
   //already defined (via a previous stack.on call) in our stack: 
   const existingCommand = _.find(stack.commands, (existingCommand) => {
     var commandIsWild = _s.include(existingCommand.route.spec, "*")
+    var specIsWid = _s.include(path, "*")    
     var matchedRoute = route.match(existingCommand.route.spec)
     var reversedRoute = route.reverse(path)
+    //var hasParameters 
     if(matchedRoute) return true 
     if(reversedRoute && commandIsWild) return true 
+    if(reversedRoute && specIsWid) return true       
+    //debugger 
     return false  
   })
 
@@ -252,7 +256,7 @@ stack.fire = (pathname, callback) => {
     matchingCommand.listeners = _.chain(matchingCommand.listeners)
       .map(listener => listener.one_time ? false : listener)
       .compact()
-      .value() 
+      .value()
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
     //add the callback if one was provided: 

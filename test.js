@@ -2695,6 +2695,22 @@ var testObj = {
       stack.fire('jumping')
     }) 
 
+    newTest('parameter routes fire (param route defined afer a related listener established)', (t)  => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(2)
+
+      stack.on('keyup/f', () => {
+        t.pass('f key explicity listener ran')
+      })
+
+      stack.on('/keyup/:key', () => {
+        t.pass('keyup slash param listener ran')        
+      })  
+
+      stack.fire('keyup/f')
+    })
+
     if(run) { 
       console.log('run tests...')
       if(testObj.only) { //Only run the one test: 
@@ -2704,7 +2720,6 @@ var testObj = {
         entry.func(entry.name)
       })      
     }
-
 
     //Only send the one test: 
     if(testObj.only) return [testObj.only]

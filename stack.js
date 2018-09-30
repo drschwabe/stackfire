@@ -42,10 +42,7 @@ stack.on = (pathOrPaths, callback) => {
   let route = new routeParser(path) 
 
 
-  let matchedFromCommandPath, 
-      commandIsWild, 
-      commandHasParams, 
-      pathIsWild = _s.include(path, "*"),  
+  let pathIsWild = _s.include(path, "*"),  
       pathHasParams = _s.include(path, ":"),  
       matchedFromPath, 
       reversedRoute = route.reverse(path)
@@ -53,10 +50,10 @@ stack.on = (pathOrPaths, callback) => {
   //Determine if this path corresponds to a command
   //already defined (via a previous stack.on call) in our stack: 
   const existingCommand = _.find(stack.commands, (existingCommand) => {
-    commandIsWild = _s.include(existingCommand.route.spec, "*")
-    commandHasParams = _s.include(existingCommand.route.spec, ":")
+    let commandIsWild = _s.include(existingCommand.route.spec, "*")
+    let commandHasParams = _s.include(existingCommand.route.spec, ":")
     matchedFromPath = route.match(existingCommand.route.spec)
-    matchedFromCommandPath = existingCommand.route.match(path) //< could be param!
+    let matchedFromCommandPath = existingCommand.route.match(path) //< could be param!
     if(matchedFromPath ||  matchedFromCommandPath && !pathHasParams) return true 
     if(reversedRoute && commandIsWild) return true 
     if(reversedRoute && pathIsWild) return true       
@@ -82,6 +79,7 @@ stack.on = (pathOrPaths, callback) => {
   } else {
     //path has params
     newListener.route = route
+    newListener.params = matchedFromPath
     stack.parameter_listeners.push(newListener)
   }
 
@@ -96,13 +94,23 @@ stack.on = (pathOrPaths, callback) => {
           var parameterListenerClone = _.clone(parameterListener)
           parameterListenerClone.path = path 
           newCommand.listeners.unshift(parameterListenerClone) 
-        } else {
-          console.log('existing command...')
         }
       }
     })
+  } else {
+    //find existing listeners it may match... 
+    let existingCommandNonParam = _.find(stack.commands, (existingCommand) => {
+      let matchedFromPath = route.match(existingCommand.route.spec)
+      return matchedFromPath 
+    })
+    //an existing (non param) command has been established
+    //which has a matching pattern, so we now
+    //add this listener's callback (which was defined with a matching stack.on call but using a param; hence same pattern) to said existing command's listeners: 
+    if(existingCommandNonParam) {
+      newListener.path = existingCommandNonParam.route.spec 
+      existingCommandNonParam.listeners.push(newListener )      
+    }
   }
-
   return
 }
 

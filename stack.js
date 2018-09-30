@@ -15,6 +15,7 @@ require('is-electron') ? electron = true : electron = false
 const stack = {
   state : {}, 
   commands : [],
+  parameter_listeners : [], //(parameter listeners can be apart of multiple commands)
   queue : [], 
   grid : gg.populateCells(gg.createGrid(1,1)), 
   utils : [],  //< For third party mods to execute at each hook  
@@ -40,18 +41,25 @@ stack.on = (pathOrPaths, callback) => {
   //Create a route from the path: 
   let route = new routeParser(path) 
 
+
+  let matchedFromCommandPath, 
+      commandIsWild, 
+      commandHasParams, 
+      pathIsWild = _s.include(path, "*"),  
+      pathHasParams = _s.include(path, ":"),  
+      matchedFromPath, 
+      reversedRoute = route.reverse(path)
+
   //Determine if this path corresponds to a command
   //already defined (via a previous stack.on call) in our stack: 
   const existingCommand = _.find(stack.commands, (existingCommand) => {
-    var commandIsWild = _s.include(existingCommand.route.spec, "*")
-    var specIsWid = _s.include(path, "*")    
-    var matchedRoute = route.match(existingCommand.route.spec)
-    var reversedRoute = route.reverse(path)
-    //var hasParameters 
-    if(matchedRoute) return true 
+    commandIsWild = _s.include(existingCommand.route.spec, "*")
+    commandHasParams = _s.include(existingCommand.route.spec, ":")
+    matchedFromPath = route.match(existingCommand.route.spec)
+    matchedFromCommandPath = existingCommand.route.match(path) //< could be param!
+    if(matchedFromPath ||  matchedFromCommandPath && !pathHasParams) return true 
     if(reversedRoute && commandIsWild) return true 
-    if(reversedRoute && specIsWid) return true       
-    //debugger 
+    if(reversedRoute && pathIsWild) return true       
     return false  
   })
 
@@ -60,15 +68,39 @@ stack.on = (pathOrPaths, callback) => {
   //(which calls a callback) and the raw path...
   const newListener = { func : callback, path: path, _id : uuid.v4()  }   
 
-  if(!existingCommand) {
+  let newCommand
+
+  if(!existingCommand && !pathHasParams) {
     //No existing command, so let's define one now, 
     //with two properties: the route and an array to store listeners...
-    let command = { route: route, listeners: [newListener] }
-    stack.commands.push(command)
-  } else {
+    newCommand = { route: route, listeners: [newListener] }
+    stack.commands.push(newCommand)
+  } else if(!pathHasParams) {
     //If the command already exists, just push this new
-    //listener into the command's existing stack: 
+    //listener into the command's existing stack...
     existingCommand.listeners.push(newListener)
+  } else {
+    //path has params
+    newListener.route = route
+    stack.parameter_listeners.push(newListener)
+  }
+
+  //Do a check to see if the existingCommand needs to add a matching parameter route
+  if(!pathHasParams) {
+    stack.parameter_listeners.forEach((parameterListener) => {
+      //determine if the parameterListener should be attached to this command...
+      var matchedFromParameterListener = parameterListener.route.match(path)
+      if(matchedFromParameterListener) {
+        //add to the front of this new command
+        if(!existingCommand) {
+          var parameterListenerClone = _.clone(parameterListener)
+          parameterListenerClone.path = path 
+          newCommand.listeners.unshift(parameterListenerClone) 
+        } else {
+          console.log('existing command...')
+        }
+      }
+    })
   }
 
   return

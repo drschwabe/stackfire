@@ -798,7 +798,7 @@ var testObj = {
 
     })
 
-    test.skip('Catch all wildcard listener (using callbacks)', (t) => {
+    newTest('Catch all wildcard listener (using callbacks)', (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -1089,14 +1089,14 @@ var testObj = {
     })
 
     //failing: 
-    test.skip("Commands not issued should not fire (using commands that use URL param)", (t) => {
+    newTest("Commands not issued should not fire (using commands that use URL param)", (t) => {
       t.plan(3)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
       stack.on('/bomb/:anything', () => {
-        t.pass('this should invoke on every fire')
+        t.pass('this should invoke on every fire (involving bomb slash anything)')
         //stack.next()    
       })
 

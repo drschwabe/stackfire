@@ -2698,17 +2698,20 @@ var testObj = {
     newTest('parameter routes fire (param route defined afer a related listener established)', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      t.plan(2)
+      t.plan(3)
 
       stack.on('keyup/f', () => {
         t.pass('f key explicity listener ran')
       })
 
       stack.on('/keyup/:key', () => {
-        t.pass('keyup slash param listener ran')        
+        t.pass('keyup slash param listener ran') 
+        //(should run twice)       
       })  
 
       stack.fire('keyup/f')
+
+      stack.fire('keyup/g')
     })
 
     if(run) { 

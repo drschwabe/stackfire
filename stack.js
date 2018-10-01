@@ -267,7 +267,18 @@ stack.fire = (pathname, callback) => {
     return matchedRoute
   })
 
+  if(!matchingCommand) {
+    let route = new routeParser(pathname)  
+    let matchingParameterListener = _.find(stack.parameter_listeners, (listener) => listener.route.match(pathname))
+
+    if(matchingParameterListener) {
+      //make it a temporary command: 
+      matchingCommand = { route: matchingParameterListener.route, listeners: [matchingParameterListener] }
+    }
+  }
+
   if(!matchingCommand && !callback) {
+    //check if there are any listener parameters...    
     console.log("there are no listeners (or callback) existing for this command '" + pathname + "'") 
     return
   }

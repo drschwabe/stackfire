@@ -2714,6 +2714,23 @@ var testObj = {
       stack.fire('keyup/g')
     })
 
+
+    newTest('Multiple parameter listeners fire when called', (t)  => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(2)
+
+      stack.on('/keyup/:key', () => {
+        t.pass('keyup slash param listener ran') 
+      })  
+
+      stack.on('/keyup/:key', () => {
+        t.pass('keyup slash param listener ran again') 
+      })  
+
+      stack.fire('keyup/z')
+    })    
+
     if(run) { 
       console.log('run tests...')
       if(testObj.only) { //Only run the one test: 

@@ -269,11 +269,11 @@ stack.fire = (pathname, callback) => {
 
   if(!matchingCommand) {
     let route = new routeParser(pathname)  
-    let matchingParameterListener = _.find(stack.parameter_listeners, (listener) => listener.route.match(pathname))
+    let matchingParameterListeners = _.filter(stack.parameter_listeners, (listener) => listener.route.match(pathname))
 
-    if(matchingParameterListener) {
+    if(matchingParameterListeners.length) {
       //make it a temporary command: 
-      matchingCommand = { route: matchingParameterListener.route, listeners: [matchingParameterListener] }
+      matchingCommand = { route: matchingParameterListeners[0].route, listeners: matchingParameterListeners }
     }
   }
 

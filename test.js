@@ -1,44 +1,44 @@
-const test = require('tape-catch'), 
-      requireUncached = require('require-uncached'), 
-      //^ ensures a clean slate for stack for each test. 
-      _ = require('underscore'), 
+const test = require('tape-catch'),
+      requireUncached = require('require-uncached'),
+      //^ ensures a clean slate for stack for each test.
+      _ = require('underscore'),
       log = console.log
 
-//Export tests a module so all of the tests are available for consumption 
-//by other modules or tools: 
+//Export tests a module so all of the tests are available for consumption
+//by other modules or tools:
 var testObj = {
   tests : [],
-  //Run tests unless the param is provided 
+  //Run tests unless the param is provided
   //(typically when required/consumed by another module)
   queue : (run) => {
     //Prepare an array and function for populating it with tests
     var newTest = (testName, testFunc) => {
       testObj.tests.push({
-        name : testName, 
+        name : testName,
         func : (testName) => {
-          test(testName, testFunc) 
+          test(testName, testFunc)
         }
       })
     }
     newTest.only = (testName, testFunc) => {
       testObj.only = {
-        name : testName, 
+        name : testName,
         func : (testName) => {
-          test(testName, testFunc) 
+          test(testName, testFunc)
         }
       }
     }
-    //^ if run == true we will loop over this to perform 
+    //^ if run == true we will loop over this to perform
     //the tests
 
-    //Now write each test as normal, but call it with queuing function:  
+    //Now write each test as normal, but call it with queuing function:
     newTest("stack.fire invokes stack.on", (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
       stack.on('/do-something', () => {
-        t.ok(stack.state, 'listener invoked and stack state established') 
+        t.ok(stack.state, 'listener invoked and stack state established')
         t.equal(stack.path, '/do-something', "state.path equals '/do-something'")
         debugger
       })
@@ -55,7 +55,7 @@ var testObj = {
 
       stack.on('/boot', () => {
         t.ok(stack.path == '/boot', 'first boot listener ran')
-        stack.state.booting = true 
+        stack.state.booting = true
       })
 
       stack.on('/boot', () => {
@@ -81,15 +81,15 @@ var testObj = {
 
       stack.on('/boot', () => {
         t.ok(stack.path == '/boot', 'third boot listener ran')
-      })      
+      })
 
       stack.fire('/boot')
 
       //Verify each listener (grid enty) exists at cells 0, 3, and 6
       t.ok(stack.grid.enties[0].cell == 0 && stack.grid.enties[1].cell == 3 && stack.grid.enties[2].cell == 6, 'Each listener exist in the same column')
-      //ie: 
+      //ie:
       //0 x x
-      //3 x x 
+      //3 x x
       //6 x x
     })
 
@@ -127,23 +127,23 @@ var testObj = {
 
       stack.on('/apple', (next) => {
         console.log('/apple "on" (listener function in progress).')
-        t.equal(stack.path, '/apple', "state.path equals the path of the current 'on' listener.")        
+        t.equal(stack.path, '/apple', "state.path equals the path of the current 'on' listener.")
         //stack.fire('/bannana', (next) => next)
         debugger
         next.fire('/bannana')
       })
 
-      stack.on('/bannana', () => {     
+      stack.on('/bannana', () => {
         console.log('/bannana "on" listener in progress. state.path:')
-        console.log(stack.path) 
+        console.log(stack.path)
         t.ok(stack.state, 'root level listener invoked from a nested fire')
         t.equal(stack.path, '/bannana', "state.path equals the path of the current 'on' listener.")
-        //next() 
+        //next()
         //at this point, apple should be done too
       })
       console.log('about to fire /apple')
       stack.fire('apple')
-      t.ok( stack.grid.cells[0].enties[0].done , 'Original command is immediately done')    
+      t.ok( stack.grid.cells[0].enties[0].done , 'Original command is immediately done')
       setTimeout( () => {
         t.ok( stack.grid.cells[0].enties[0].done , 'Original command is done (after checking again with some setTimeout delay)')
       }, 2)
@@ -168,36 +168,36 @@ var testObj = {
 
       stack.on('orange', (next) => {
         console.log('/orange yet again!')
-        t.ok(stack.path, '/orange')    
-        debugger    
-        //next(  stack.fire('grapefruit') ) 
+        t.ok(stack.path, '/orange')
+        debugger
+        //next(  stack.fire('grapefruit') )
         next.fire('grapefruit')
-      })        
+      })
 
-      stack.on('/grapefruit', () => {     
+      stack.on('/grapefruit', () => {
         console.log('/grapefruit "on" listener in progress.')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
         t.ok(stack.path, '/grapefruit')
-        //next() 
+        //next()
       })
 
-      stack.on('/grapefruit', () => {     
+      stack.on('/grapefruit', () => {
         console.log('/grapefruit again')
         t.equal(stack.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
-        //next() 
-      })  
-      
+        //next()
+      })
+
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
         t.ok(stack.path, '/orange')
-        debugger   
+        debugger
         t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [4,0]), 'orange first listener after grapefruit command assigned to correct cell')
       })
 
       stack.on('orange', () => {
         console.log('/orange last time!')
-        t.ok(stack.path, '/orange')  
-        t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [5,0]), 'orange second listener after grapefruit assigned to correct cell')        
+        t.ok(stack.path, '/orange')
+        t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [5,0]), 'orange second listener after grapefruit assigned to correct cell')
       })
 
       console.log('about to fire /orange')
@@ -206,7 +206,7 @@ var testObj = {
       t.equal(stack.grid.cells[13].enties[0].command.route.spec, '/grapefruit')
       t.equal(stack.grid.cells[19].enties[0].command.route.spec, '/grapefruit' )
 
-      t.ok( _.every(stack.commands, (command) => command.done), 'all commands are done') 
+      t.ok( _.every(stack.commands, (command) => command.done), 'all commands are done')
 
     })
 
@@ -217,8 +217,8 @@ var testObj = {
       let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('strawberry', () => {
-        console.log('/strawberry "on" (listener function in progress)')   
-        debugger     
+        console.log('/strawberry "on" (listener function in progress)')
+        debugger
       })
 
       stack.on('orange', () => {
@@ -234,33 +234,33 @@ var testObj = {
 
       stack.on('orange', (next) => {
         console.log('/orange yet again!')
-        t.ok(stack.path, '/orange')  
-        debugger              
+        t.ok(stack.path, '/orange')
+        debugger
         next.fire('grapefruit')
-      })        
+      })
 
-      stack.on('/grapefruit', () => {     
+      stack.on('/grapefruit', () => {
         console.log('/grapefruit "on" listener in progress.')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
         debugger
       })
 
-      stack.on('/grapefruit', () => {     
+      stack.on('/grapefruit', () => {
         console.log('/grapefruit again')
         t.equal(stack.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
         debugger
-      })  
-      
+      })
+
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
-        t.ok(stack.path, '/orange')   
+        t.ok(stack.path, '/orange')
         t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [4,1]), 'orange first listener after grapefruit command assigned to correct cell')
       })
 
       stack.on('orange', () => {
         console.log('/orange last time!')
-        t.ok(stack.path, '/orange')  
-        t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [5,1]), 'orange second listener after grapefruit assigned to correct cell')        
+        t.ok(stack.path, '/orange')
+        t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [5,1]), 'orange second listener after grapefruit assigned to correct cell')
       })
 
       console.log('about to fire /strawberry')
@@ -278,7 +278,7 @@ var testObj = {
     newTest("stack.fire nested within stack.on, which was nested in another stack.on", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      t.plan(3)      
+      t.plan(3)
       stack.on('green', (next) => {
         t.pass("green listener's callback invoked")
         next.fire('blue')
@@ -302,7 +302,7 @@ var testObj = {
     newTest("stack.fire nested within stack.on, which was nested in another stack.on (complex)", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      t.plan(9)      
+      t.plan(9)
 
       stack.on('green', () => {
         t.pass("green listener's first callback invoked")
@@ -313,7 +313,7 @@ var testObj = {
       })
 
       stack.on('green', () => {
-        t.pass("green listener's third callback invoked")        
+        t.pass("green listener's third callback invoked")
       })
 
       stack.on('green', (next) => {
@@ -351,8 +351,8 @@ var testObj = {
     newTest("stack.fire nested spiderweb", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      t.plan(11) 
-      
+      t.plan(11)
+
       stack.on('green', () => {
         t.pass("green listener's first callback invoked")
       })
@@ -362,7 +362,7 @@ var testObj = {
       })
 
       stack.on('green', () => {
-        t.pass("green listener's third callback invoked")        
+        t.pass("green listener's third callback invoked")
       })
 
       stack.on('green', (next) => {
@@ -395,11 +395,11 @@ var testObj = {
 
       stack.on('red', () => {
         t.pass("red listener's second callback invoked")
-      }) 
+      })
 
       stack.on('red', () => {
         t.pass("red listener's third callback invoked")
-      })              
+      })
 
       stack.fire('green')
 
@@ -411,7 +411,7 @@ var testObj = {
       //to execute after all other listener callbacks finish
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-            
+
       t.plan(1)
 
       stack.fire('test', () => {
@@ -424,7 +424,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-            
+
       t.plan(2)
 
       stack.on('test', () => {
@@ -433,7 +433,7 @@ var testObj = {
 
       stack.fire('test', () => {
         t.pass('callback is executed')
-      })      
+      })
 
     })
 
@@ -441,7 +441,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-            
+
       t.plan(3)
 
       stack.on('test', () => {
@@ -454,7 +454,7 @@ var testObj = {
 
       stack.fire('test', () => {
         t.pass('callback is executed')
-      })    
+      })
 
     })
 
@@ -475,7 +475,7 @@ var testObj = {
       stack.fire('purple', (next) => {
         t.pass('purple callback is executed')
         next.fire('pink')
-      })  
+      })
 
     })
 
@@ -489,8 +489,8 @@ var testObj = {
         setTimeout(() => {
           console.log('first sip (takes 100 ms)')
           t.equals(stack.state.listener, 'first')
-          next() 
-        }, 100)        
+          next()
+        }, 100)
       }
 
       var secondSip = (next) => {
@@ -499,7 +499,7 @@ var testObj = {
           console.log('second sip (takes 200 ms)')
           t.equals(stack.state.listener, 'second')
           next()
-        }, 200)        
+        }, 200)
       }
 
       var thirdSip = (next) => {
@@ -507,8 +507,8 @@ var testObj = {
         setTimeout(() => {
           console.log('third sip (takes 300 ms)')
           t.equals(stack.state.listener, 'third')
-        }, 300)        
-      }            
+        }, 300)
+      }
 
       stack.on('sip latte', firstSip)
 
@@ -519,10 +519,10 @@ var testObj = {
       stack.fire('sip latte')
 
       setTimeout(() => {
-        //check that the functions are placed in the same order: 
+        //check that the functions are placed in the same order:
         t.equals( stack.grid.enties[0].func.toString(), firstSip.toString() )
         t.equals( stack.grid.enties[1].func.toString(), secondSip.toString() )
-        t.equals( stack.grid.enties[2].func.toString(), thirdSip.toString() )       
+        t.equals( stack.grid.enties[2].func.toString(), thirdSip.toString() )
       }, 700)
 
     })
@@ -535,7 +535,7 @@ var testObj = {
       var executeSyncly = () => console.log('executed syncly')
       var executeAsyncly = (next) => setTimeout( () => {
         console.log('executed asyncly')
-        next() 
+        next()
       }, 300)
 
       var executeSynclyAgain = () => console.log('executed syncly (again)')
@@ -554,7 +554,7 @@ var testObj = {
 
       stack.fire('go')
       setTimeout(() => {
-        t.pass() 
+        t.pass()
       }, 700)
     })
 
@@ -566,30 +566,30 @@ var testObj = {
       stack.on('/apple', () => {
         debugger
         console.log('/apple "on" (middleware in progress).  state.path:')
-        console.log(stack.path)  
+        console.log(stack.path)
         console.log('about to run .5 second timeout before firing /bannana...')
-        //Nested async fire: 
+        //Nested async fire:
         setTimeout(() => {
           debugger
           stack.fire('/bannana', () => {
             debugger
             t.pass('/bannana reaches its callback')
             console.log('/bannana fired (its final callback in progress)')
-            console.log(stack.path)  
-            console.log("/bannana's callback will immediately call nextFire()")   
+            console.log(stack.path)
+            console.log("/bannana's callback will immediately call nextFire()")
           })
         }, 500)
       })
 
       debugger
-      stack.on('/bannana', () => {         
+      stack.on('/bannana', () => {
         console.log('/bannana "on" middleware in progress. state.path:')
-        console.log(stack.path) 
-        console.log('(this should not execute until after 0.5 seconds)')  
+        console.log(stack.path)
+        console.log('(this should not execute until after 0.5 seconds)')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
-        t.equal(stack.path, '/bannana', "state.path equals the path of the current 'on' listener.")       
+        t.equal(stack.path, '/bannana', "state.path equals the path of the current 'on' listener.")
         console.log('/bannana middleware will now call stack.next()')
-        //stack.next() 
+        //stack.next()
         debugger
       })
 
@@ -599,9 +599,9 @@ var testObj = {
       stack.fire('apple', () => {
         debugger
         //something is causing the apple callback to be called twice
-        // _.command.callback = _.once()  ?        
+        // _.command.callback = _.once()  ?
         console.log('/apple fired (its final callback in progress). state.path:')
-        console.log(stack.path)    
+        console.log(stack.path)
         console.log('about to run 1 second timeout before calling stack.next)')
         setTimeout(() => {
           t.pass('reached end of the original fire (/apple)')
@@ -613,31 +613,31 @@ var testObj = {
 
 
     newTest("fire three nested commands and verify state consistency along the way", (t) => {
-      t.plan(6) //This will be the next major engineering hurdle; 
-      //to ensure that commands that are children of children fire and return back to the 
-      //root command; will wnat to make a visualization of this. 
+      t.plan(6) //This will be the next major engineering hurdle;
+      //to ensure that commands that are children of children fire and return back to the
+      //root command; will wnat to make a visualization of this.
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
       stack.on('/land-on-moon', () => {
         stack.state.landed = true
-        t.ok(stack.state.landed, 'landed on moon') 
-        //Second command fired: 
+        t.ok(stack.state.landed, 'landed on moon')
+        //Second command fired:
         stack.fire('/plant-flag', (err) => {
           t.ok(stack.state.landed, 'still landed')
           stack.state.flagPlanted = true
-          t.ok(stack.state.flagPlanted, 'planted flag')      
-          //Third command fired: 
+          t.ok(stack.state.flagPlanted, 'planted flag')
+          //Third command fired:
           stack.fire('/take-picture', (err) => {
             t.ok(stack.state.landed && stack.state.flagPlanted, 'still landed and flag remains planted')
-            stack.state.tookPicture = true 
-            t.ok(stack.state.tookPicture, 'took picture') 
+            stack.state.tookPicture = true
+            t.ok(stack.state.tookPicture, 'took picture')
           })
         })
         //TODO - test grid placement
       })
 
-      //First command fired: 
+      //First command fired:
       stack.fire('/land-on-moon')
 
       t.ok(stack.state.landed && stack.state.flagPlanted && stack.state.tookPicture, 'mission complete')
@@ -654,10 +654,10 @@ var testObj = {
         t.equals(stack.path, '/go', 'expected listener invoked')
       })
 
-      //This should not run: 
+      //This should not run:
       stack.on('/stop', () => {
         t.fail('listener invoked when it should not have')
-      }) 
+      })
 
       stack.fire('/go', () => {
         t.pass('callback invoked')
@@ -678,10 +678,10 @@ var testObj = {
         t.equals(stack.path, '/go/somewhere', 'expected listener invoked')
       })
 
-      //This should not run: 
+      //This should not run:
       stack.on('/stop/something', () => {
         t.fail('listener invoked when it should not have')
-      }) 
+      })
 
       stack.fire('/go/somewhere', (err) => {
         t.pass('callback invoked')
@@ -700,9 +700,9 @@ var testObj = {
         t.ok(stack.state.params.item, 'parameter is included on the command')
       })
 
-      //This should not run: 
+      //This should not run:
       stack.on('/inventory/:item/destroy', () => {
-        t.fail('listener invoked when it should not have')    
+        t.fail('listener invoked when it should not have')
       })
 
       stack.fire('/inventory/widget/deliver', () => {
@@ -723,7 +723,7 @@ var testObj = {
         t.equals(stack.path, '/go/Brisbane/tomorrow', 'expected listener invoked')
       })
 
-      //This should not run: 
+      //This should not run:
       stack.on('/some/other/route', () => {
         t.fail('listener invoked when it should not have')
       })
@@ -734,7 +734,7 @@ var testObj = {
 
     })
 
-    //Test to ensure stack.state is updated as expected. 
+    //Test to ensure stack.state is updated as expected.
     newTest("stack.state integrity (and commands without listeners)", (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -742,10 +742,10 @@ var testObj = {
 
       stack.fire('/take-off', (next) => {
         t.equals(stack.state, stack.state, 'stack.state equals the newly returned state')
-        stack.state.flying = true 
+        stack.state.flying = true
         next.fire('/autopilot', () => {
           t.ok(stack.state.flying, 'We are flying.')
-        })    
+        })
       })
     })
 
@@ -771,7 +771,7 @@ var testObj = {
       stack.on('anything', () => {
         t.pass('specific listener ran')
         //t.equals(stack.path, '/anything')
-        debugger        
+        debugger
       })
 
       stack.on('*wild', () => {
@@ -782,11 +782,11 @@ var testObj = {
 
       stack.fire('anything')
 
-      //should result in a 2x2 grid 
+      //should result in a 2x2 grid
       // [ /anything , 1  ]
       // [ /wild ,     3]
 
-      //The command route spec should be '/anything' for both listeners: 
+      //The command route spec should be '/anything' for both listeners:
       //t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/anything' )
       //t.ok( stack.grid.cells[1].enties[0].length )
       //t.equals( stack.grid.cells[1].enties[0].command.route.spec, '/anything' )
@@ -810,7 +810,7 @@ var testObj = {
       stack.fire('anything', () => {
         t.pass('anything fired')
       })
-      
+
       stack.fire('anything/else', () => {
         t.pass('anything else fired too')
       })
@@ -826,21 +826,21 @@ var testObj = {
         t.fail("listener ('heart') which was never explicitly fired was invoked!")
       })
 
-      //Establish wildcard before diamond: 
+      //Establish wildcard before diamond:
       stack.on('*wild', () => {
         console.log(stack.path)
         t.pass('*wild listener invoked')
       })
 
       stack.on('diamond', () => {
-        //if(state._command.route.spec != '/diamond') return next(null, state)        
-        t.pass('diamond listener invoked')    
+        //if(state._command.route.spec != '/diamond') return next(null, state)
+        t.pass('diamond listener invoked')
       })
 
       stack.fire('diamond')
     })
 
-    //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same. 
+    //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same.
     test.skip("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -852,13 +852,13 @@ var testObj = {
       })
 
       stack.on('diamond', () => {
-        t.pass('diamond listener invoked')    
+        t.pass('diamond listener invoked')
       })
 
-      //Establish wildcard after diamond: 
+      //Establish wildcard after diamond:
       stack.on('*wild', () => {
         t.pass('*wild listener invoked')
-      })  
+      })
 
       stack.fire('diamond')
     })
@@ -890,7 +890,7 @@ var testObj = {
       })
 
       stack.fire('ten', () => {
-        t.equal(stack.state.counter, 1000, 'multiply called twice on ten') 
+        t.equal(stack.state.counter, 1000, 'multiply called twice on ten')
       })
       stack.fire('zero', () => {
         t.equal(stack.state.counter, 0, 'zero canned with multiply is zero')
@@ -913,7 +913,7 @@ var testObj = {
 
       stack.on('/party', () => {
         t.pass("it's the same party!")
-      })  
+      })
 
       stack.fire('party')
 
@@ -936,26 +936,26 @@ var testObj = {
       t.plan(5)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack    
+      if(process.browser) window.stack = stack
 
       t.ok(_.isArray(stack.grid.cells))
 
       stack.on('berry', () => {
-        t.equals(stack.grid.enties[0].command.route.spec, '/berry') 
+        t.equals(stack.grid.enties[0].command.route.spec, '/berry')
       })
 
-      stack.fire('berry', () => {  
-        //now the fire has completed: 
+      stack.fire('berry', () => {
+        //now the fire has completed:
         //t.ok(stack.grid.enties[0].command.middleware_done)
         t.pass()
-      })  
+      })
 
-      stack.fire('vegetable', () => { 
-        //Even though no middleware, ensure this enty still exists on the grid: 
+      stack.fire('vegetable', () => {
+        //Even though no middleware, ensure this enty still exists on the grid:
         t.pass('fired vegetable')
-      }) 
+      })
 
-      t.ok(stack.grid.enties[1].command.done)    
+      t.ok(stack.grid.enties[1].command.done)
     })
 
     newTest("When a completed command is fired for the 2nd time, its callbacks all correctly re-enter the grid but in a new column", (t) => {
@@ -964,8 +964,8 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
       let gg = process.browser ? require('gg') : requireUncached('gg')
-        
-      
+
+
       stack.on('apple', () => {
         console.log('first apple callback')
       })
@@ -976,16 +976,16 @@ var testObj = {
 
       stack.on('apple', () => {
         console.log('third apple callback')
-      })    
+      })
 
-      stack.fire('apple')    
+      stack.fire('apple')
 
-      stack.fire('apple')  
+      stack.fire('apple')
 
       // [  apple   apple  ]
       // [  apple   apple  ]
-      // [  apple   apple  ]    
-  
+      // [  apple   apple  ]
+
       t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [0,0]) ].enties[0].command.route.spec, '/apple' )
       t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [1,0]) ].enties[0].command.route.spec, '/apple' )
       t.equals( stack.grid.cells[ gg.xyToIndex(stack.grid, [2,0]) ].enties[0].command.route.spec, '/apple' )
@@ -1008,7 +1008,7 @@ var testObj = {
 
       t.ok(stack.grid.cells[0].enties[0] && stack.grid.cells[0].enties[0].command.route.spec == '/silence')
 
-      t.pass() 
+      t.pass()
 
     })
 
@@ -1016,40 +1016,40 @@ var testObj = {
       t.plan(4)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
 
       stack.on('warning-alarm', (next) => {
         console.log('you have 2 seconds to comply')
         setTimeout(()=> {
           console.log('wait 2 seconds')
           //stack.next()
-          next() 
-        }, 2000)  
+          next()
+        }, 2000)
       })
 
       stack.fire('warning-alarm', () => {
         t.pass('warning alarm finished')
-        //stack.next() 
-      }) 
-
-      stack.fire('fire-turret', (next) => {
-        console.log('fire turret!') 
-        //The following should apply to state 
-        //only AFTER warning alarm completes: 
-        stack.state.firing_turret = true
-        //t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
-        //next() 
+        //stack.next()
       })
 
-      //Wait one second and check state: 
+      stack.fire('fire-turret', (next) => {
+        console.log('fire turret!')
+        //The following should apply to state
+        //only AFTER warning alarm completes:
+        stack.state.firing_turret = true
+        //t.ok(stack.grid.enties[1].command.middleware_done, true, 'Fire turret middleware is done.')
+        //next()
+      })
+
+      //Wait one second and check state:
       setTimeout( () => {
         t.notOk(stack.state.firing_turret, 'Turret is not firing yet')
       }, 500 )
 
-      //Wait 2.5 seconds and check state: 
+      //Wait 2.5 seconds and check state:
       setTimeout( () => {
-        t.ok(stack.state.firing_turret, 'Turret is now firing!')    
-        t.notOk(stack.commands[1].done, 'Fire turret command is not done cause we never called the trailing next') 
+        t.ok(stack.state.firing_turret, 'Turret is now firing!')
+        t.notOk(stack.commands[1].done, 'Fire turret command is not done cause we never called the trailing next')
       }, 2500)
 
     })
@@ -1061,12 +1061,12 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      //Defining a wildcard listener atop of the stack seems to result in 
+      //Defining a wildcard listener atop of the stack seems to result in
       //subsequent listeners being fired even though their command was not issued...
 
       stack.on('*wildcard', () => {
         t.pass('this should invoke on every fire')
-        //stack.next()    
+        //stack.next()
       })
 
       stack.on('/release-prisoner', () => {
@@ -1074,9 +1074,9 @@ var testObj = {
         //stack.next()
       })
 
-      //This should not run! 
+      //This should not run!
       stack.on('/execute-prisoner', () => {
-        //workaround by manually checking: 
+        //workaround by manually checking:
         //if(stack.path != '/execute-prisoner') return stack.next()
         t.fail('listener invoked when it should not have')
         //stack.next()
@@ -1088,7 +1088,7 @@ var testObj = {
 
     })
 
-    //failing: 
+    //failing:
     newTest("Commands not issued should not fire (using commands that use URL param)", (t) => {
       t.plan(3)
 
@@ -1097,7 +1097,7 @@ var testObj = {
 
       stack.on('/bomb/:anything', () => {
         t.pass('this should invoke on every fire (involving bomb slash anything)')
-        //stack.next()    
+        //stack.next()
       })
 
       stack.on('/bomb/disarm', () => {
@@ -1105,16 +1105,16 @@ var testObj = {
         //stack.next()
       })
 
-      //This should not run! 
+      //This should not run!
       stack.on('/bomb/detonate', () => {
-        //TODO: fix this; should not run  
+        //TODO: fix this; should not run
         t.fail('listener invoked when it should not have')
         //stack.next()
       })
 
       stack.fire('/bomb/disarm', () => {
         t.pass('end of stack reached')
-      })  
+      })
     })
 
     test.skip('Robot assembly line', (t) => {
@@ -1124,24 +1124,24 @@ var testObj = {
       if(process.browser) window.stack = stack
 
       stack.on('robot/assemble/:product', (next) => {
-        console.log('"robot/assemble/:product" on!')    
-        t.equals(stack.path, '/robot/assemble/box')    
+        console.log('"robot/assemble/:product" on!')
+        t.equals(stack.path, '/robot/assemble/box')
 
         stack.fire('robot/box', () => {
           console.log('"robot/box" fire complete')
           console.log(`state._command.route.spec is: ${stack.path}
           `)
           // stack.next()
-          // stack.next() 
+          // stack.next()
         })
       })
 
       stack.on('robot/:product', () => {
-        console.log('"robot/:product" on!')    
+        console.log('"robot/:product" on!')
         console.log(`state.path is: ${stack.path}
-        `)  
+        `)
         t.equals(stack.path, '/robot/box')
-        //stack.next()   
+        //stack.next()
       })
 
       stack.fire('robot/assemble/box', () => {
@@ -1166,14 +1166,14 @@ var testObj = {
     //   stack.on('element/init/:prefix', () => {
     //     var elems = ['my-elem-a', 'my-elem-b', 'my-elem-c']
     //     //var nextFires = []
-    //     console.log('on: ' + stack.state._command.route.spec)    
+    //     console.log('on: ' + stack.state._command.route.spec)
     //     async.eachSeries(elems, (elem, callback) => {
     //       //callback(null)
     //       stack.fire('element/' + elem,() => {
     //         //nextFires.push(nextFire)
     //         //nextFire(null, callback)
-    //         console.log('fired: ' + stack.state._command.route.spec)        
-    //         stack.next(callback)    
+    //         console.log('fired: ' + stack.state._command.route.spec)
+    //         stack.next(callback)
     //       })
     //     }, (err) => {
     //       //nextFires[0]()
@@ -1186,31 +1186,31 @@ var testObj = {
     //     //     //nextFires.push(nextFire)
     //     //     //callback(null)
     //     //     //nextFire()
-    //     //     nextFire()    
+    //     //     nextFire()
     //     //   })
     //     // })
     //     //next(null, state)
     //   })
 
-    //   stack.on('element/:elementName', () => { 
-    //     log('on: ' + stack.state._command.route.spec)        
+    //   stack.on('element/:elementName', () => {
+    //     log('on: ' + stack.state._command.route.spec)
     //     //Got a problem with this matching "/element/init/my-element"
-    //     //temporary workaround: 
+    //     //temporary workaround:
     //     //if(!state._command.elementName) return next(null, state)
     //     //console.log('on: ' + state._command.route.spec)
     //     stack.fire('element/' + stack.state._command.params.elementName + '/connected', () => {
-    //       //next(null, newState) //< If you call next here we get a failure. 
+    //       //next(null, newState) //< If you call next here we get a failure.
     //       //TODO: should be some brakes when the next() command fires; some extra logic to prevent max callback.
     //       console.log('fired: ' + stack.state._command.route.spec)
     //       stack.next()
-    //       stack.next()  //Could be an issue with doing double calls like this though.... 
+    //       stack.next()  //Could be an issue with doing double calls like this though....
     //       //for an async func in particular, stack.next might get called
-    //       //but without reference to the original middleware that it's intended for - 
+    //       //but without reference to the original middleware that it's intended for -
     //       //you can't necessarily move forward the stack...
-    //       //which is why it may be important to pass stack.next('element/:elemnetName') here... 
+    //       //which is why it may be important to pass stack.next('element/:elemnetName') here...
     //       //or stack.next('element/' + stack.state._command.params.elementName)
     //       //next(null, newState)
-    //       //if you call just stack.next() it will do a general advance; but may cause issue if 
+    //       //if you call just stack.next() it will do a general advance; but may cause issue if
     //       //you need things to execute in specific order so thats why its advisable to use stack.next('/name-of-function') or possibly another way would be to do it my original way which was to pass
     //       //the 'next' object
     //     })
@@ -1243,8 +1243,8 @@ var testObj = {
 
     //   stack.on('go', () => {
     //     t.pass('going')
-    //     stack.next() 
-    //   })  
+    //     stack.next()
+    //   })
 
     //   stack.fire('green', (err, state, nextFire) => {
     //     t.pass('gone')
@@ -1277,9 +1277,9 @@ var testObj = {
     //   stack.on('red', (state) => {
     //     t.pass('red light on')
     //     stack.next()
-    //   })  
+    //   })
 
-    //   //Red should be a sibling of root... 
+    //   //Red should be a sibling of root...
     //   stack.fire('red', (err, state) => {
     //     t.pass('stopped')
     //   })
@@ -1291,7 +1291,7 @@ var testObj = {
     newTest('command path nulls after fire', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
       stack.on('bake-cookie', () => {
         t.ok(stack.path, '/bake-cookie')
       })
@@ -1303,7 +1303,7 @@ var testObj = {
     test.skip('buffer fires every fire', (t) => {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
       stack.on('apples', (state, next) => {
         t.pass('apples on!')
         next(null, state)
@@ -1311,7 +1311,7 @@ var testObj = {
       stack.on('oranges', (state, next) => {
         t.pass('oranges on!')
         next(null, state)
-      })  
+      })
       stack.on('/_buffer', (state, next) => {
         console.log('/buffer')
         t.pass('/_buffer on!') //< Should run twice.
@@ -1329,7 +1329,7 @@ var testObj = {
     test.skip('buffer fires every fire (complex)', (t) => {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
       stack.on('apples', (state, next) => {
         t.pass('apples on!')
         stack.fire('oranges', (err, state) => {
@@ -1353,31 +1353,31 @@ var testObj = {
     test.skip('Demonstrate multiple ways of calling next (WIP)', (t) => {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
 
       stack.on('shake', (state, next) => {
-        //The shake command is not done yet: 
+        //The shake command is not done yet:
         t.notOk( _.find(stack.grid.enties, (enty) => enty.command.route.spec == 'shake').done)
         console.log('we are making a milk shake')
-      })  
+      })
 
       stack.fire('milk', (err, state, nextFire) => {
-        //The milk command is done: 
-        t.ok( _.find(stack.grid.enties, (enty) => enty.command.route.spec == 'milk').done)    
+        //The milk command is done:
+        t.ok( _.find(stack.grid.enties, (enty) => enty.command.route.spec == 'milk').done)
         stack.fire('shake', (err, state, nextFire) => {
           nextFire()
         })
       })
 
       stack.on('tonic', (state, next) => {
-        //The shake command is not done yet: 
+        //The shake command is not done yet:
         t.notOk( _.find(stack.grid.enties, (enty) => enty.command.route.spec == 'shake').done)
         console.log('we are making a milk shake')
-      })  
+      })
 
       stack.fire('gin', (err, state, nextFire) => {
-        //The milk command is done: 
-        t.ok( _.find(stack.grid.enties, (enty) => enty.command.route.spec == 'milk').done)    
+        //The milk command is done:
+        t.ok( _.find(stack.grid.enties, (enty) => enty.command.route.spec == 'milk').done)
         stack.fire('tonic', next)
       })
 
@@ -1390,53 +1390,53 @@ var testObj = {
     test.skip('Multi command stress test', (t) => {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
-      let gg = process.browser ? require('gg') : requireUncached('gg')  
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('shake', () => {
-        //The shake command is not done yet: 
-        var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/shake').command    
+        //The shake command is not done yet:
+        var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/shake').command
         t.notOk(shakeCommand.done, 'shake command not done')
 
         var nextRowCell = gg.xyToIndex(stack.grid, 1, 0)
-        t.equals(shakeCommand.cell, nextRowCell, 'shake command inserted to second row, first column')  //Sibling next to shake. 
+        t.equals(shakeCommand.cell, nextRowCell, 'shake command inserted to second row, first column')  //Sibling next to shake.
 
         console.log('we are making a milk shake')
         debugger
-      })  
+      })
 
       stack.fire('milk', () => {
-        //The milk command callback is underway: 
+        //The milk command callback is underway:
         //skiping these tests for now; theorteically a fire without any listeners
         //does indeed create a new command that exists on the grid
-        //so TODO; comeback to uncomment and pass these: 
+        //so TODO; comeback to uncomment and pass these:
         //var milkCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/milk').command
-        //t.notOk(milkCommand.done, 'milk command not done yet (trailing callback underway)') 
-        //t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0') 
-        debugger 
+        //t.notOk(milkCommand.done, 'milk command not done yet (trailing callback underway)')
+        //t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0')
+        debugger
         stack.fire('shake', () => {
           var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/shake').command
-          //milk command is still done: 
-          t.notOk(milkCommand.done, 'milk command still not done')     
-          //and now shake is done too:                  
-          t.notOk(shakeCommand.done, 'shake command not done (trailing callback underway)')                 
+          //milk command is still done:
+          t.notOk(milkCommand.done, 'milk command still not done')
+          //and now shake is done too:
+          t.notOk(shakeCommand.done, 'shake command not done (trailing callback underway)')
           console.log('we made a milk shake')
-          debugger          
+          debugger
         })
       })
 
       stack.on('beer', () => {
         var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/beer').command
-        //The beer command is not done yet:     
-        t.notOk(beerCommand.done, 'beer command not done') 
-        t.equals(beerCommand.cell, gg.xyToIndex(stack.grid, 0, 1), 'beer command inserted to first row, second column (sibling of the first command)') 
+        //The beer command is not done yet:
+        t.notOk(beerCommand.done, 'beer command not done')
+        t.equals(beerCommand.cell, gg.xyToIndex(stack.grid, 0, 1), 'beer command inserted to first row, second column (sibling of the first command)')
         console.log('pour a beer')
         //stack.next()
-      })  
+      })
 
       stack.fire('beer', () => {
-        var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/beer')    
-        t.notOk(beerCommand.done, 'beer command still not done') 
+        var beerCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/beer')
+        t.notOk(beerCommand.done, 'beer command still not done')
         t.equals(beerCommand.cell, gg.xyToIndex(stack.grid, 0, 1), 'beer command still at first row, second column')  //< Sibling next to milk.
         console.log('poured a beer.')
         //stack.next()
@@ -1453,25 +1453,25 @@ var testObj = {
     test.skip('Strawberry milkshake', (t) => {
       t.plan(10)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
 
       stack.on('milkshake', (state, next) => {
-      
+
         stack.fire('milk', (err, state, nextFire) => {
           console.log('add some milk')
-          //nextFire()      
-        })  
+          //nextFire()
+        })
 
         stack.fire('strawberries', (err, state, nextFire) => {
           console.log('add some strawberries')
-          //wow should not run! 
-          //next(null, state)       
+          //wow should not run!
+          //next(null, state)
         })
 
-      })  
+      })
 
       stack.fire('milkshake', (err, state) => {
-        //The milk command is done: 
+        //The milk command is done:
         console.log('finished milkshake!')
       })
 
@@ -1482,8 +1482,8 @@ var testObj = {
     test.skip('Empty goldmine', (t) => {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
-      let gg = process.browser ? require('gg') : requireUncached('gg') 
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.state.gold = false
 
@@ -1496,39 +1496,39 @@ var testObj = {
 
           debugger
 
-          //Parent cell should equal 0 (first cell): 
+          //Parent cell should equal 0 (first cell):
           t.equals(shovelCommand.parent.cell, 0, "shovel command's parent is at the first cell of the grid")
 
-          //Shovel command's cell should be directly below: 
+          //Shovel command's cell should be directly below:
           var expectedCell = gg.xyToIndex(stack.grid, [1, 0])
 
           t.equals(shovelCommand.cell, expectedCell, 'shovel command is directly below the parent command')
 
           //This will never be true; there should be no advancement to 'cart' fire.
           if(stack.state.gold == true) return stack.next()
-        })  
+        })
 
         //technically stack.fire above is done... as such, we may need to use a different metric for stack.fire
         //OR we should not mark as done
-        //perhaps we will say middlware_done and then command_done - command_done false until callback completed ie; nextFire called. 
+        //perhaps we will say middlware_done and then command_done - command_done false until callback completed ie; nextFire called.
 
         stack.fire('cart', () => {
           //Should not run...
-          console.log('fill cart...')           
+          console.log('fill cart...')
           t.fail('there will never be any gold!')
         })
 
-      })  
+      })
 
       stack.fire('mine', (err, state) => {
-        //Should not run: 
+        //Should not run:
         t.fail('mining will never finish!')
       })
 
       setTimeout(() => {
-        t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/mine', 'first cell is /mine') 
+        t.equals( stack.grid.cells[0].enties[0].command.route.spec, '/mine', 'first cell is /mine')
         t.equals ( stack.grid.cells[gg.xyToIndex(stack.grid, [1,0])].enties[0].command.route.spec, '/shovel', 'next row down, same column is /shovel' )
-        t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [1,1])].enties[0].command.route.spec, '/cart', 'next column over is /cart (it is sibling so shares same row)')       
+        t.equals( stack.grid.cells[gg.xyToIndex(stack.grid, [1,1])].enties[0].command.route.spec, '/cart', 'next column over is /cart (it is sibling so shares same row)')
       }, 100)
 
     })
@@ -1536,8 +1536,8 @@ var testObj = {
     newTest('Incomplete garden', (t) => {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')    
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.fire('dig', (next) => {
         log('dug')
@@ -1555,29 +1555,29 @@ var testObj = {
         t.fail('there is no water!')
       })
 
-      setTimeout(() => { //Ensure each of the commands exist on the first row: 
+      setTimeout(() => { //Ensure each of the commands exist on the first row:
         var rowZeroColumnZero = stack.grid.cells[0]
         t.equals( rowZeroColumnZero.enties[0].command.route.spec, '/dig', 'first cell is /dig')
-        //There should be no enties in 0,1: 
+        //There should be no enties in 0,1:
         var rowZeroColumnOne = stack.grid.cells[gg.xyToIndex(stack.grid, [0,1])]
         t.notOk ( rowZeroColumnOne.enties[0] )
 
-        //0,2 should not exist: 
-        var rowZeroColumnTwo = stack.grid.cells[gg.xyToIndex(stack.grid, [0,2])]  
-        t.notOk( rowZeroColumnTwo ) 
+        //0,2 should not exist:
+        var rowZeroColumnTwo = stack.grid.cells[gg.xyToIndex(stack.grid, [0,2])]
+        t.notOk( rowZeroColumnTwo )
 
-        //The queue should have the following commands: 
-        t.equals(stack.queue[0].route.spec, '/plant')  
-        t.equals(stack.queue[1].route.spec, '/water')                    
+        //The queue should have the following commands:
+        t.equals(stack.queue[0].route.spec, '/plant')
+        t.equals(stack.queue[1].route.spec, '/water')
       }, 100)
 
-      //Future shorthand: 
-      //stack.chain().fire('dig').fire('plant').fire('water') 
+      //Future shorthand:
+      //stack.chain().fire('dig').fire('plant').fire('water')
       //normally you would have to call 'nextFire' but when in a chain they fire automatically
       //possibly could rename to stack.autoFire()
       //or stack.auto('')
       //stack.parallel()
-      //maybe I should remove callbacks from fires... 
+      //maybe I should remove callbacks from fires...
       //that way ... nah... or how about remove nested ... nah
 
     })
@@ -1586,15 +1586,15 @@ var testObj = {
     newTest('Complete garden', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
 
       stack.fire('dig', (next) => {
         log('dug')
         t.pass('dig complete, we done for the day')
         //nextFire()
         //nextFire(null, state)
-        //nextFire called, so the next command runs: 
-        next() 
+        //nextFire called, so the next command runs:
+        next()
       })
 
       stack.fire('plant', (next) => {
@@ -1613,16 +1613,16 @@ var testObj = {
     newTest('Multiple .on with same name', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
 
       stack.on('water', (next) => {
         t.pass('flowing...')
-        next() 
+        next()
       })
 
       stack.on('water', () => {
         t.pass('still flowing...')
-      })  
+      })
 
       stack.fire('water')
     })
@@ -1630,16 +1630,16 @@ var testObj = {
     test.skip('Stack shorthand advances the stack (inexplicitly calls stack.next())', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
 
       stack.on('apple', () => {
         t.pass()
-        stack.next() 
-      })  
+        stack.next()
+      })
 
       stack.on('bannana', () => {
         t.pass()
-        stack.next() 
+        stack.next()
       })
 
       stack.fire('apple')
@@ -1652,7 +1652,7 @@ var testObj = {
     newTest('inadvertent next calls', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
+      if(process.browser) window.stack = stack
 
       stack.on('init', (next) => {
         t.pass('/init on')
@@ -1686,13 +1686,13 @@ var testObj = {
     newTest('inadvertent next calls pt2', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
-      let gg = process.browser ? require('gg') : requireUncached('gg')  
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('bannana-shake', (next) => {
         console.log('brrshh-zzzzzze....')
         setTimeout(() => {
-          next() 
+          next()
         }, 2000)
       })
 
@@ -1708,8 +1708,8 @@ var testObj = {
       })
 
       setTimeout(() => {
-        //apple command completes cause stack.fire without callback 
-        //inexplicilty advance the stack: 
+        //apple command completes cause stack.fire without callback
+        //inexplicilty advance the stack:
         var firstCellCommand = gg.examine(stack.grid, [0,0]).command
         t.ok( firstCellCommand.route.spec = '/apple' &&  gg.examine(stack.grid, [0,0]).command.done, 'First command /apple is done')
       }, 3000)
@@ -1720,19 +1720,19 @@ var testObj = {
     newTest('inadvertent next calls pt3', (t) => {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack  
-      let gg = process.browser ? require('gg') : requireUncached('gg')  
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('bannana-shake', (next) => {
         console.log('brrshh-zzzzzze....')
         setTimeout(() => {
-          next() 
+          next()
         }, 500)
       })
 
       stack.on('cherry', (next) => {
         t.pass('put a cherry on top')
-        next() 
+        next()
       })
 
 
@@ -1742,20 +1742,20 @@ var testObj = {
          next.fire('cherry', (next) => {
             t.pass('cherry fire callback reached')
             console.log('do not finish cherry') //< By invoking a callback that does not
-            //call next() we block the stack; apple will never complete. 
+            //call next() we block the stack; apple will never complete.
           })
         })
       })
 
       setTimeout(() => {
         //apple command should not complete cause we provided a callback
-        //and did not expliclitly call stack.next() to advance the stack: 
+        //and did not expliclitly call stack.next() to advance the stack:
         var appleCommand = gg.examine(stack.grid, [0,0]).command
         t.notOk(appleCommand.done, 'First command /apple is not done')
-        var cherryListener = gg.examine(stack.grid, [1,2]) 
+        var cherryListener = gg.examine(stack.grid, [1,2])
         console.log(cherryListener)
         t.ok(cherryListener.done, "Third command '/cherry', first listener  is done")
-        var cherryCommand = gg.examine(stack.grid, [1,2]).command          
+        var cherryCommand = gg.examine(stack.grid, [1,2]).command
         t.notOk(cherryCommand.done, 'Third command /cherry is not done')
       }, 600)
 
@@ -1764,8 +1764,8 @@ var testObj = {
     test.skip('rows of siblings', (t) => {
       t.plan(8)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')     
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
       stack.fire('fruits', () => {
         stack.fire('apple')
         stack.fire('bannana')
@@ -1773,30 +1773,30 @@ var testObj = {
         stack.fire('pineapple')
         stack.fire('kiwi')
         stack.fire('watermellon')
-        //stack.next() //< we do not call, 
+        //stack.next() //< we do not call,
         //therefore the fruits command should never complete
       })
 
-      //1 parent, and row of 6 siblings: 
+      //1 parent, and row of 6 siblings:
       //fruits
-      //apple | bannana | cherry | pineapple | kiwi | watermellon 
+      //apple | bannana | cherry | pineapple | kiwi | watermellon
 
       t.equals(gg.examine(stack.grid, 0).command.route.spec, '/fruits' )
       t.notOk(gg.examine(stack.grid, 0).command.done)
       t.equals(gg.examine(stack.grid, [1,0]).command.route.spec, '/apple' )
-      t.equals(gg.examine(stack.grid, [1,1]).command.route.spec, '/bannana' )  
-      t.equals(gg.examine(stack.grid, [1,2]).command.route.spec, '/cherry' )  
-      t.equals(gg.examine(stack.grid, [1,3]).command.route.spec, '/pineapple' )  
-      t.equals(gg.examine(stack.grid, [1,4]).command.route.spec, '/kiwi' )  
-      t.equals(gg.examine(stack.grid, [1,5]).command.route.spec, '/watermellon' )  
+      t.equals(gg.examine(stack.grid, [1,1]).command.route.spec, '/bannana' )
+      t.equals(gg.examine(stack.grid, [1,2]).command.route.spec, '/cherry' )
+      t.equals(gg.examine(stack.grid, [1,3]).command.route.spec, '/pineapple' )
+      t.equals(gg.examine(stack.grid, [1,4]).command.route.spec, '/kiwi' )
+      t.equals(gg.examine(stack.grid, [1,5]).command.route.spec, '/watermellon' )
     })
 
 
     test.skip('stack next() caller check', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')       
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.fire('stone', () => {
         //next()
@@ -1805,29 +1805,29 @@ var testObj = {
       stack.fire('wood', () => {
         //stack.next()
         stack.fire('paper', () => {
-          //stack.next() 
+          //stack.next()
         })
       })
 
-      //  stone | wood 
+      //  stone | wood
       //          paper
 
       t.ok(gg.examine(stack.grid, 0).command.done)
       t.notOk(gg.examine(stack.grid, [0, 1]).command.done)
       t.ok(gg.examine(stack.grid, [1, 1]).command.done)
       //Wood is not done cause it never calls stack.next()
-      //Stone and paper are both done cause their callbacks both call stack.next() 
+      //Stone and paper are both done cause their callbacks both call stack.next()
     })
 
 
     newTest('wait for loading...', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg') 
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
       let async = process.browser ? require('async') : requireUncached('async')
 
-      var loaded = false 
+      var loaded = false
 
       stack.on('init', (next) => {
         async.series([
@@ -1841,9 +1841,9 @@ var testObj = {
             })
           },
           (callback) => {
-            //This should wait for it's sibling to finish loading:  
+            //This should wait for it's sibling to finish loading:
             next.fire('do-other-stuff', () => {
-              console.log('now do other stuff')      
+              console.log('now do other stuff')
               t.ok(loaded)
             })
           }
@@ -1852,30 +1852,30 @@ var testObj = {
 
       stack.fire('init')
 
-      //cell check: 
+      //cell check:
       setTimeout(() => {
         t.equals(  _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/init').cell, 0)
-        //Both these commands are siblings of the original '/init' command: 
+        //Both these commands are siblings of the original '/init' command:
         //TODO: cell placement visualization
         //t.equals(  _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/load').cell, 2)
-        //t.equals(  _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/do-other-stuff').cell, 3) 
+        //t.equals(  _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/do-other-stuff').cell, 3)
       }, 200)
     })
 
     //TODO: handle a next.fire on command with no listeners better
-    //or update this test: 
+    //or update this test:
     test.skip('stack.next for ons vs fires', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')   
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('apple', (next) => {
         next.fire('bannana')
       })
 
       stack.fire('apple')
-      console.log(  gg.examine(stack.grid, 0) ) 
+      console.log(  gg.examine(stack.grid, 0) )
       t.ok(gg.examine(stack.grid, 0).command.done)  //< /bannana is done
       t.ok(gg.examine(stack.grid, 0).command.done) //< /apple is done
     })
@@ -1884,54 +1884,54 @@ var testObj = {
     newTest('stack.next for ons vs fires pt2', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')   
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('cherry', (next) => {
         next.fire('date', (next) => {
 
-        }) 
+        })
         //^ Both cherry and date should be incomplete;
-        //date's listener/callback does not call next and 
+        //date's listener/callback does not call next and
         //cherry is date's parent
       })
       stack.fire('cherry')
-      
+
       t.notOk(gg.examine(stack.grid, [0, 1]).command.done)  //< date is not done
       t.notOk(gg.examine(stack.grid, 0).command.done) //< cherry is not done
-      //actually date is done cause there is no middleware... if date was fired with a callback it would not be done.       
+      //actually date is done cause there is no middleware... if date was fired with a callback it would not be done.
     })
 
 
     newTest('stack.next for ons vs fires pt3', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')   
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('asparagus', (next) => {
-        next.fire('bean-sprouts') 
+        next.fire('bean-sprouts')
       })
       stack.fire('asparagus')
-      t.notOk(gg.examine(stack.grid, [0, 1]))  //< bean-sprouts is nowhere because there is no middleware, nor callback provided. 
+      t.notOk(gg.examine(stack.grid, [0, 1]))  //< bean-sprouts is nowhere because there is no middleware, nor callback provided.
       t.notOk(gg.examine(stack.grid, 0).command.done) //< asparagus is not done
     })
 
     newTest('stack.next for ons vs fires pt4', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')   
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('bean-sprouts', () => {
         console.log('bean-sprouts in progress')
       })
 
       stack.on('asparagus', (next) => {
-        next.fire('bean-sprouts')  
+        next.fire('bean-sprouts')
       })
       stack.fire('asparagus')
-     
+
       t.ok(gg.examine(stack.grid, [0, 1]).command.done)  //< bean-sprouts is done
       t.ok(gg.examine(stack.grid, 0).command.done) //< asparagus is done
 
@@ -1941,20 +1941,20 @@ var testObj = {
     newTest('stack.next for ons vs fires pt5', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')   
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('bean-sprouts', (next) => {
         console.log('bean-sprouts in progress')
-        //next provided but not called        
+        //next provided but not called
       })
 
       stack.on('asparagus', (next) => {
-        next.fire('bean-sprouts', next) 
+        next.fire('bean-sprouts', next)
       })
 
       stack.fire('asparagus')
-      t.notOk(gg.examine(stack.grid, [0, 1]).command.done)  //< bean-sprouts is not done because next was not called during it's final callback. 
+      t.notOk(gg.examine(stack.grid, [0, 1]).command.done)  //< bean-sprouts is not done because next was not called during it's final callback.
       t.notOk(gg.examine(stack.grid, 0).command.done)
     })
 
@@ -1963,12 +1963,12 @@ var testObj = {
     newTest('nested on/next situation', (t) => {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')   
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('apple', (next) => {
         next.fire('orange')
-        //stack.next is not called during the middleware function so apple should never complete... 
+        //stack.next is not called during the middleware function so apple should never complete...
       })
       stack.fire('apple')
 
@@ -1980,8 +1980,8 @@ var testObj = {
       t.plan(7)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg')  
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.fire('apple', (next) => {
         next.fire('green', (next) => next.fire('red', next))
@@ -2004,17 +2004,17 @@ var testObj = {
     newTest('Ensure commands do not get doubled in the grid if only fired once', (t) => {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg') 
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('connect', () => {
         console.log('do something')
-        //stack.next() 
+        //stack.next()
       })
 
       stack.on('connect', () => {
         console.log('do another thing')
-        //stack.next() 
+        //stack.next()
       })
 
       stack.fire('connect', () => {
@@ -2022,7 +2022,7 @@ var testObj = {
         console.log(stack.grid.enties)
       })
 
-      //this basic example does not reproduce the issue.... 
+      //this basic example does not reproduce the issue....
 
     })
 
@@ -2031,22 +2031,22 @@ var testObj = {
     test.skip('Ensure commands do not get doubled in the grid if only fired once, specifically if they are using parameter', (t) => {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg') 
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
-      //Order is important here... 
+      //Order is important here...
       //the parameter version 'on' needs to like reverse itself
       //though this could be a feature that is like not needed; or just a gotcha
-      //to watch out for. 
+      //to watch out for.
 
       stack.on('element/awesome-element/connected', () => {
         console.log('do another thing')
-        //stack.next() 
+        //stack.next()
       })
 
       stack.on('element/:elementName/connected', () => {
         console.log('do something')
-        //stack.next() 
+        //stack.next()
       })
 
       stack.fire('element/awesome-element/connected', () => {
@@ -2060,12 +2060,12 @@ var testObj = {
     newTest('finish all middleware', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg') 
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('save', (next) => {
         t.pass('save stuff')
-        next.fire('elements/render')  
+        next.fire('elements/render')
       })
 
       stack.on('elements/render', () => {
@@ -2073,7 +2073,7 @@ var testObj = {
       })
 
       stack.on('save', () => {
-        t.pass('save more stuff') 
+        t.pass('save more stuff')
       })
 
       stack.fire('save')
@@ -2082,8 +2082,8 @@ var testObj = {
     newTest('finish all middleware (triple on)', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      let gg = process.browser ? require('gg') : requireUncached('gg') 
+      if(process.browser) window.stack = stack
+      let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('/favvorite-main-save', (next) => {
         //next.fire('elements/render', next) //< TODO accommodate for this syntax
@@ -2095,11 +2095,11 @@ var testObj = {
       })
 
       stack.on('favvorite-main-save', () => {
-        t.pass('second middleware invoked') 
+        t.pass('second middleware invoked')
       })
 
       stack.fire('/favvorite-main-save', () => {
-        t.pass('command finished') 
+        t.pass('command finished')
       })
 
     })
@@ -2107,17 +2107,17 @@ var testObj = {
     newTest('Completion pyramid', (t) => {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
+      if(process.browser) window.stack = stack
       stack.fire('first', (next) => {
         next.fire('second', (next) => {
           next.fire('third', (next) => {
             next.fire('fourth', (next) => {
               next.fire('fifth', (next) => {
-                console.log('reached the end')   
-                t.pass()     
+                console.log('reached the end')
+                t.pass()
               })
             })
-          })      
+          })
         })
       })
     })
@@ -2126,7 +2126,7 @@ var testObj = {
     newTest('Middleware fires in correct order', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
+      if(process.browser) window.stack = stack
 
       stack.on('go', () => {
         t.pass('first wildcard')
@@ -2148,7 +2148,7 @@ var testObj = {
     newTest('Middleware fires in correct order (with wildcards)', (t) => {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
+      if(process.browser) window.stack = stack
 
       stack.on('*wild', () => {
         t.pass('first wildcard')
@@ -2170,8 +2170,8 @@ var testObj = {
     newTest('All middleware fires', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      
+      if(process.browser) window.stack = stack
+
 
       stack.on('click', (next) => {
         next.fire('init')
@@ -2193,8 +2193,8 @@ var testObj = {
       t.plan(2)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
-      
+      if(process.browser) window.stack = stack
+
       stack.on('apples', () => {
         //need not run
       })
@@ -2212,12 +2212,12 @@ var testObj = {
       var command = _.find(stack.commands, (command) => command.route.spec == '/cherries')
       t.equals( command.route.spec, '/cherries')
 
-    }) 
+    })
 
     newTest('Stress test', (t) => {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
+      if(process.browser) window.stack = stack
       let gg = process.browser ? require('gg') : requireUncached('gg')
 
       stack.on('ready', (next) => {
@@ -2236,7 +2236,7 @@ var testObj = {
 
       stack.on('init', () => {
         console.log('init fourth')
-        debugger        
+        debugger
       })
 
       stack.on('docs', () => {
@@ -2246,7 +2246,7 @@ var testObj = {
 
       stack.on('docs', () => {
         console.log('docs second')
-        debugger        
+        debugger
       })
 
       stack.on('docs', () => {
@@ -2262,14 +2262,14 @@ var testObj = {
         stack.grid = gg.xyCells(stack.grid)
 
         var thirdInit = gg.examine(stack.grid, [2, 1] )
-        console.log(thirdInit) 
+        console.log(thirdInit)
 
         console.log(stack.grid.cells[13])
 
-        //var fourthInit = gg.examine(stack.grid, [3, 1] )   
+        //var fourthInit = gg.examine(stack.grid, [3, 1] )
         var fourthInit = stack.grid.cells[gg.xyToIndex(stack.grid, 5, 1)].enties[0]
         //TODO figure out why stack.grid, [3, 1] doesnt work... maybe gg.examine
-        //is looking for column row and not row column... 
+        //is looking for column row and not row column...
 
         console.log(fourthInit)
 
@@ -2281,7 +2281,7 @@ var testObj = {
         t.ok( _.find(stack.commands, (command) => command.route.spec == '/init').done, "/init command is done")
         t.ok( _.find(stack.commands, (command) => command.route.spec == '/ready').done, "/ready command is done")
 
-        //t.ok( stack.grid.cells[0].enties[0].command.done, "first 'ready' command is done")        
+        //t.ok( stack.grid.cells[0].enties[0].command.done, "first 'ready' command is done")
 
       }, 1)
 
@@ -2292,7 +2292,7 @@ var testObj = {
       t.plan(1)
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
+      if(process.browser) window.stack = stack
 
       stack.trimming = true
 
@@ -2314,19 +2314,19 @@ var testObj = {
       stack.on('save-note', () => console.log('save-note 3'))
 
       stack.on('keyboard/keydown', (next) => {
-        console.log('keyboard/keydown 1') 
+        console.log('keyboard/keydown 1')
         if(state.keydown === 'ESC') return next.fire('save-note')
-        next() 
-      })  
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 2') )        
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 3') )        
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 4') )        
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 5') )        
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 6') )        
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 7') )        
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 8') )        
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 9') )        
-      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 10') )        
+        next()
+      })
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 2') )
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 3') )
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 4') )
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 5') )
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 6') )
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 7') )
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 8') )
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 9') )
+      stack.on('keyboard/keydown', () => console.log('keyboard/keydown 10') )
 
       stack.on('create-note', () => console.log('create-note 1') )
 
@@ -2369,7 +2369,7 @@ var testObj = {
 
       stack.fire('ready')
 
-      stack.fire('create-note') 
+      stack.fire('create-note')
 
       stack.fire('keyboard/keydown') //T
       stack.fire('keyboard/keydown') //E
@@ -2379,10 +2379,10 @@ var testObj = {
       state.keydown = 'ESC'
       stack.fire('keyboard/keydown') //ESC
 
-      //Create another note! 
-      //TODO: fix failing / max call stack size exceeded.... 
+      //Create another note!
+      //TODO: fix failing / max call stack size exceeded....
       setTimeout(() => {
-        stack.fire('create-note') 
+        stack.fire('create-note')
 
         stack.fire('keyboard/keydown') //T
         stack.fire('keyboard/keydown') //E
@@ -2390,7 +2390,7 @@ var testObj = {
         stack.fire('keyboard/keydown') //T
 
         state.keydown = 'ESC'
-        stack.fire('keyboard/keydown') //ESC  
+        stack.fire('keyboard/keydown') //ESC
 
         t.pass('finshed without crashing')
 
@@ -2398,42 +2398,42 @@ var testObj = {
 
     })
 
-    newTest('stack.fire executes syncronously if all listeners are synchronous', (t) => { 
-      t.plan(1) 
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js') 
-      if(process.browser) window.stack = stack  
- 
-      var going = false 
-      var stillGoing = false  
- 
-      var executeSyncly = () => { 
-        console.log('executed syncly') 
-        going = true  
-      } 
-      var executeSynclyAgain = () => { 
-        stillGoing = true  
-        console.log('executed syncly (again)') 
-      }       
- 
-      stack.on('go', executeSyncly ) 
-      stack.on('go', executeSynclyAgain ) 
- 
-      stack.fire('go') 
- 
-      t.ok(going && stillGoing) 
-        
-    }) 
+    newTest('stack.fire executes syncronously if all listeners are synchronous', (t) => {
+      t.plan(1)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      var going = false
+      var stillGoing = false
+
+      var executeSyncly = () => {
+        console.log('executed syncly')
+        going = true
+      }
+      var executeSynclyAgain = () => {
+        stillGoing = true
+        console.log('executed syncly (again)')
+      }
+
+      stack.on('go', executeSyncly )
+      stack.on('go', executeSynclyAgain )
+
+      stack.fire('go')
+
+      t.ok(going && stillGoing)
+
+    })
 
 
 
     test.skip('stack.fire executes asyncronously if next is used in a listener', (t) => {
-      
-    })  
+
+    })
 
 
     newTest('One time callback is executed only once', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
+      if(process.browser) window.stack = stack
 
       t.plan(1)
 
@@ -2453,7 +2453,7 @@ var testObj = {
 
     newTest('One time callback is executed again if included again', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack 
+      if(process.browser) window.stack = stack
 
       t.plan(2)
 
@@ -2469,36 +2469,36 @@ var testObj = {
         })
       }
 
-      fireEat() 
-      fireEat() 
-    })       
+      fireEat()
+      fireEat()
+    })
 
     newTest('ttt', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      let gg = process.browser ? require('gg') : requireUncached('gg')      
-      if(process.browser) window.stack = stack 
+      let gg = process.browser ? require('gg') : requireUncached('gg')
+      if(process.browser) window.stack = stack
 
-      t.plan(3)        
+      t.plan(3)
 
       stack.on('something', () => t.pass('something happened'))
 
       stack.fire('something', (next) => {
         t.pass('something finshed')
-        next() 
+        next()
       })
 
       //check that something command is done
 
-      t.ok( _.every(stack.commands, (command) => command.done), 'all commands are done') 
+      t.ok( _.every(stack.commands, (command) => command.done), 'all commands are done')
 
     })
 
     newTest('stack.every fires everytime', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      let gg = process.browser ? require('gg') : requireUncached('gg')      
-      if(process.browser) window.stack = stack 
+      let gg = process.browser ? require('gg') : requireUncached('gg')
+      if(process.browser) window.stack = stack
 
-      t.plan(3)        
+      t.plan(3)
 
       stack.on('something', () => console.log('something happened'))
 
@@ -2508,20 +2508,20 @@ var testObj = {
 
       stack.every(() => t.pass() )
 
-      stack.fire('something') 
+      stack.fire('something')
 
-      stack.fire('another-thing') 
+      stack.fire('another-thing')
 
       stack.fire('yet another-thing')
 
-    })   
+    })
 
     newTest('Grid expands to accommodate multiple incomplete listeners', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      let gg = process.browser ? require('gg') : requireUncached('gg')      
-      if(process.browser) window.stack = stack 
+      let gg = process.browser ? require('gg') : requireUncached('gg')
+      if(process.browser) window.stack = stack
 
-      t.plan(9)   
+      t.plan(9)
 
       stack.on('one', () => t.pass('one listened'))
 
@@ -2534,13 +2534,13 @@ var testObj = {
       })
 
       stack.on('two B', () => {
-        t.pass('listened for two B')        
+        t.pass('listened for two B')
         stack.fire('two C')
-      })    
+      })
 
       stack.on('two B', () => {
         t.pass('listened for two B again')
-      })   
+      })
 
       stack.on('two B', () => {
         t.pass('listened for two B yet again')
@@ -2556,32 +2556,32 @@ var testObj = {
       stack.on('two C', () => t.pass('two C listened even one more time'))
 
 
-      stack.fire('one') 
+      stack.fire('one')
 
-      stack.fire('two') 
+      stack.fire('two')
 
 
-    })  
+    })
 
     newTest('All listeners run (after a re-stack)', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      //let gg = process.browser ? require('gg') : requireUncached('gg')      
-      if(process.browser) window.stack = stack 
+      //let gg = process.browser ? require('gg') : requireUncached('gg')
+      if(process.browser) window.stack = stack
 
-      t.plan(12)   
+      t.plan(12)
 
       stack.on('keyboard/keydown', () => {
         stack.fire('create-note/save')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
       stack.on('create-note/save', () => {
-        console.log('create-note/save')  
+        console.log('create-note/save')
         stack.fire('docs')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
-      //These ones were not running correctly... 
+      //These ones were not running correctly...
       stack.on('create-note/save', () => {
         console.log('create-note/save #2') //< this one would just repeat
         t.pass('runs')
@@ -2599,43 +2599,43 @@ var testObj = {
 
       stack.on('docs', () => {
         console.log('docs')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
       stack.on('docs', () => {
         console.log('docs #2')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
       stack.on('docs', () => {
         console.log('docs #3')
         stack.fire('selected-doc/selected')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
       stack.on('selected-doc/selected', () => {
         console.log('selected-doc/selected')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
       stack.on('selected-doc/selected', () => {
         console.log('selected-doc/selected #2')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
       stack.on('selected-doc/selected', () => {
         console.log('selected-doc/selected #3')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
       stack.on('selected-doc/selected', () => {
         console.log('selected-doc/selected #4')
-        t.pass('runs')  
+        t.pass('runs')
       })
 
       stack.fire('keyboard/keydown')
 
-    })    
+    })
 
     newTest('stack.endCommand ends a command early', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -2655,7 +2655,7 @@ var testObj = {
       })
       stack.on('green', () => {
         t.fail('listener 4 (should not run!)')
-      })      
+      })
       stack.on('green', () => {
         t.fail('listener 5 (should not run!)')
       })
@@ -2669,17 +2669,17 @@ var testObj = {
       if(process.browser) window.stack = stack
       t.plan(2)
 
-      var count = 0 
+      var count = 0
 
       stack.on('one', () => {
         console.log('one')
-        count++; 
+        count++;
         t.ok(count == 2)
       })
 
       stack.before('one', () => {
         console.log('zero')
-        count++; 
+        count++;
         t.ok(count == 1)
       })
 
@@ -2691,9 +2691,9 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
       t.plan(1)
-      stack.on(['jump-around', 'jumping'], () => t.pass('a jump has occurred')) 
+      stack.on(['jump-around', 'jumping'], () => t.pass('a jump has occurred'))
       stack.fire('jumping')
-    }) 
+    })
 
     newTest('parameter routes fire (param route defined afer a related listener established)', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -2705,9 +2705,9 @@ var testObj = {
       })
 
       stack.on('/keyup/:key', () => {
-        t.pass('keyup slash param listener ran') 
-        //(should run twice)       
-      })  
+        t.pass('keyup slash param listener ran')
+        //(should run twice)
+      })
 
       stack.fire('keyup/f')
 
@@ -2721,33 +2721,46 @@ var testObj = {
       t.plan(2)
 
       stack.on('/keyup/:key', () => {
-        t.pass('keyup slash param listener ran') 
-      })  
+        t.pass('keyup slash param listener ran')
+      })
 
       stack.on('/keyup/:key', () => {
-        t.pass('keyup slash param listener ran again') 
-      })  
+        t.pass('keyup slash param listener ran again')
+      })
 
       stack.fire('keyup/z')
-    })    
+    })
 
-    if(run) { 
+    newTest('Parameter commands store the actual parameter supplied', (t)  => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+
+      stack.on('/fruit/:typeOfFruit', () => {
+        t.equals(stack.params.typeOfFruit, 'apple', 'the type of fruit is apple')
+      })    
+
+      stack.fire('fruit/apple')
+    })
+
+
+    if(run) {
       console.log('run tests...')
-      if(testObj.only) { //Only run the one test: 
+      if(testObj.only) { //Only run the one test:
         return testObj.only.func(testObj.only.name)
       }
       testObj.tests.forEach((entry) => {
         entry.func(entry.name)
-      })      
+      })
     }
 
-    //Only send the one test: 
+    //Only send the one test:
     if(testObj.only) return [testObj.only]
 
     return testObj.tests
   }
-} 
+}
 
-if(process.browser) window.testObj = testObj 
+if(process.browser) window.testObj = testObj
 
 module.exports = testObj

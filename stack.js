@@ -23,16 +23,20 @@ const stack = {
 }
 
 //Listener creation function:
-stack.on = (pathOrPaths, callback) => {
+stack.on = (pathOrPathsOrCommand, callback) => {
 
-  var path
+  var path, existingCommand
 
+  //if we provide a command we can skip the path stuff... 
+  if(_.isObject(pathOrPathsOrCommand) && !_.isArray(pathOrPathsOrCommand)) {
+    path = pathOrPathsOrCommand.route.spec
+    existingCommand = pathOrPathsOrCommand
   //If an array...
-  if(_.isArray(pathOrPaths)) { //just re-call this function with each path:
-    pathOrPaths.forEach( (path) => stack.on(path, callback) )
+  } else if(_.isArray(pathOrPathsOrCommand)) { //just re-call this function with each path:
+    pathOrPathsOrCommand.forEach( (path) => stack.on(path, callback) )
     return
   } else { //otherwise continue with the single path:
-    path = pathOrPaths
+    path = pathOrPathsOrCommand
   }
 
   //Ensure path always is prefixed with a slash:
@@ -41,17 +45,14 @@ stack.on = (pathOrPaths, callback) => {
   //Create a route from the path:
   let route = new routeParser(path)
 
-
   let pathIsWild = _s.include(path, "*"),
       pathHasParams = _s.include(path, ":"),
       matchedFromPath,
       reversedRoute = route.reverse(path)
 
-  //debugger
-
   //Determine if this path corresponds to a command
   //already defined (via a previous stack.on call) in our stack:
-  const existingCommand = _.find(stack.commands, (existingCommand) => {
+  if(!existingCommand) existingCommand = _.find(stack.commands, (existingCommand) => {
     let commandIsWild = _s.include(existingCommand.route.spec, "*")
     let commandHasParams = _s.include(existingCommand.route.spec, ":")
     matchedFromPath = route.match(existingCommand.route.spec)
@@ -74,7 +75,7 @@ stack.on = (pathOrPaths, callback) => {
     //with two properties: the route and an array to store listeners...
     newCommand = { route: route, listeners: [newListener] }
     stack.commands.push(newCommand)
-  } else if(!pathHasParams) {
+  } else if(!pathHasParams || pathHasParams && _.isObject(pathOrPathsOrCommand)){
     //If the command already exists, just push this new
     //listener into the command's existing stack...
     existingCommand.listeners.push(newListener)
@@ -83,6 +84,8 @@ stack.on = (pathOrPaths, callback) => {
     newListener.route = route
     newListener.params = matchedFromPath
     stack.parameter_listeners.push(newListener)
+    //may also need to create a new command here... 
+    
   }
 
   //Do a check to see if the existingCommand needs to add a matching parameter route
@@ -276,6 +279,12 @@ stack.fire = (pathname, callback) => {
     if(matchingParameterListeners.length) {
       //make it a temporary command:
       matchingCommand = { route: matchingParameterListeners[0].route, listeners: matchingParameterListeners }
+
+      if(callback) {
+        //make the callback a listener; register it now:
+        //stack.on(pathname, callback)
+        stack.on(matchingCommand, callback)
+      }
     }
   }
 
@@ -300,6 +309,8 @@ stack.fire = (pathname, callback) => {
     //console.log('run only once')
     stack.once(pathname, callback)
   }
+
+  // debugger
 
 
   //Determine if this is a new instance of the command....

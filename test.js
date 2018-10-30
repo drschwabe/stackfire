@@ -2743,6 +2743,20 @@ var testObj = {
       stack.fire('fruit/apple')
     })
 
+    newTest('Fire that triggers commmand with parameter listener runs callback', (t)  => {
+      global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(2)
+
+      stack.on('/fruit/:typeOfFruit', () => {
+        t.equals(stack.params.typeOfFruit, 'apple', 'the type of fruit is apple')
+      })
+
+      stack.fire('fruit/apple', () => {
+        t.pass() 
+      })
+    })
+
 
     if(run) {
       console.log('run tests...')

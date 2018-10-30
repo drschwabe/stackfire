@@ -2758,6 +2758,24 @@ var testObj = {
     })
 
 
+    test('Can run parameter command twice', (t)  => {
+      global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(4)
+
+      var executionCount = 0
+      stack.on('/fruit/:typeOfFruit', () => {
+        t.equals(stack.params.typeOfFruit, 'apple', 'the type of fruit is apple')
+        executionCount++
+        t.pass('ran the listener ' + executionCount + ' times')
+      })    
+
+      stack.fire('fruit/apple')
+      stack.fire('fruit/apple')
+
+    })    
+
+
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:

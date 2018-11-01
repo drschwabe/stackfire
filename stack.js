@@ -271,7 +271,8 @@ stack.fire = (pathname, callback) => {
     matchedRoute = command.route.match(pathname)
     return matchedRoute
   })
-
+ 
+  let callbackOn = false
   if(!matchingCommand) {
     let route = new routeParser(pathname)
     let matchingParameterListeners = _.filter(stack.parameter_listeners, (listener) => listener.route.match(pathname))
@@ -279,11 +280,10 @@ stack.fire = (pathname, callback) => {
     if(matchingParameterListeners.length) {
       //make it a temporary command:
       matchingCommand = { route: matchingParameterListeners[0].route, listeners: matchingParameterListeners }
-
       if(callback) {
         //make the callback a listener; register it now:
-        //stack.on(pathname, callback)
         stack.on(matchingCommand, callback)
+        callbackOn = true
       }
     }
   }
@@ -305,7 +305,7 @@ stack.fire = (pathname, callback) => {
     //set a flag that this is one_time
     //(do not keep this listener for subsequent fires of the same path)
     matchingCommand.listeners[0].one_time = true
-  } else if(callback) {
+  } else if(callback && !callbackOn) {
     //console.log('run only once')
     stack.once(pathname, callback)
   }

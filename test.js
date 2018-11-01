@@ -2758,7 +2758,7 @@ var testObj = {
     })
 
 
-    test('Can run parameter command twice', (t)  => {
+    newTest('Can run parameter command twice', (t)  => {
       global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
       t.plan(4)
@@ -2773,7 +2773,24 @@ var testObj = {
       stack.fire('fruit/apple')
       stack.fire('fruit/apple')
 
-    })    
+    })   
+
+    newTest('Multiple parameter listeners fire when called twice', (t)  => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(4)
+
+      stack.on('/keyup/:key', () => {
+        t.pass('keyup slash param listener ran')
+      })
+
+      stack.on('/keyup/:key', () => {
+        t.pass('keyup slash param listener ran again')
+      })
+
+      stack.fire('keyup/z')
+      stack.fire('keyup/z')
+    })     
 
 
     if(run) {

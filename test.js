@@ -2738,7 +2738,7 @@ var testObj = {
 
       stack.on('/fruit/:typeOfFruit', () => {
         t.equals(stack.params.typeOfFruit, 'apple', 'the type of fruit is apple')
-      })    
+      })
 
       stack.fire('fruit/apple')
     })
@@ -2753,7 +2753,7 @@ var testObj = {
       })
 
       stack.fire('fruit/apple', () => {
-        t.pass() 
+        t.pass()
       })
     })
 
@@ -2768,12 +2768,12 @@ var testObj = {
         t.equals(stack.params.typeOfFruit, 'apple', 'the type of fruit is apple')
         executionCount++
         t.pass('ran the listener ' + executionCount + ' times')
-      })    
+      })
 
       stack.fire('fruit/apple')
       stack.fire('fruit/apple')
 
-    })   
+    })
 
     newTest('Multiple parameter listeners fire when called twice', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -2790,8 +2790,52 @@ var testObj = {
 
       stack.fire('keyup/z')
       stack.fire('keyup/z')
-    })     
+    })
 
+    newTest.only('Async next.fire within a seconary listener runs asyncronously (after a previous async execution)', (t)  => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(4)
+
+      var executionCount = 0
+
+      stack.on('init', (next) => {
+        console.log('init db...')
+        next.fire('start-server')
+      })
+
+      stack.on('load/:database', (next) => {
+        console.log('load database...')
+        setTimeout(() => {
+          t.pass('database loaded')
+          executionCount++
+          next()
+        }, 1000)
+      })
+
+      stack.on('start-server', (next) => {
+        setTimeout(() => {
+          console.log('server started')
+          next()
+        }, 1000)
+      })
+
+      stack.on('load/:database', () => {
+        t.pass('post database loaded listener ran')
+        executionCount++
+        t.equals(executionCount, 2)
+      })
+
+      stack.on('init', (next) => {
+        console.log('init complete')
+        next.fire('load/apple-inventory', () => {
+          t.equals(executionCount, 2)
+        })
+      })
+
+      //stack.fire('load/apple-inventory')
+      stack.fire('init')
+    })
 
     if(run) {
       console.log('run tests...')

@@ -492,7 +492,6 @@ const runCommand = (commandToRun) => {
 
       //(or perhaps queue / retry until not async_nexting?)
 
-
       var cell = stack.grid.cells[cell]
 
       if(_.isUndefined(cell)) return callback(true)
@@ -504,6 +503,28 @@ const runCommand = (commandToRun) => {
       stack.cell = cell
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()
       if(cell.enties[0].done) return callback ()
+
+      //if any other commands are underway; we need to exit this loop!
+
+      debugger
+      var incompleteListeners = _.filter(thisColumnsCells, (cell) => {
+        var enty = gg.examine(stack.grid, cell)
+        if(!enty) return false
+        debugger
+        return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
+      })
+
+      var underwayListeners = _.filter(thisColumnsCells, (cell) => {
+        var enty = gg.examine(stack.grid, cell)
+        if(!enty) return false
+        return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
+      })
+
+      if(!incompleteListeners.length) {
+        debugger
+        return console.warn("we got some incompleted'edness!")
+      }
+
 
       if(cell.enties[0].underway) {  //If its already underway, mark as done:
         delete cell.enties[0].underway
@@ -558,7 +579,6 @@ const runCommand = (commandToRun) => {
 
       //for now, just make them all async
       stack.next = _.wrap( callback, (callbackFunc, optionalNext) => {
-        debugger
         if(stack.async_nexting) return console.warn('not calling next, cause we are async nexting')
         delete cell.enties[0].underway
         cell.enties[0].done = true

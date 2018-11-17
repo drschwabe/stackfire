@@ -1,0 +1,9 @@
+{
+  "name": "demo",
+  "version": "0.0.1",
+  "main" : "listen.js", 
+  "scripts" : {
+    "compile" : "browserify demo.js > bundle.js",
+    "watch" : "watchify -g stringify --extensions '.html' -g browserify-css demo.js -o bundle.js -d -v"
+  }
+}

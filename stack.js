@@ -27,7 +27,7 @@ stack.on = (pathOrPathsOrCommand, callback) => {
 
   var path, existingCommand
 
-  //if we provide a command we can skip the path stuff... 
+  //if we provide a command we can skip the path stuff...
   if(_.isObject(pathOrPathsOrCommand) && !_.isArray(pathOrPathsOrCommand)) {
     path = pathOrPathsOrCommand.route.spec
     existingCommand = pathOrPathsOrCommand
@@ -84,8 +84,8 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     newListener.route = route
     newListener.params = matchedFromPath
     stack.parameter_listeners.push(newListener)
-    //may also need to create a new command here... 
-    
+    //may also need to create a new command here...
+
   }
 
   //Do a check to see if the existingCommand needs to add a matching parameter route
@@ -271,7 +271,7 @@ stack.fire = (pathname, callback) => {
     matchedRoute = command.route.match(pathname)
     return matchedRoute
   })
- 
+
   let callbackOn = false
   if(!matchingCommand) {
     let route = new routeParser(pathname)
@@ -289,8 +289,8 @@ stack.fire = (pathname, callback) => {
   }
 
   if(!matchingCommand && !callback) {
-    //check if there are any listener parameters...    
-    console.log("there are no listeners (or callback) existing for this command '" + pathname + "'") 
+    //check if there are any listener parameters...
+    console.log("there are no listeners (or callback) existing for this command '" + pathname + "'")
     return
   }
   if(!matchingCommand && callback) {
@@ -344,7 +344,7 @@ stack.fire = (pathname, callback) => {
 
   if(specHasParams) {
     //match the pathname to spec to get an obj containing
-    //the parameter's values: 
+    //the parameter's values:
     stack.params = matchingCommand.route.match( pathname )
   }
 
@@ -373,11 +373,11 @@ stack.fire = (pathname, callback) => {
       //stack.fire.next('command-path')
     } else {
       //if this has been fired within a 'next' we should run it now...
-      
-      //it should then be queued, so mark and push it: 
+
+      //it should then be queued, so mark and push it:
       matchingCommand.queued = true
-      stack.queue.push(matchingCommand) 
-      return       
+      stack.queue.push(matchingCommand)
+      return
     }
   } else if(stack.queue.length) {
     commandToRunNow = stack.queue.pop()
@@ -462,12 +462,12 @@ const runCommand = (commandToRun) => {
       //listenerEnty = _.extend(listener, listenerEnty)
       if(listener.buffer) listenerEnty.buffer = true
       if(listener.every) listenerEnty.every = true
-      if(listener.before) listenerEnty.before = true         
+      if(listener.before) listenerEnty.before = true
       listenerEnty._id = listener._id
 
 
       stack.grid = gg.insertEnty(stack.grid, listenerEnty)
-   
+
       //Populate cells of the grid:
       stack.grid = gg.populateCells(stack.grid)
 
@@ -487,6 +487,11 @@ const runCommand = (commandToRun) => {
     var thisColumnsCells = gg.columnCells(stack.grid, stack.column)
 
     async.eachSeries(thisColumnsCells, (cell, callback) => {
+
+      //if(stack.async_nexting) return //< prevents it from advancing past the first async listner :/
+
+      //(or perhaps queue / retry until not async_nexting?)
+
 
       var cell = stack.grid.cells[cell]
 
@@ -553,6 +558,8 @@ const runCommand = (commandToRun) => {
 
       //for now, just make them all async
       stack.next = _.wrap( callback, (callbackFunc, optionalNext) => {
+        debugger
+        if(stack.async_nexting) return console.warn('not calling next, cause we are async nexting')
         delete cell.enties[0].underway
         cell.enties[0].done = true
         cell.enties[0].end_time = new Date()
@@ -604,7 +611,6 @@ const runCommand = (commandToRun) => {
       //Execute the function!
       cell.enties[0].start_time = new Date()
 
-
       if(!cell.enties[0].func) {
         return console.log('something funced happened')
       }
@@ -615,7 +621,11 @@ const runCommand = (commandToRun) => {
       //Ie- usage is: stack.on(next, function) //< wait for next (async)
       //stack.on(function) //< don't wait for next (synchronous)
 
+      console.log(stack.async_nexting)
+    //  console.log(stack.next_firing) //< never seems to be next_firing here
+      //debugger
       if(!entyFuncArgs.length && stack.next)  {
+      //if(!stack.async_nexting) {
         //console.log('calling stack.next()')
         return stack.next()
       }

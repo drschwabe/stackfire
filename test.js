@@ -2792,7 +2792,17 @@ var testObj = {
       stack.fire('keyup/z')
     })
 
-    newTest.only('Async next.fire within a seconary listener runs asyncronously (after a previous async execution)', (t)  => {
+    // newTest.only('test', (t)  => {
+    //   console.log('whatup')
+    //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+    //   if(process.browser) window.stack = stack
+    //   t.plan(4)
+
+    //   var executionCount = 0
+    // })
+
+
+    newTest('Async next.fire within a seconary listener runs asyncronously (after a previous async execution)', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
       t.plan(4)
@@ -2807,7 +2817,7 @@ var testObj = {
       stack.on('load/:database', (next) => {
         console.log('load database...')
         setTimeout(() => {
-          t.pass('database loaded')
+          t.pass('database loaded (should run first)')
           executionCount++
           next()
         }, 1000)
@@ -2821,7 +2831,7 @@ var testObj = {
       })
 
       stack.on('load/:database', () => {
-        t.pass('post database loaded listener ran')
+        t.pass('post database loaded listener ran (should run second)')
         executionCount++
         t.equals(executionCount, 2)
       })

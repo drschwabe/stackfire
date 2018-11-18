@@ -2802,7 +2802,7 @@ var testObj = {
     // })
 
 
-    newTest('Async next.fire within a seconary listener runs asyncronously (after a previous async execution)', (t)  => {
+    newTest.only('Async next.fire within a seconary listener runs asyncronously (after a previous async execution)', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
       t.plan(4)

@@ -189,7 +189,7 @@ stack.buffer = (callback) => {
   })
 
   // stack.grid.enties.forEach((enty) => {
-  //   debugger //Not sure why this hack needed,
+  //    //Not sure why this hack needed,
   //   //but ensures that the buffer property is reflected in the grid.
   //   if(enty.func.toString() == callback.toString()) {
   //     enty.buffer = true
@@ -310,7 +310,7 @@ stack.fire = (pathname, callback) => {
     stack.once(pathname, callback)
   }
 
-  // debugger
+  //
 
 
   //Determine if this is a new instance of the command....
@@ -506,11 +506,11 @@ const runCommand = (commandToRun) => {
 
       //if any other commands are underway; we need to exit this loop!
 
-      debugger
+
       var incompleteListeners = _.filter(thisColumnsCells, (cell) => {
         var enty = gg.examine(stack.grid, cell)
         if(!enty) return false
-        debugger
+
         return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
       })
 
@@ -521,7 +521,7 @@ const runCommand = (commandToRun) => {
       })
 
       if(!incompleteListeners.length) {
-        debugger
+
         return console.warn("we got some incompleted'edness!")
       }
 
@@ -623,6 +623,7 @@ const runCommand = (commandToRun) => {
       })
 
       stack.next.fire = (path, callback) => {
+        debugger
         stack.next_firing = true
         if(callback) return stack.fire(path, callback)
         stack.fire(path)
@@ -635,6 +636,8 @@ const runCommand = (commandToRun) => {
         return console.log('something funced happened')
       }
 
+      //do not execute if there is another next in prog!
+      debugger
       cell.enties[0].func(stack.next)
 
       //Wait for stack.next to be called, unless the user did not supply it
@@ -643,7 +646,7 @@ const runCommand = (commandToRun) => {
 
       console.log(stack.async_nexting)
     //  console.log(stack.next_firing) //< never seems to be next_firing here
-      //debugger
+      //
       if(!entyFuncArgs.length && stack.next)  {
       //if(!stack.async_nexting) {
         //console.log('calling stack.next()')
@@ -684,6 +687,8 @@ const runCommand = (commandToRun) => {
           parentListener.done = true
           parentListener.end_time = new Date()
           parentListener.total_time = parentListener.end_time - parentListener.start_time
+          debugger
+          if(parentListener.async) stack.async_nexting = false
 
           stack.column = gg.column(stack.grid, parentListener.cell)
           if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
@@ -699,6 +704,9 @@ const runCommand = (commandToRun) => {
           parentListener.command.done = true
           parentListener.command.end_time = new Date()
           parentListener.command.total_time = parentListener.command.end_time - parentListener.command.start_time
+
+          debugger
+          if(parentListener.async) stack.async_nexting = false          
 
           if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
           //if parentListener is done, we still need to check other commands..

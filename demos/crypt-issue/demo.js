@@ -5,6 +5,7 @@ stack.control_state.pause = true
 stack.inject()
 
 stack.on('init', (next) => {
+  debugger
   next.fire('terminal/start-db-server')
 })
 
@@ -17,8 +18,10 @@ stack.on('terminal/start-db-server', (next) => {
 })
 
 stack.on('init', (next) => {
+  console.log('second init...')
+  debugger
   next.fire('terminal/create/fund/test', (next) => {
-    console.log("firing complete.")
+    console.log("firing complete (should run last).")
     next()
   })
 })

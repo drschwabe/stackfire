@@ -638,6 +638,7 @@ const runCommand = (commandToRun) => {
 
       //do not execute if there is another next in prog!
       debugger
+      if(stack.async_nexting) return 
       cell.enties[0].func(stack.next)
 
       //Wait for stack.next to be called, unless the user did not supply it
@@ -654,6 +655,8 @@ const runCommand = (commandToRun) => {
       }
 
     }, (returningEarly) => {
+
+      debugger
 
       //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command):

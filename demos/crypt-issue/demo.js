@@ -28,7 +28,7 @@ stack.on('init', (next) => {
 
 //stack.on('terminal/create/fund/:nickname', (next) => {
 stack.on('terminal/create/fund/test', (next) => {
-  console.log('do something...')
+  console.log('create a fund (nothing should happen until this completes) ...')
   setTimeout(() => {
     console.log('fund created (after 2 second delay)')
     next()

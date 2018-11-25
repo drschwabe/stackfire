@@ -488,6 +488,10 @@ const runCommand = (commandToRun) => {
 
     async.eachSeries(thisColumnsCells, (cell, callback) => {
 
+      console.log('column cell eaching')
+      console.log(cell)
+      console.log(stack.path)
+
       //if(stack.async_nexting) return //< prevents it from advancing past the first async listner :/
 
       //(or perhaps queue / retry until not async_nexting?)
@@ -579,6 +583,7 @@ const runCommand = (commandToRun) => {
 
       //for now, just make them all async
       stack.next = _.wrap( callback, (callbackFunc, optionalNext) => {
+        console.log('stack.next called')
         if(stack.async_nexting) return console.warn('not calling next, cause we are async nexting')
         delete cell.enties[0].underway
         cell.enties[0].done = true
@@ -623,6 +628,7 @@ const runCommand = (commandToRun) => {
       })
 
       stack.next.fire = (path, callback) => {
+        console.log('stack.next.fire called')
         debugger
         stack.next_firing = true
         if(callback) return stack.fire(path, callback)
@@ -638,7 +644,7 @@ const runCommand = (commandToRun) => {
 
       //do not execute if there is another next in prog!
       debugger
-      if(stack.async_nexting) return 
+      if(stack.async_nexting) return
       cell.enties[0].func(stack.next)
 
       //Wait for stack.next to be called, unless the user did not supply it
@@ -655,6 +661,8 @@ const runCommand = (commandToRun) => {
       }
 
     }, (returningEarly) => {
+
+      if(returningEarly) debugger
 
       debugger
 
@@ -709,7 +717,7 @@ const runCommand = (commandToRun) => {
           parentListener.command.total_time = parentListener.command.end_time - parentListener.command.start_time
 
           debugger
-          if(parentListener.async) stack.async_nexting = false          
+          if(parentListener.async) stack.async_nexting = false
 
           if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
           //if parentListener is done, we still need to check other commands..

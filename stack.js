@@ -19,8 +19,7 @@ const stack = {
   queue : [],
   grid : gg.populateCells(gg.createGrid(1,1)),
   utils : [],  //< For third party mods to execute at each hook
-  trimming : false,  //< Do not clear the grid after every command (slower)
-  looping : []
+  trimming : false //< Do not clear the grid after every command (slower)
 }
 
 //Listener creation function:
@@ -483,29 +482,13 @@ const runCommand = (commandToRun) => {
 
   const gridLoop = (startCell, loopCallback) => {
 
-    console.log('about to grid loop!')
-    console.log(stack.path)
-    //if(stack.grid_looping) console.warn('looping within a loop')
-    //stack.grid_looping.push(stack.path)
-    var originalPath = stack.path
-
-
-
     var cellCount = -1
 
     var thisColumnsCells = gg.columnCells(stack.grid, stack.column)
 
     async.eachSeries(thisColumnsCells, (cell, callback) => {
 
-      console.log('column cell eaching')
-      console.log(cell)
-      console.log(stack.path)
-
-      //if(stack.async_nexting) return //< prevents it from advancing past the first async listner :/
-
-      //(or perhaps queue / retry until not async_nexting?)
-
-      //reset async_nexting: 
+      //reset async_nexting:
       stack.async_nexting = false
 
       var cell = stack.grid.cells[cell]
@@ -595,7 +578,6 @@ const runCommand = (commandToRun) => {
 
       //for now, just make them all async
       stack.next = _.wrap( callback, (callbackFunc, optionalNext) => {
-        console.log('stack.next called')
         if(stack.async_nexting) return console.warn('not calling next, cause we are async nexting')
         delete cell.enties[0].underway
         cell.enties[0].done = true
@@ -612,7 +594,6 @@ const runCommand = (commandToRun) => {
           cell.enties[0].command.done = true
           cell.enties[0].command.end_time = new Date()
           cell.enties[0].command.total_time = cell.enties[0].command.end_time - cell.enties[0].command.start_time
-          //if(stack.column > 0) stack.column--
         }
 
         //Note this does not yet accommodate for async!
@@ -620,32 +601,23 @@ const runCommand = (commandToRun) => {
 
         //possibly we will run any queued commands at this point...
         if(cell.enties[0].async) {
-          //console.log('is async...')
           stack.async_nexting = true
         }
 
         if(_.isNull(stack.path)) {
-          //console.log('stack.path is null')
           //return null //< no need to call anything further
           stack.next = null
-          //console.log(callbackFunc)
         }
         if(optionalNext) {
           stack.optional_next = true
-          //console.log('running optional next')
           return callbackFunc(optionalNext)
         }
         if(_.isNull(stack.path)) return null
-
-        //do not call callbackFunc sometimes!!
-        debugger
 
         return callbackFunc()
       })
 
       stack.next.fire = (path, callback) => {
-        console.log('stack.next.fire called')
-
         stack.next_firing = true
         if(callback) return stack.fire(path, callback)
         stack.fire(path)
@@ -659,38 +631,21 @@ const runCommand = (commandToRun) => {
       }
 
       //do not execute if there is another next in prog!
-
       if(stack.async_nexting) return
       cell.enties[0].func(stack.next)
 
       //Wait for stack.next to be called, unless the user did not supply it
       //Ie- usage is: stack.on(next, function) //< wait for next (async)
-      //stack.on(function) //< don't wait for next (synchronous)
 
-      console.log(stack.async_nexting)
-    //  console.log(stack.next_firing) //< never seems to be next_firing here
-      //
       if(!entyFuncArgs.length && stack.next)  {
-      //if(!stack.async_nexting) {
-        //console.log('calling stack.next()')
         return stack.next()
       }
 
     }, (returningEarly) => {
 
-      if(returningEarly) debugger
-
-      console.log('end of grid loop: ')
-      console.log(stack.path)
-
-      stack.grid_looping = false
-
-      //is there a command stillin prog?
-
       //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command):
       var incompleteListeners = _.filter(thisColumnsCells, (cell) => {
-        //console.log('cell is: ' + cell + ' and column is: ' + stack.column)
         var enty = gg.examine(stack.grid, cell)
         if(!enty) return false
         return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
@@ -772,7 +727,6 @@ const runCommand = (commandToRun) => {
           if(!stack.queue.length) return trimGrid()
           return runCommand( stack.queue.pop() )
         }
-        console.log('wtf')
         if(!stack.queue.length) return trimGrid()
         if(loopCallback) {
           return loopCallback()
@@ -789,8 +743,6 @@ const runCommand = (commandToRun) => {
       updateGridColumn(incompleteListeners[0].command)
       gridLoop()
       //these will never run?
-      // if(!stack.queue.length) return trimGrid()
-      // return runCommand( stack.queue.pop() )
     })
   }
 

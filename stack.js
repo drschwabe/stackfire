@@ -19,7 +19,8 @@ const stack = {
   queue : [],
   grid : gg.populateCells(gg.createGrid(1,1)),
   utils : [],  //< For third party mods to execute at each hook
-  trimming : false //< Do not clear the grid after every command (slower)
+  trimming : false,  //< Do not clear the grid after every command (slower)
+  looping : []
 }
 
 //Listener creation function:
@@ -480,7 +481,15 @@ const runCommand = (commandToRun) => {
     })
   }
 
-  const gridLoop = (startCell) => {
+  const gridLoop = (startCell, loopCallback) => {
+
+    console.log('about to grid loop!')
+    console.log(stack.path)
+    //if(stack.grid_looping) console.warn('looping within a loop')
+    //stack.grid_looping.push(stack.path)
+    var originalPath = stack.path
+
+
 
     var cellCount = -1
 
@@ -495,6 +504,9 @@ const runCommand = (commandToRun) => {
       //if(stack.async_nexting) return //< prevents it from advancing past the first async listner :/
 
       //(or perhaps queue / retry until not async_nexting?)
+
+      //reset async_nexting: 
+      stack.async_nexting = false
 
       var cell = stack.grid.cells[cell]
 
@@ -624,12 +636,16 @@ const runCommand = (commandToRun) => {
           return callbackFunc(optionalNext)
         }
         if(_.isNull(stack.path)) return null
+
+        //do not call callbackFunc sometimes!!
+        debugger
+
         return callbackFunc()
       })
 
       stack.next.fire = (path, callback) => {
         console.log('stack.next.fire called')
-        debugger
+
         stack.next_firing = true
         if(callback) return stack.fire(path, callback)
         stack.fire(path)
@@ -643,7 +659,7 @@ const runCommand = (commandToRun) => {
       }
 
       //do not execute if there is another next in prog!
-      debugger
+
       if(stack.async_nexting) return
       cell.enties[0].func(stack.next)
 
@@ -664,7 +680,12 @@ const runCommand = (commandToRun) => {
 
       if(returningEarly) debugger
 
-      debugger
+      console.log('end of grid loop: ')
+      console.log(stack.path)
+
+      stack.grid_looping = false
+
+      //is there a command stillin prog?
 
       //we find any incomplete listeners (listeners that were queued before an earlier
       //listener up the column fired a new command):
@@ -675,7 +696,7 @@ const runCommand = (commandToRun) => {
         return !enty.done && gg.column(stack.grid, enty.cell) == stack.column
       })
 
-      if(!incompleteListeners.length) {
+      if(!incompleteListeners || !incompleteListeners.length) {
         //if no incomplete listeners, exit the loop....
         //first reset path and complete the matching command:
         stack.path = null
@@ -698,7 +719,7 @@ const runCommand = (commandToRun) => {
           parentListener.done = true
           parentListener.end_time = new Date()
           parentListener.total_time = parentListener.end_time - parentListener.start_time
-          debugger
+
           if(parentListener.async) stack.async_nexting = false
 
           stack.column = gg.column(stack.grid, parentListener.cell)
@@ -710,13 +731,29 @@ const runCommand = (commandToRun) => {
           if(remainingCommandListeners.length) {
             stack.path = remainingCommandListeners[0].command.route.spec
             updateGridColumn(remainingCommandListeners[0].command, stack.column)
-            gridLoop()
+            return gridLoop(null, () => {
+              //<!-- duplicating --->
+              parentListener.command.done = true
+              parentListener.command.end_time = new Date()
+              parentListener.command.total_time = parentListener.command.end_time - parentListener.command.start_time
+
+              if(parentListener.async) stack.async_nexting = false
+
+              if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
+              //if parentListener is done, we still need to check other commands..
+              if(stack.column > 0) stack.column--;
+              gridLoop()
+              if(!stack.queue.length) return trimGrid()
+              return runCommand( stack.queue.pop() )
+              //<!-- end of duplicated code --->
+            })
           }
+
+          //<!-- duplicating --->
           parentListener.command.done = true
           parentListener.command.end_time = new Date()
           parentListener.command.total_time = parentListener.command.end_time - parentListener.command.start_time
 
-          debugger
           if(parentListener.async) stack.async_nexting = false
 
           if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
@@ -725,6 +762,7 @@ const runCommand = (commandToRun) => {
           gridLoop()
           if(!stack.queue.length) return trimGrid()
           return runCommand( stack.queue.pop() )
+          //<!-- end of duplicated code --->
         } else {
           var commandInCurrentColumn = _.findWhere(stack.commands, { column : stack.column })
           if(commandInCurrentColumn) commandInCurrentColumn.done = true
@@ -734,8 +772,13 @@ const runCommand = (commandToRun) => {
           if(!stack.queue.length) return trimGrid()
           return runCommand( stack.queue.pop() )
         }
+        console.log('wtf')
         if(!stack.queue.length) return trimGrid()
-        return runCommand( stack.queue.pop() )
+        if(loopCallback) {
+          return loopCallback()
+        } else {
+          return runCommand( stack.queue.pop() )
+        }
       }
 
       //run the incomplete listener/callback by calling gridLoop again...

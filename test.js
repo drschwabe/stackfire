@@ -2847,6 +2847,20 @@ var testObj = {
       stack.fire('init')
     })
 
+    newTest('Wildcard listener makes its path available', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+
+      stack.on('*anything', () => {
+        console.log('do something')
+        t.equals(stack.params.wild, '/something')         
+      })
+
+      stack.fire('something')      
+
+    })
+
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:

@@ -116,6 +116,9 @@ stack.on = (pathOrPathsOrCommand, callback) => {
       existingCommandNonParam.listeners.push(newListener )
     }
   }
+  if(pathIsWild) {
+    route.isWild = true 
+  }
   return
 }
 
@@ -347,6 +350,10 @@ stack.fire = (pathname, callback) => {
     //the parameter's values:
     stack.params = matchingCommand.route.match( pathname )
   }
+
+  if(matchingCommand.route.isWild) {
+    stack.params = { wild : pathname }
+  } 
 
   var commandToRunNow
 

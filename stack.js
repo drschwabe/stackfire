@@ -52,16 +52,26 @@ stack.on = (pathOrPathsOrCommand, callback) => {
 
   //Determine if this path corresponds to a command
   //already defined (via a previous stack.on call) in our stack:
-  if(!existingCommand) existingCommand = _.find(stack.commands, (existingCommand) => {
-    let commandIsWild = _s.include(existingCommand.route.spec, "*")
-    let commandHasParams = _s.include(existingCommand.route.spec, ":")
-    matchedFromPath = route.match(existingCommand.route.spec)
-    let matchedFromCommandPath = existingCommand.route.match(path) //< could be param!
+  if(!existingCommand) existingCommand = _.find(stack.commands, (establishedCommand) => {
+    let commandIsWild = _s.include(establishedCommand.route.spec, "*")
+    let commandHasParams = _s.include(establishedCommand.route.spec, ":")
+    matchedFromPath = route.match(establishedCommand.route.spec)
+    let matchedFromCommandPath = establishedCommand.route.match(path) //< could be param!
     if(matchedFromPath ||  matchedFromCommandPath && !pathHasParams) return true
     if(reversedRoute && commandIsWild) return true
     if(reversedRoute && pathIsWild) return true
     return false
   })
+
+  //if the path is wild, there may be multiple existing commands, so let's run it again: 
+  var existingCommands
+  if(pathIsWild) {
+    existingCommands = _.filter(stack.commands, (establishedCommand) => {
+      if( route.match(establishedCommand.route.spec) ) return true 
+    })
+  }
+
+  debugger
 
   //Either way, we will create a listener entry;
   //with two properties: an async handler function
@@ -70,7 +80,12 @@ stack.on = (pathOrPathsOrCommand, callback) => {
 
   let newCommand
 
-  if(!existingCommand && !pathHasParams) {
+  if(pathIsWild && existingCommands) {
+    //if the path is wild and there are existing commands matched...
+    existingCommands.forEach((theCommand) => {
+      theCommand.listeners.push(newListener)      
+    })
+  } else if(!existingCommand && !pathHasParams) {
     //No existing command, so let's define one now,
     //with two properties: the route and an array to store listeners...
     newCommand = { route: route, listeners: [newListener] }

@@ -841,7 +841,7 @@ var testObj = {
     })
 
     //This test is same as above, but with the wildcard listener happening after existing routes.  Results should be the same.
-    test.skip("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
+    newTest("Wildcard plays nicely with other listeners (wildcard listener established AFTER existing routes)", (t) => {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
@@ -863,7 +863,7 @@ var testObj = {
       stack.fire('diamond')
     })
 
-    test.skip("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
+    newTest("Wildcard correctly is added to stacks and fires in the correct order", (t) => {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack

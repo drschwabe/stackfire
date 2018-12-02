@@ -754,7 +754,7 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      stack.on('*wild', () => {
+      stack.on('/*wild', () => {
         t.pass('wildcard listener ran')
       })
 

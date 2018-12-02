@@ -71,8 +71,6 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     })
   }
 
-  debugger
-
   //Either way, we will create a listener entry;
   //with two properties: an async handler function
   //(which calls a callback) and the raw path...
@@ -80,16 +78,16 @@ stack.on = (pathOrPathsOrCommand, callback) => {
 
   let newCommand
 
-  if(pathIsWild && existingCommands) {
-    //if the path is wild and there are existing commands matched...
-    existingCommands.forEach((theCommand) => {
-      theCommand.listeners.push(newListener)      
-    })
-  } else if(!existingCommand && !pathHasParams) {
+  if(!existingCommand && !pathHasParams) {
     //No existing command, so let's define one now,
     //with two properties: the route and an array to store listeners...
     newCommand = { route: route, listeners: [newListener] }
     stack.commands.push(newCommand)
+  } else if(pathIsWild && existingCommands) {
+    //if the path is wild and there are existing commands matched...
+    existingCommands.forEach((theCommand) => {
+      theCommand.listeners.push(newListener)      
+    })    
   } else if(!pathHasParams || pathHasParams && _.isObject(pathOrPathsOrCommand)){
     //If the command already exists, just push this new
     //listener into the command's existing stack...
@@ -100,7 +98,6 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     newListener.params = matchedFromPath
     stack.parameter_listeners.push(newListener)
     //may also need to create a new command here...
-
   }
 
   //Do a check to see if the existingCommand needs to add a matching parameter route

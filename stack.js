@@ -58,7 +58,7 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     matchedFromPath = route.match(establishedCommand.route.spec)
     let matchedFromCommandPath = establishedCommand.route.match(path) //< could be param!
     if(matchedFromPath ||  matchedFromCommandPath && !pathHasParams) return true
-    if(reversedRoute && commandIsWild) return true
+    if(matchedFromPath && reversedRoute && commandIsWild) return true
     if(reversedRoute && pathIsWild) return true
     return false
   })
@@ -70,6 +70,7 @@ stack.on = (pathOrPathsOrCommand, callback) => {
       if( route.match(establishedCommand.route.spec) ) return true 
     })
   }
+
 
   //Either way, we will create a listener entry;
   //with two properties: an async handler function
@@ -83,7 +84,7 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     //with two properties: the route and an array to store listeners...
     newCommand = { route: route, listeners: [newListener] }
     stack.commands.push(newCommand)
-  } else if(pathIsWild && existingCommands) {
+  } else if(pathIsWild && existingCommands.length) {
     //if the path is wild and there are existing commands matched...
     existingCommands.forEach((theCommand) => {
       theCommand.listeners.push(newListener)      

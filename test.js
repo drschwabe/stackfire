@@ -2757,6 +2757,27 @@ var testObj = {
       stack.fire('fruit/apple')
     })
 
+    newTest.only('Child commmand gets correct paramter and then parent gets correct parameter after', (t)  => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(4)
+
+      stack.on('/vegetable/:typeOfVegetable', (next) => {
+        t.equals(stack.params.typeOfVegetable, 'carrot', 'the type of vegetable is correct')
+        next.fire('material/wood', () => {
+          console.log(stack.params)
+          t.equals(stack.params.typeOfVegetable, 'carrot', 'parent command param is re-applied')
+        })
+      })
+
+      stack.on('/material/:typeOfMaterial', () => {
+        t.ok(stack.params.typeOfMaterial, 'child command has correct parameter')
+        t.equals(stack.params.typeOfMaterial, 'wood', 'parameter is correct')
+      })
+
+      stack.fire('vegetable/carrot')
+    })
+
     newTest('Fire that triggers commmand with parameter listener runs callback', (t)  => {
       global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack

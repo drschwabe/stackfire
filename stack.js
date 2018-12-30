@@ -365,8 +365,11 @@ stack.fire = (pathname, callback) => {
   }
 
   if(matchingCommand.route.isWild) {
-    stack.params = { wild : pathname }
-  } 
+    //extract the part of the pathname that is wild...
+    let matchedRoute = matchingCommand.route.match(pathname)
+    stack.params = matchedRoute
+    stack.params.wild = _.values(matchedRoute)[0]
+  }
 
   var commandToRunNow
 

@@ -914,6 +914,15 @@ var testObj = {
       })
     })
 
+    newTest("Wildcard value stored on stack.params.wild correctly", (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+      stack.on('vegetable/*typeOfVeggie', () => {
+        t.equals(stack.params.wild, 'carrot')
+      })
+      stack.fire('vegetable/carrot')
+    })
 
     newTest("Commands are agnostic to stating with a slash or not", (t) => {
 
@@ -2757,16 +2766,17 @@ var testObj = {
       stack.fire('fruit/apple')
     })
 
-    newTest.only('Child commmand gets correct paramter and then parent gets correct parameter after', (t)  => {
+    newTest('Child commmand gets correct wild/paramter and then parent gets correct parameter after', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      t.plan(4)
+      t.plan(5)
 
-      stack.on('/vegetable/:typeOfVegetable', (next) => {
-        t.equals(stack.params.typeOfVegetable, 'carrot', 'the type of vegetable is correct')
+      stack.on('vegetable/*typeOfVegetable', (next) => {
+        t.equals(stack.params.wild, 'carrot', 'wild param is correct')
+        t.equals(stack.params.typeOfVegetable, 'carrot', 'named param is correct')
         next.fire('material/wood', () => {
           console.log(stack.params)
-          t.equals(stack.params.typeOfVegetable, 'carrot', 'parent command param is re-applied')
+          t.equals(stack.params.typeOfMaterial, 'wood', 'paramater is correct')
         })
       })
 
@@ -2880,10 +2890,10 @@ var testObj = {
 
       stack.on('*anything', () => {
         console.log('do something')
-        t.equals(stack.params.wild, '/something')         
+        t.equals(stack.params.wild, 'something')
       })
 
-      stack.fire('something')      
+      stack.fire('something')
 
     })
 

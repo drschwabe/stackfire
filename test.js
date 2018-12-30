@@ -762,6 +762,20 @@ var testObj = {
 
     })
 
+    newTest('Wildcard listener after specific string', (t) => {
+      t.plan(1)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      stack.on('green/*wild', () => {
+        t.pass('green wildcard listener ran')
+      })
+
+      stack.fire('not green')
+      stack.fire('green/giant')
+      stack.fire('red/devil')
+    })
+
 
     newTest('Catch all wildcard listener (wildcard listener defined after specific listener)', (t) => {
       t.plan(2)
@@ -2792,15 +2806,6 @@ var testObj = {
       stack.fire('keyup/z')
     })
 
-    // newTest.only('test', (t)  => {
-    //   console.log('whatup')
-    //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-    //   if(process.browser) window.stack = stack
-    //   t.plan(4)
-
-    //   var executionCount = 0
-    // })
-
 
     newTest('Async next.fire within a seconary listener runs asyncronously (after a previous async execution)', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -2858,6 +2863,25 @@ var testObj = {
       })
 
       stack.fire('something')      
+
+    })
+
+
+    newTest('wildcard test', (t)  => {
+      console.log('whatup')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+
+      stack.on('init', () => {
+        t.pass('first init')
+      })
+
+      stack.on('folder/*', () => {
+        t.fail('should not fire')
+      })
+
+      stack.fire('init')
 
     })
 

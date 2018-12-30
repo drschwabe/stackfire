@@ -59,7 +59,7 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     let matchedFromCommandPath = establishedCommand.route.match(path) //< could be param!
     if(matchedFromPath ||  matchedFromCommandPath && !pathHasParams) return true
     if(matchedFromPath && reversedRoute && commandIsWild) return true
-    if(reversedRoute && pathIsWild) return true
+    //if(reversedRoute && pathIsWild) return true
     return false
   })
 

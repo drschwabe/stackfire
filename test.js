@@ -2788,6 +2788,25 @@ var testObj = {
       stack.fire('vegetable/carrot')
     })
 
+    newTest('Empty wildcard', (t)  => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(2)
+
+      stack.on('folder/*path', (next) => {
+        t.equals(stack.params.path, '', 'parameter is correct') //< in this case, path is blank
+        console.log(stack.params)
+        next.fire('move-to-column/test/2')
+      })
+
+      stack.on('move-to-column/:element/:column', () => {
+        console.log(stack.params)
+        t.equals(stack.params.element, 'test', 'paramater is correct')
+      })
+
+      stack.fire('folder/')
+    })
+
     newTest('Fire that triggers commmand with parameter listener runs callback', (t)  => {
       global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack

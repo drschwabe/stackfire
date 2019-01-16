@@ -172,9 +172,10 @@ stack.before = (path, callback) => {
 //stack.every = (pathOrCommand, frequency, priority, callback) => {
 //for now just make it on all commands, frequency: command, priority: last
 //(end of every command)
-stack.every = (callback) => {
+stack.every = (callback, unshiftOrPush) => {
+  if(!unshiftOrPush) unshiftOrPush = 'push'
   stack.commands.forEach((command) => {
-    command.listeners.push({
+    command.listeners[unshiftOrPush]({
       func: callback,
       path : command.route.spec,
       every : true,

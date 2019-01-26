@@ -2935,6 +2935,23 @@ var testObj = {
 
     })
 
+    newTest('stack.once works as expected', (t) => {
+      console.log('hi')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+      let goCount = 0
+      stack.once('go', () => {
+        console.log('go!')
+        goCount++
+      })
+
+      stack.fire('go')
+      stack.fire('go')
+      stack.fire('go')
+      t.equals(goCount, 1, '"go" only fired once')
+    })
+
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:

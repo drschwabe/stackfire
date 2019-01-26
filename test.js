@@ -2936,10 +2936,9 @@ var testObj = {
     })
 
     newTest('stack.once works as expected', (t) => {
-      console.log('hi')
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      t.plan(1)
+      t.plan(3)
       let goCount = 0
       stack.once('go', () => {
         console.log('go!')
@@ -2949,7 +2948,40 @@ var testObj = {
       stack.fire('go')
       stack.fire('go')
       stack.fire('go')
-      t.equals(goCount, 1, '"go" only fired once')
+      t.equals(goCount, 1, '"go" only invoked once')
+
+      let jumpCount = 0
+      stack.on('jump', () => {
+        console.log('jump!')
+        jumpCount++
+      })
+
+      stack.once('jump', () => {
+        console.log('jump around!')
+        jumpCount++
+      })
+
+      stack.fire('jump')
+      stack.fire('jump')
+
+      t.equals(jumpCount, 3, '"jump" invoked a regular listener on the 2 fires and then a third listener invoked on just one of those fires')
+
+      let attackCount = 0
+      stack.on('attack/*type', () => {
+        console.log(stack.params.wild + ' it!')
+        attackCount++
+      })
+
+      stack.once('attack/*type', () => {
+        console.log(stack.params.wild + ' it!')
+        attackCount++
+      })
+
+      stack.fire('attack/kick')
+      stack.fire('attack/punch')
+
+      t.equals(attackCount, 3, '"attack/*type" invoked 3 times')
+
     })
 
     if(run) {

@@ -162,6 +162,10 @@ stack.before = (path, callback) => {
   path = prefixPath(path)
   route = new routeParser(path)
   existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
+  if(!existingCommand) {
+    stack.on(path, () => null)
+    return stack.before(path, callback)
+  }
   const newListener = { func : callback, path: path, _id : uuid.v4() }
   newListener.before = true
   existingCommand.listeners.unshift(newListener)

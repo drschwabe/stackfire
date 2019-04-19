@@ -2984,6 +2984,15 @@ var testObj = {
 
     })
 
+
+    newTest.only('stack.before works even if no existing command', (t) => {
+      t.plan(1)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      stack.before('dinosaurs', () => t.ok('fired before dinosaurs'))
+      stack.fire('dinosaurs')
+    })
+
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:

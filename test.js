@@ -40,7 +40,6 @@ var testObj = {
       stack.on('/do-something', () => {
         t.ok(stack.state, 'listener invoked and stack state established')
         t.equal(stack.path, '/do-something', "state.path equals '/do-something'")
-        debugger
       })
 
       stack.fire('/do-something')
@@ -129,7 +128,6 @@ var testObj = {
         console.log('/apple "on" (listener function in progress).')
         t.equal(stack.path, '/apple', "state.path equals the path of the current 'on' listener.")
         //stack.fire('/bannana', (next) => next)
-        debugger
         next.fire('/bannana')
       })
 
@@ -169,7 +167,6 @@ var testObj = {
       stack.on('orange', (next) => {
         console.log('/orange yet again!')
         t.ok(stack.path, '/orange')
-        debugger
         //next(  stack.fire('grapefruit') )
         next.fire('grapefruit')
       })
@@ -183,6 +180,7 @@ var testObj = {
 
       stack.on('/grapefruit', () => {
         console.log('/grapefruit again')
+        debugger
         t.equal(stack.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
         //next()
       })
@@ -190,7 +188,7 @@ var testObj = {
       stack.on('orange', () => {
         console.log('/orange again (should occur after grapefruit listeners)')
         t.ok(stack.path, '/orange')
-        debugger
+
         t.equal(stack.cell.num, gg.xyToIndex(stack.grid, [4,0]), 'orange first listener after grapefruit command assigned to correct cell')
       })
 
@@ -218,7 +216,7 @@ var testObj = {
 
       stack.on('strawberry', () => {
         console.log('/strawberry "on" (listener function in progress)')
-        debugger
+
       })
 
       stack.on('orange', () => {
@@ -229,26 +227,22 @@ var testObj = {
       stack.on('orange', () => {
         console.log('/orange again')
         t.ok(stack.path, '/orange')
-        debugger
       })
 
       stack.on('orange', (next) => {
         console.log('/orange yet again!')
         t.ok(stack.path, '/orange')
-        debugger
         next.fire('grapefruit')
       })
 
       stack.on('/grapefruit', () => {
         console.log('/grapefruit "on" listener in progress.')
         t.ok(stack.state, 'root level listener invoked from a nested fire')
-        debugger
       })
 
       stack.on('/grapefruit', () => {
         console.log('/grapefruit again')
         t.equal(stack.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
-        debugger
       })
 
       stack.on('orange', () => {
@@ -286,7 +280,7 @@ var testObj = {
 
       stack.on('blue', (next) => {
         t.pass("blue listener's callback invoked")
-        debugger
+
         next.fire('red')
       })
 
@@ -385,7 +379,7 @@ var testObj = {
 
       stack.on('blue', (next) => {
         t.pass("blue listener's third callback invoked")
-        debugger
+
         next.fire('red')
       })
 
@@ -564,15 +558,14 @@ var testObj = {
       if(process.browser) window.stack = stack
 
       stack.on('/apple', () => {
-        debugger
+
         console.log('/apple "on" (middleware in progress).  state.path:')
         console.log(stack.path)
         console.log('about to run .5 second timeout before firing /bannana...')
         //Nested async fire:
         setTimeout(() => {
-          debugger
+
           stack.fire('/bannana', () => {
-            debugger
             t.pass('/bannana reaches its callback')
             console.log('/bannana fired (its final callback in progress)')
             console.log(stack.path)
@@ -581,7 +574,7 @@ var testObj = {
         }, 500)
       })
 
-      debugger
+
       stack.on('/bannana', () => {
         console.log('/bannana "on" middleware in progress. state.path:')
         console.log(stack.path)
@@ -590,14 +583,14 @@ var testObj = {
         t.equal(stack.path, '/bannana', "state.path equals the path of the current 'on' listener.")
         console.log('/bannana middleware will now call stack.next()')
         //stack.next()
-        debugger
+
       })
 
       console.log('about to fire /apple')
 
-      debugger
+
       stack.fire('apple', () => {
-        debugger
+
         //something is causing the apple callback to be called twice
         // _.command.callback = _.once()  ?
         console.log('/apple fired (its final callback in progress). state.path:')
@@ -695,7 +688,7 @@ var testObj = {
       if(process.browser) window.stack = stack
 
       stack.on('/inventory/:item/deliver', () => {
-        debugger
+
         t.equals(stack.path, '/inventory/widget/deliver', 'expected listener invoked')
         t.ok(stack.state.params.item, 'parameter is included on the command')
       })
@@ -785,13 +778,13 @@ var testObj = {
       stack.on('anything', () => {
         t.pass('specific listener ran')
         //t.equals(stack.path, '/anything')
-        debugger
+
       })
 
       stack.on('*wild', () => {
         t.pass('wildcard listener ran')
         //t.equals(stack.path, '/anything')
-        debugger
+
       })
 
       stack.fire('anything')
@@ -1169,7 +1162,7 @@ var testObj = {
 
       stack.fire('robot/assemble/box', () => {
         console.log('"robot/assemble/box" fire complete')
-        debugger
+
         t.equals(stack.path, '/robot/assemble/box')
         //stack.next()
       })
@@ -1201,7 +1194,7 @@ var testObj = {
     //     }, (err) => {
     //       //nextFires[0]()
     //       t.pass('done eachSeries')
-    //      //debugger
+    //      //
     //       stack.next()
     //     })
     //     // elems.forEach((elem) => {
@@ -1425,7 +1418,7 @@ var testObj = {
         t.equals(shakeCommand.cell, nextRowCell, 'shake command inserted to second row, first column')  //Sibling next to shake.
 
         console.log('we are making a milk shake')
-        debugger
+
       })
 
       stack.fire('milk', () => {
@@ -1436,7 +1429,7 @@ var testObj = {
         //var milkCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/milk').command
         //t.notOk(milkCommand.done, 'milk command not done yet (trailing callback underway)')
         //t.equals(milkCommand.cell, 0, 'milk command inserted to cell 0')
-        debugger
+
         stack.fire('shake', () => {
           var shakeCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/shake').command
           //milk command is still done:
@@ -1444,7 +1437,7 @@ var testObj = {
           //and now shake is done too:
           t.notOk(shakeCommand.done, 'shake command not done (trailing callback underway)')
           console.log('we made a milk shake')
-          debugger
+
         })
       })
 
@@ -1517,7 +1510,7 @@ var testObj = {
 
           var shovelCommand = _.find(stack.grid.enties, (enty) => enty.command.route.spec == '/shovel').command
 
-          debugger
+
 
           //Parent cell should equal 0 (first cell):
           t.equals(shovelCommand.parent.cell, 0, "shovel command's parent is at the first cell of the grid")
@@ -2253,28 +2246,28 @@ var testObj = {
 
       stack.on('init', (next) => {
         console.log('init third')
-        debugger
+
         next.fire('docs')
       })
 
       stack.on('init', () => {
         console.log('init fourth')
-        debugger
+
       })
 
       stack.on('docs', () => {
         console.log('docs first')
-        debugger
+
       })
 
       stack.on('docs', () => {
         console.log('docs second')
-        debugger
+
       })
 
       stack.on('docs', () => {
         console.log('docs third')
-        debugger
+
       })
 
       stack.fire('ready')

@@ -2978,12 +2978,35 @@ var testObj = {
     })
 
 
-    newTest.only('stack.before works even if no existing command', (t) => {
+    newTest('stack.before works even if no existing command', (t) => {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
       stack.before('dinosaurs', () => t.ok('fired before dinosaurs'))
       stack.fire('dinosaurs')
+    })
+
+    newTest('Command can be fired with an object body/payload/parameter', (t) => {
+      t.plan(4)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      //async alt:
+      stack.on('green', () => {
+        t.ok( _.isObject( stack.params.body ))
+        t.equals(stack.params.body.hex, '#008000', 'object has expected property')
+      })
+
+      stack.fire('green', { hex : '#008000' })
+
+      //or with just a string:
+      stack.on('red', () => {
+        t.ok( _.isString( stack.params.body ))
+        t.equals(stack.params.body, '#ff0000', 'body has expected value ')
+      })
+
+      stack.fire('red', '#ff0000')
+
     })
 
     if(run) {

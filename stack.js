@@ -63,11 +63,11 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     return false
   })
 
-  //if the path is wild, there may be multiple existing commands, so let's run it again: 
+  //if the path is wild, there may be multiple existing commands, so let's run it again:
   var existingCommands
   if(pathIsWild) {
     existingCommands = _.filter(stack.commands, (establishedCommand) => {
-      if( route.match(establishedCommand.route.spec) ) return true 
+      if( route.match(establishedCommand.route.spec) ) return true
     })
   }
 
@@ -87,8 +87,8 @@ stack.on = (pathOrPathsOrCommand, callback) => {
   } else if(pathIsWild && existingCommands.length) {
     //if the path is wild and there are existing commands matched...
     existingCommands.forEach((theCommand) => {
-      theCommand.listeners.push(newListener)      
-    })    
+      theCommand.listeners.push(newListener)
+    })
   } else if(!pathHasParams || pathHasParams && _.isObject(pathOrPathsOrCommand)){
     //If the command already exists, just push this new
     //listener into the command's existing stack...
@@ -130,7 +130,7 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     }
   }
   if(pathIsWild) {
-    route.isWild = true 
+    route.isWild = true
   }
   return
 }
@@ -263,9 +263,14 @@ stack.endCommand = (next) => {
 
 stack.row = 0
 
-stack.fire = (pathname, callback) => {
+stack.fire = (...args) => {
+  var pathname, callback, body
 
-  if(!_.isString(pathname)) return console.error('path is not a string')
+  if(!_.isString(args[0])) return console.error('path is not a string')
+
+  pathname = args[0]
+  callback = _.find(args, (arg) =>  _.isFunction(arg))
+  body = _.find(args, (arg) => arg != pathname && arg != callback)
 
   //TODO: some better logic to prevent 'rapid fires'; fires interrupting other fires
 
@@ -331,9 +336,6 @@ stack.fire = (pathname, callback) => {
     stack.once(pathname, callback)
   }
 
-  //
-
-
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
     //create a new copy, this time with a uid...
@@ -360,7 +362,6 @@ stack.fire = (pathname, callback) => {
   matchingCommand.callee = callee
 
 
-
   let specHasParams = _s.include(matchingCommand.route.spec, ":")
 
   if(specHasParams) {
@@ -374,6 +375,14 @@ stack.fire = (pathname, callback) => {
     let matchedRoute = matchingCommand.route.match(pathname)
     stack.params = matchedRoute
     stack.params.wild = _.values(matchedRoute)[0]
+  }
+
+  if(body) { //Accommodate for stack.fire('pathname', body)
+    if(stack.params) {
+      stack.params.body = body
+    } else {
+      stack.params = { body: body }
+    }
   }
 
   var commandToRunNow

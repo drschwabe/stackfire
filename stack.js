@@ -84,11 +84,9 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     //with two properties: the route and an array to store listeners...
     newCommand = { route: route, listeners: [newListener] }
     stack.commands.push(newCommand)
-    //make an alias : 
+    //make an alias :
     if(stack.aliasing) {
-      console.log('creating alias...')
-      console.log(_s.camelize(path).substr(1))
-      stack[_s.camelize(path).substr(1) ] = (...args) => stack.fire(path, ...args)
+      stack[  _s(path).substr(1).replaceAll('/', '-').camelize().value()   ] = (...args) => stack.fire(path, ...args)
     }
   } else if(pathIsWild && existingCommands.length) {
     //if the path is wild and there are existing commands matched...

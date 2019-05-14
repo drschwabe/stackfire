@@ -103,6 +103,25 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     newListener.params = matchedFromPath
     stack.parameter_listeners.push(newListener)
     //may also need to create a new command here...
+
+    if(stack.aliasing) {
+      //Save the structure of the pathname and its chunks/params:
+      let words = _s(path).substr(1).replaceAll('/', '-').camelize().words(':')
+      let specChunks = _s.words(path, '/')
+      let params = _.rest(words, 1)
+
+      stack[words[0]] = (...params) => {
+        //... and use it to reconstruct the original path,
+        //putting the params where they need to go:
+        let mirrorParamIndex = -1
+        specChunks = _.map(specChunks, (chunk, index) => {
+          if( chunk.search(':') < 0 ) return chunk
+          mirrorParamIndex++
+          return params[mirrorParamIndex]
+        })
+        return stack.fire( specChunks.join('/') )
+      }
+    }
   }
 
   //Do a check to see if the existingCommand needs to add a matching parameter route

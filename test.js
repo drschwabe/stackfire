@@ -3011,28 +3011,36 @@ var testObj = {
 
 
     newTest('Shorthand feature', (t) => {
-      t.plan(2)
+      t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      stack.aliasing = true 
+      stack.aliasing = true
 
       stack.on('insert-ui-grid', () => {
-        t.pass('using named function same as firing the original path') 
-      }) 
-
-      stack.insertUiGrid() 
-
-      //with param: 
-      stack.on('render-page', () => {
-        t.ok( _.isObject( stack.params.body) && stack.params.body.title == 'Smurftown', 'parameter works') 
+        t.pass('using named function same as firing the original path')
       })
 
+      stack.insertUiGrid()
+
+      //with param (body) 
+      stack.on('render-page', () => {
+        t.ok( _.isObject( stack.params.body) && stack.params.body.title == 'Smurftown', 'parameter works')
+      })
       stack.renderPage({ title: 'Smurftown' })
 
+      //with named params:
+      stack.on('ui-grid/insert/:row/:column', () => {
+        t.pass('listener ran')
+        t.equals(stack.params.row, '1', 'first param correct')
+        t.equals(stack.params.column, '2', 'second param correct')
+      })
+
+      stack.uiGridInsert(1, 2)
+
+      //TODO with named params + body
+
     })
-
-
 
     if(run) {
       console.log('run tests...')

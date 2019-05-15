@@ -85,8 +85,8 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     newCommand = { route: route, listeners: [newListener] }
     stack.commands.push(newCommand)
     //make an alias :
-    if(stack.aliasing) {
-      stack[  _s(path).substr(1).replaceAll('/', '-').camelize().value()   ] = (...args) => stack.fire(path, ...args)
+    if(stack.aliaser) {
+      stack.aliaser[  _s(path).substr(1).replaceAll('/', '-').camelize().value()   ] = (...args) => stack.fire(path, ...args)
     }
   } else if(pathIsWild && existingCommands.length) {
     //if the path is wild and there are existing commands matched...
@@ -104,13 +104,13 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     stack.parameter_listeners.push(newListener)
     //may also need to create a new command here...
 
-    if(stack.aliasing) {
+    if(stack.aliaser) {
       //Save the structure of the pathname and its chunks/params:
       let words = _s(path).substr(1).replaceAll('/', '-').camelize().words(':')
       let specChunks = _s.words(path, '/')
       let params = _.rest(words, 1)
 
-      stack[words[0]] = (...params) => {
+      stack.aliaser[words[0]] = (...params) => {
         //... and use it to reconstruct the original path,
         //putting the params where they need to go:
         let mirrorParamIndex = -1
@@ -1047,6 +1047,18 @@ function end() {
   // get seconds
   var seconds = Math.round(timeDiff);
   //console.log(seconds + " seconds");
+}
+
+//Accommodate for another object we can use
+//for shorthand/aliases to stack.fire('command-name')
+//ex:
+//const fire = new stack.aliaser()
+//stack.on('command-name', ()=> ... )
+//fire.commandName()
+stack.aliaser = function() {
+  let aliaser = {}
+  stack.aliaser = aliaser
+  return aliaser
 }
 
 module.exports = stack

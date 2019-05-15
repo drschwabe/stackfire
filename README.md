@@ -49,12 +49,27 @@ Any number of parameters on the command itself (ie: `/do-something/:time` are ma
 
 ### Techniques
 
+#### async
 
-To fire from within an asyncronous listener, use this technique: 
-
+To fire from within an asynchronous listener, use this technique:
+```javascript
 stack.on('/apple', (next) => {
   next( stack.fire('/bannana') )
 })
+```
+
+
+#### alias
+
+Create an aliaser to enable shorthand aliases:
+
+```javascript
+const fire = new stack.aliaser()
+stack.on('fruit/apple', () => console.log('good in shakes'))
+fire.fruitApple()
+// > 'good in shakes'
+```
+
 
 #### License
 MIT

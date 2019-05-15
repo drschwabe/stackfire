@@ -3010,24 +3010,24 @@ var testObj = {
     })
 
 
-    newTest('Shorthand feature', (t) => {
+    newTest('Aliasing/shorthand feature', (t) => {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
-      stack.aliasing = true
-
-      stack.on('insert-ui-grid', () => {
+      const fire = new stack.aliaser()  
+    
+      stack.on('init-multi-game', () => {
         t.pass('using named function same as firing the original path')
       })
 
-      stack.insertUiGrid()
+      fire.initMultiGame()
 
       //with param (body) 
       stack.on('render-page', () => {
         t.ok( _.isObject( stack.params.body) && stack.params.body.title == 'Smurftown', 'parameter works')
       })
-      stack.renderPage({ title: 'Smurftown' })
+      fire.renderPage({ title: 'Smurftown' })
 
       //with named params:
       stack.on('ui-grid/insert/:row/:column', () => {
@@ -3036,7 +3036,7 @@ var testObj = {
         t.equals(stack.params.column, '2', 'second param correct')
       })
 
-      stack.uiGridInsert(1, 2)
+      fire.uiGridInsert(1, 2)
 
       //TODO with named params + body
 

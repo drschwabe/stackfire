@@ -105,12 +105,15 @@ stack.on = (pathOrPathsOrCommand, callback) => {
     //may also need to create a new command here...
 
     if(stack.aliaser) {
-      //Save the structure of the pathname and its chunks/params:
+
+      //let params = _.rest(words, 1)
       let words = _s(path).substr(1).replaceAll('/', '-').camelize().words(':')
-      let specChunks = _s.words(path, '/')
-      let params = _.rest(words, 1)
 
       stack.aliaser[words[0]] = (...params) => {
+        //Save the structure of the pathname and its chunks/params:
+
+        let specChunks = _s.words(path, '/')
+
         //... and use it to reconstruct the original path,
         //putting the params where they need to go:
         let mirrorParamIndex = -1
@@ -119,6 +122,9 @@ stack.on = (pathOrPathsOrCommand, callback) => {
           mirrorParamIndex++
           return params[mirrorParamIndex]
         })
+        //also include a body if one was provided ie- stack.fire('path', { body })
+        let body = _.find(params, (param) => _.isObject(param) )
+        if(body) return stack.fire( specChunks.join('/'), body)
         return stack.fire( specChunks.join('/') )
       }
     }
@@ -278,8 +284,6 @@ stack.endCommand = (next) => {
   if(stack.queue.length) runCommand( stack.queue.pop() )
   return //(otherwise do nothing)
 }
-
-
 
 //For now set this as last cause there is no way to determine all listeners..
 //unless stack.on is updated to check for any stack.every's ? hmmm

@@ -125,7 +125,9 @@ stack.on = (pathOrPathsOrCommand, callback) => {
         //also include a body if one was provided ie- stack.fire('path', { body })
         let body = _.find(params, (param) => _.isObject(param) )
         if(body) return stack.fire( specChunks.join('/'), body)
-        return stack.fire( specChunks.join('/') )
+        let firePath =  specChunks.join('/') //For some reason an extra slash may be appended; if so, remove it: 
+        if(_s.include(firePath, '//')) firePath = firePath.substr(0, firePath.length - 2)
+        return stack.fire( firePath )
       }
     }
   }

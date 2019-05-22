@@ -3042,6 +3042,18 @@ var testObj = {
 
     })
 
+
+    test.skip('Wildcards and folders', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(4)
+      stack.on(['folder/*path', 'docs-feed-render'], () => t.pass('folder/* (in an array with 1 other listener) listened') )
+      stack.on('folder/*path', () => t.pass('folder/*path listened'))
+      stack.on('folder/games', () => t.pass('folder/games listened'))
+      stack.on('folder/*') //< TODO: make sure this catches too
+      stack.fire('folder/')
+    })
+
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:

@@ -412,6 +412,8 @@ stack.fire = (...args) => {
     } else {
       stack.params = { body: body }
     }
+  } else if(stack.params && stack.params.body) {
+    delete stack.params.body
   }
 
   var commandToRunNow

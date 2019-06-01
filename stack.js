@@ -189,26 +189,38 @@ stack.once = (pathOrCommand, callback) => {
   return
 }
 
-stack.first = (path, callback) => {
+stack.first = (path, callback) => stack.nth(path, 1, callback)
+stack.second = (path, callback) => stack.nth(path, 2, callback)
+stack.third = (path, callback) => stack.nth(path, 3, callback)
+stack.fourth = (path, callback) => stack.nth(path, 4, callback)
+stack.fifth = (path, callback) => stack.nth(path, 5, callback)
+stack.sixth = (path, callback) => stack.nth(path, 6, callback)
+
+stack.nth = (path, priority, callback) => {
   path = prefixPath(path)
   route = new routeParser(path)
   existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
   if(!existingCommand) {
     stack.on(path, () => null)
-    return stack.first(path, callback)
+    return stack.nth(path, priority, callback)
   }
   const newListener = { func : callback, path: path, _id : uuid.v4() }
-  newListener.priority = 1
+  newListener.priority = priority
 
   existingCommand.listeners.push(newListener)
 
-  //re-sort the listeners based on priority (or 'before')..
-  existingCommand.listeners = _.sortBy(existingCommand.listeners, (listener) => {
-    let priority = listener.priority
-    if(listener.before) listener.priority = 0
-    return priority
+  //ensure listeners have a priority if not already...
+  existingCommand.listeners = _.map(existingCommand.listeners, (listener, index) => {
+    if(!listener.priority) listener.priority = index
+    return listener
   })
 
+  //re-sort the listeners based on priority (or 'before')..
+  existingCommand.listeners = _.sortBy(existingCommand.listeners, (listener) => {
+    if(listener.before) listener.priority = 0
+    let sortPriority = listener.priority
+    return sortPriority
+  })
   stack.commands.push(existingCommand)
 }
 

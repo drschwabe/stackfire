@@ -189,6 +189,29 @@ stack.once = (pathOrCommand, callback) => {
   return
 }
 
+stack.first = (path, callback) => {
+  path = prefixPath(path)
+  route = new routeParser(path)
+  existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
+  if(!existingCommand) {
+    stack.on(path, () => null)
+    return stack.first(path, callback)
+  }
+  const newListener = { func : callback, path: path, _id : uuid.v4() }
+  newListener.priority = 1
+
+  existingCommand.listeners.push(newListener)
+
+  //re-sort the listeners based on priority (or 'before')..
+  existingCommand.listeners = _.sortBy(existingCommand.listeners, (listener) => {
+    let priority = listener.priority
+    if(listener.before) listener.priority = 0
+    return priority
+  })
+
+  stack.commands.push(existingCommand)
+}
+
 stack.before = (path, callback) => {
   path = prefixPath(path)
   route = new routeParser(path)

@@ -3054,6 +3054,35 @@ var testObj = {
       stack.fire('folder/')
     })
 
+    newTest('stack.first() happens before regular listeners', (t) => {
+      t.plan(3)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      let count = 0
+
+      stack.on('green', () => {
+        console.log('hit gas')
+        count++
+        t.equals(count, 2)
+      })
+
+      stack.on('green', () => {
+        console.log('go')
+        count++
+        t.equals(count, 3)
+      })
+
+      stack.first('green', () => {
+        console.log('look both ways')
+        count++
+        t.equals(count, 1)
+      })
+
+      stack.fire('green')
+
+    })
+
+
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:

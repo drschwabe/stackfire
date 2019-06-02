@@ -3111,7 +3111,7 @@ var testObj = {
 
     })
 
-    newTest.only('stack.second() plays nice with existing listeners without pre-defined priority', (t) => {
+    newTest('stack.second() plays nice with existing listeners without pre-defined priority', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 

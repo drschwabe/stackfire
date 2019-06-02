@@ -125,7 +125,7 @@ stack.on = (pathOrPathsOrCommand, callback) => {
         //also include a body if one was provided ie- stack.fire('path', { body })
         let body = _.find(params, (param) => _.isObject(param) )
         if(body) return stack.fire( specChunks.join('/'), body)
-        let firePath =  specChunks.join('/') //For some reason an extra slash may be appended; if so, remove it: 
+        let firePath =  specChunks.join('/') //For some reason an extra slash may be appended; if so, remove it:
         if(_s.include(firePath, '//')) firePath = firePath.substr(0, firePath.length - 2)
         return stack.fire( firePath )
       }
@@ -206,21 +206,22 @@ stack.nth = (path, priority, callback) => {
   }
   const newListener = { func : callback, path: path, _id : uuid.v4() }
   newListener.priority = priority
+  newListener.nth = true
 
-  existingCommand.listeners.push(newListener)
-
-  //ensure listeners have a priority if not already...
-  existingCommand.listeners = _.map(existingCommand.listeners, (listener, index) => {
-    if(!listener.priority) listener.priority = index
-    return listener
+  //determine if a higher priority listener is lower in the list than where we would otherwise just splice in:
+  higherPriorityListener = _.find(existingCommand.listeners, (listener) => {
+    let index = _.indexOf(existingCommand.listeners, listener )
+    return listener.priority < priority && index >= priority -1
   })
 
-  //re-sort the listeners based on priority (or 'before')..
-  existingCommand.listeners = _.sortBy(existingCommand.listeners, (listener) => {
-    if(listener.before) listener.priority = 0
-    let sortPriority = listener.priority
-    return sortPriority
-  })
+  if(higherPriorityListener) {
+    existingCommand.listeners.splice(
+      _.indexOf(existingCommand.listeners, higherPriorityListener) +1,
+      0, newListener)
+  } else { //otherwise, just splice in at priority (-1):
+    existingCommand.listeners.splice(priority -1, 0, newListener)
+  }
+
   stack.commands.push(existingCommand)
 }
 

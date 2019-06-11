@@ -3133,6 +3133,44 @@ var testObj = {
 
     })
 
+    newTest("Can use Coalan's Async lib within a stack listener", (t) => {
+      t.plan(10)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let async = process.browser ? require('async') : requireUncached('async')
+
+      //can run an asyncEach within a stack fire; calling stack.next at each point...
+      stack.on('delete-item', (next) => {
+        t.pass('talking to database')
+        setTimeout(next, 10)
+      })
+
+      stack.fire('delete-item', () => {
+        t.pass('deleted single item')
+      })
+
+      //2 passes there, but now lets try to delete 6 items asynchronoulsy
+      stack.on('delete-all-items', (next) => {
+
+        let items = _.map( _.range(6), (item, index) => 'item' + index )
+
+        console.log(items)
+
+        async.eachSeries(items, (item, callback) => {
+          console.log(item)
+          //next.fire('delete-item', callback) //< you can't use shorthand
+          next.fire('delete-item', () => callback())
+        }, () => {
+          t.pass('finished deleting all items')
+          next()
+        })
+      })
+
+      stack.fire('delete-all-items', () => {
+        t.pass('finished stack command')
+      })
+
+    })
+
 
     if(run) {
       console.log('run tests...')

@@ -23,9 +23,14 @@ const stack = {
 }
 
 //Listener creation function:
-stack.on = (pathOrPathsOrCommand, callback) => {
+stack.on = (...params) => {
+//stack.on = (pathOrPathsOrCommand, priority, callback) => {
 
-  var path, existingCommand
+  let pathOrPathsOrCommand = params[0],
+      priority = _.find(params, (param) => _.isNumber(param) ),
+      callback = _.find(params, (param) => _.isFunction(param)),
+      path,
+      existingCommand
 
   //if we provide a command we can skip the path stuff...
   if(_.isObject(pathOrPathsOrCommand) && !_.isArray(pathOrPathsOrCommand)) {
@@ -70,7 +75,6 @@ stack.on = (pathOrPathsOrCommand, callback) => {
       if( route.match(establishedCommand.route.spec) ) return true
     })
   }
-
 
   //Either way, we will create a listener entry;
   //with two properties: an async handler function
@@ -163,6 +167,35 @@ stack.on = (pathOrPathsOrCommand, callback) => {
   if(pathIsWild) {
     route.isWild = true
   }
+
+  if(priority) {
+    //re-sort the shit
+    console.log('this listener needs prioirty!!')
+    newListener.priority = priority
+    newListener.nth = true
+
+    if(existingCommand) {
+      //remove it from the current stack; cause we about to re-insert it based on priority...
+      existingCommand.listeners = _.without(existingCommand.listeners, newListener)
+
+      //determine if a higher priority listener is lower in the list than where we would otherwise just splice in:
+      higherPriorityListener = _.find(existingCommand.listeners, (listener) => {
+        let index = _.indexOf(existingCommand.listeners, listener )
+        return listener.priority < priority && index >= priority -1
+      })
+
+      if(higherPriorityListener) {
+        existingCommand.listeners.splice(
+          _.indexOf(existingCommand.listeners, higherPriorityListener) +1,
+          0, newListener)
+      } else { //otherwise, just splice in at priority (-1):
+        existingCommand.listeners.splice(priority -1, 0, newListener)
+      }
+
+      stack.commands.push(existingCommand)
+    }
+  }
+
   return
 }
 
@@ -196,34 +229,7 @@ stack.fourth = (path, callback) => stack.nth(path, 4, callback)
 stack.fifth = (path, callback) => stack.nth(path, 5, callback)
 stack.sixth = (path, callback) => stack.nth(path, 6, callback)
 
-stack.nth = (path, priority, callback) => {
-  path = prefixPath(path)
-  route = new routeParser(path)
-  existingCommand = _.find(stack.commands, (existingCommand) => existingCommand.route.match(path))
-  if(!existingCommand) {
-    stack.on(path, () => null)
-    return stack.nth(path, priority, callback)
-  }
-  const newListener = { func : callback, path: path, _id : uuid.v4() }
-  newListener.priority = priority
-  newListener.nth = true
-
-  //determine if a higher priority listener is lower in the list than where we would otherwise just splice in:
-  higherPriorityListener = _.find(existingCommand.listeners, (listener) => {
-    let index = _.indexOf(existingCommand.listeners, listener )
-    return listener.priority < priority && index >= priority -1
-  })
-
-  if(higherPriorityListener) {
-    existingCommand.listeners.splice(
-      _.indexOf(existingCommand.listeners, higherPriorityListener) +1,
-      0, newListener)
-  } else { //otherwise, just splice in at priority (-1):
-    existingCommand.listeners.splice(priority -1, 0, newListener)
-  }
-
-  stack.commands.push(existingCommand)
-}
+stack.nth = (path, priority, callback) => stack.on(path, priority, callback)
 
 stack.before = (path, callback) => {
   path = prefixPath(path)

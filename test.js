@@ -2781,6 +2781,50 @@ var testObj = {
       stack.fire('vegetable/carrot')
     })
 
+    newTest('More complex listener arrangement involving stack.nth functions', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+
+      let folderlistenersRanCount = 0
+      let folderlistenerRan = () => {
+        folderlistenersRanCount++
+        console.log('ran')
+      }
+
+      stack.first('folder/*path', () => {
+        console.log('we got a folder path!')
+        folderlistenerRan()
+      })
+
+      stack.second('folder/*path', (next) => {
+        //(after folder-navigation sets state.current_path)
+        console.log('sort the folder tree...')
+        folderlistenerRan()
+        next.fire('folder-tree/render')
+      })
+
+      stack.on('folder-tree/render', () => {
+        console.log('render folder tree')
+      })
+
+      stack.third('folder/*path', (next) => {
+        folderlistenerRan()
+        next.fire('docs-feed/render')
+      })
+
+      stack.on('folder/*path', () => {
+        console.log('pathbar templating / render')
+        folderlistenerRan()
+      })
+
+      stack.on('docs-feed/render', () => console.log('render docs feed'))
+
+      stack.fire('folder/green')
+
+      t.equals( folderlistenersRanCount, 4, 'Each folder/*path listener ran exactly once' )
+    })
+
     newTest('Empty wildcard', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack

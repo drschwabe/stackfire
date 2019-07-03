@@ -72,7 +72,7 @@ stack.on = (...params) => {
   var existingCommands
   if(pathIsWild) {
     existingCommands = _.filter(stack.commands, (establishedCommand) => {
-      if( route.match(establishedCommand.route.spec) ) return true
+      if( establishedCommand.route.spec != route.spec && route.match(establishedCommand.route.spec) ) return true
     })
   }
 

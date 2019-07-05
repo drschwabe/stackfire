@@ -38,7 +38,10 @@ stack.on = (...params) => {
     existingCommand = pathOrPathsOrCommand
   //If an array...
   } else if(_.isArray(pathOrPathsOrCommand)) { //just re-call this function with each path:
-    pathOrPathsOrCommand.forEach( (path) => stack.on(path, callback) )
+    pathOrPathsOrCommand.forEach( (path) => {
+      if(priority) return stack.on(path, priority, callback)
+      stack.on(path, callback)
+    })
     return
   } else { //otherwise continue with the single path:
     path = pathOrPathsOrCommand
@@ -222,14 +225,14 @@ stack.once = (pathOrCommand, callback) => {
   return
 }
 
-stack.first = (path, callback) => stack.nth(path, 1, callback)
-stack.second = (path, callback) => stack.nth(path, 2, callback)
-stack.third = (path, callback) => stack.nth(path, 3, callback)
-stack.fourth = (path, callback) => stack.nth(path, 4, callback)
-stack.fifth = (path, callback) => stack.nth(path, 5, callback)
-stack.sixth = (path, callback) => stack.nth(path, 6, callback)
+stack.first = (pathOrPaths, callback) => stack.nth(pathOrPaths, 1, callback)
+stack.second = (pathOrPaths, callback) => stack.nth(pathOrPaths, 2, callback)
+stack.third = (pathOrPaths, callback) => stack.nth(pathOrPaths, 3, callback)
+stack.fourth = (pathOrPaths, callback) => stack.nth(pathOrPaths, 4, callback)
+stack.fifth = (pathOrPaths, callback) => stack.nth(pathOrPaths, 5, callback)
+stack.sixth = (pathOrPaths, callback) => stack.nth(pathOrPaths, 6, callback)
 
-stack.nth = (path, priority, callback) => stack.on(path, priority, callback)
+stack.nth = (pathOrPaths, priority, callback) => stack.on(pathOrPaths, priority, callback)
 
 stack.before = (path, callback) => {
   path = prefixPath(path)

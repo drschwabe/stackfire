@@ -3177,6 +3177,23 @@ var testObj = {
 
     })
 
+    newTest('stack.first() as an array of paths', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+      let runCount = 0
+      stack.on('run', () => {
+        runCount++
+        console.log('stack.on test happened')
+      })
+      stack.first(['run', 'run2'], ()=> {
+        runCount++
+        console.log('stack.first test happened')
+        t.equals(runCount, 1)
+      })
+      stack.fire('run')
+    })
+
     newTest("Can use Coalan's Async lib within a stack listener", (t) => {
       t.plan(10)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

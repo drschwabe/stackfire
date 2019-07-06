@@ -1929,8 +1929,10 @@ var testObj = {
         next.fire('bean-sprouts')
       })
       stack.fire('asparagus')
-      t.notOk(gg.examine(stack.grid, [0, 1]))  //< bean-sprouts is nowhere because there is no middleware, nor callback provided.
-      t.notOk(gg.examine(stack.grid, 0).command.done) //< asparagus is not done
+      console.log(   gg.examine(stack.grid, [0, 1]) )
+      t.ok(  _.isNull(   gg.examine(stack.grid, [0, 1])  )   )  //< bean-sprouts is nowhere because there is no middleware, nor callback provided.
+      console.log(   gg.examine(stack.grid, [0, 1]) )
+      t.ok(gg.examine(stack.grid, 0).command.done) //< asparagus is done cause the next call ended it despite bean-sprouts not existing command
     })
 
     newTest('stack.next for ons vs fires pt4', (t) => {
@@ -1984,11 +1986,10 @@ var testObj = {
 
       stack.on('apple', (next) => {
         next.fire('orange')
-        //stack.next is not called during the middleware function so apple should never complete...
       })
       stack.fire('apple')
 
-      t.notOk(gg.examine(stack.grid, 0).command.done )
+      t.ok(gg.examine(stack.grid, 0).command.done )
 
     })
 
@@ -3231,6 +3232,19 @@ var testObj = {
       })
 
     })
+
+    newTest("Stack.fire on a command that does not exist still passes next", (t) => {
+      t.plan(1)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let async = process.browser ? require('async') : requireUncached('async')
+      stack.on('ice', (next) => {
+        next.fire('water')
+      })
+
+      stack.fire('ice', () => {
+        t.ok('finishes')
+      })
+    }) 
 
 
     if(run) {

@@ -731,10 +731,9 @@ const runCommand = (commandToRun) => {
         return callbackFunc()
       })
 
-      stack.next.fire = (path, callback) => {
+      stack.next.fire = (...args) => {
         stack.next_firing = true
-        if(callback) return stack.fire(path, callback)
-        stack.fire(path)
+        return stack.fire(...args)
       }
 
       //Execute the function!

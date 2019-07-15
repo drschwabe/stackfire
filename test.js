@@ -3244,7 +3244,23 @@ var testObj = {
       stack.fire('ice', () => {
         t.ok('finishes')
       })
-    }) 
+    })
+
+    newTest("stack.params retain between child fires", (t) => {
+      t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      stack.on('move/:direction', (next) => {
+        t.equals(stack.params.direction, 'north')
+        next.fire('enter-new-world/' + stack.params.direction)
+      })
+
+      stack.on('enter-new-world/:direction', () => {
+        t.equals(stack.params.direction, 'north')
+      })
+
+      stack.fire('move/north')
+    })
 
 
     if(run) {

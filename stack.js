@@ -391,7 +391,7 @@ stack.fire = (...args) => {
   if(!matchingCommand && !callback) {
     //check if there are any listener parameters...
     console.log("there are no listeners (or callback) existing for this command '" + pathname + "'")
-    if(stack.next_firing) return stack.next() 
+    if(stack.next_firing) return stack.next()
     return
   }
   if(!matchingCommand && callback) {

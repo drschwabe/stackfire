@@ -171,34 +171,26 @@ stack.on = (...params) => {
     route.isWild = true
   }
 
-  if(priority) {
-    //re-sort the shit
-    console.log('this listener needs prioirty!!')
+  const _l = require('lodash')
+
+  if(priority && existingCommand) {
     newListener.priority = priority
     newListener.nth = true
-
-    if(existingCommand) {
-      //remove it from the current stack; cause we about to re-insert it based on priority...
-      existingCommand.listeners = _.without(existingCommand.listeners, newListener)
-
-      //determine if a higher priority listener is lower in the list than where we would otherwise just splice in:
-      higherPriorityListener = _.find(existingCommand.listeners, (listener) => {
-        let index = _.indexOf(existingCommand.listeners, listener )
-        return listener.priority < priority && index >= priority -1
-      })
-
-      if(higherPriorityListener) {
-        existingCommand.listeners.splice(
-          _.indexOf(existingCommand.listeners, higherPriorityListener) +1,
-          0, newListener)
-      } else { //otherwise, just splice in at priority (-1):
-        existingCommand.listeners.splice(priority -1, 0, newListener)
-      }
-
-      stack.commands.push(existingCommand)
-    }
+    existingCommand.listeners = _l.sortBy(existingCommand.listeners, ['priority', 'nth'])
+    stack.commands.push(existingCommand)
+  } else if(!priority && existingCommand) {
+    existingCommand.listeners = _.without(existingCommand.listeners, newListener)
+    let defaultPriority = existingCommand.listeners.length + 1
+    let minPriority = _.min(existingCommand.listeners, (listener) => listener.priority).priority
+    let maxPriority = _.max(existingCommand.listeners, (listener) => listener.priority).priority
+    //need to factor in some listeners are not explicity priority; so they can be bumped around ..
+    if(minPriority + 1 < maxPriority) newListener.priority = minPriority + 1
+    existingCommand.listeners.push(newListener)
+    existingCommand.listeners = _.sortBy(existingCommand.listeners, (listener) => listener.priority)
+    stack.commands.push(existingCommand)
+  } else if(!existingCommand) {
+    newListener.priority = 1
   }
-
   return
 }
 

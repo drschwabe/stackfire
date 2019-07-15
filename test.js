@@ -3178,6 +3178,48 @@ var testObj = {
 
     })
 
+
+    newTest('stack.nth("command", 99) always runs last', (t) => {
+      t.plan(5)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      let step = 0
+
+      stack.on('coffee', () => {
+        console.log('boil water')
+        step++
+        t.equals(step, 1)
+      })
+
+      stack.nth('coffee', 99, () => {
+        console.log('drink coffee!')
+        step++
+        t.equals(step, 5)
+      })
+
+      stack.on('coffee', () => {
+        console.log('steep')
+        step++
+        t.equals(step, 3)
+      })
+
+      stack.second('coffee', () => {
+        console.log('grind beans')
+        step++
+        t.equals(step, 2)
+      })
+
+
+      stack.on('coffee', () => {
+        console.log('pour cream')
+        step++
+        t.equals(step, 4)
+      })
+
+      stack.fire('coffee')
+
+    })
+
     newTest('stack.first() as an array of paths', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack

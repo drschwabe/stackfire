@@ -437,28 +437,26 @@ stack.fire = (...args) => {
   matchingCommand.callee = callee
 
 
+  if(!stack.params) stack.params = {}
+
   let specHasParams = _s.include(matchingCommand.route.spec, ":")
 
   if(specHasParams) {
     //match the pathname to spec to get an obj containing
     //the parameter's values:
-    stack.params = matchingCommand.route.match( pathname )
+    stack.params = _.extend(stack.params, matchingCommand.route.match( pathname ))
   }
 
   if(matchingCommand.route.isWild) {
     //extract the part of the pathname that is wild...
     let matchedRoute = matchingCommand.route.match(pathname)
-    stack.params = matchedRoute
+    stack.params = _.extend(stack.params,  matchedRoute )
     stack.params.wild = _.values(matchedRoute)[0]
   }
 
   if(body) { //Accommodate for stack.fire('pathname', body)
-    if(stack.params) {
       stack.params.body = body
-    } else {
-      stack.params = { body: body }
-    }
-  } else if(stack.params && stack.params.body) {
+  } else if(stack.params.body) {
     delete stack.params.body
   }
 

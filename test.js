@@ -3180,8 +3180,9 @@ var testObj = {
 
 
     newTest('stack.nth("command", 99) always runs last', (t) => {
-      t.plan(5)
+      t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
 
       let step = 0
 
@@ -3209,15 +3210,48 @@ var testObj = {
         t.equals(step, 2)
       })
 
-
       stack.on('coffee', () => {
         console.log('pour cream')
         step++
         t.equals(step, 4)
       })
 
-      stack.fire('coffee')
+      stack.fire('coffee', () => {
+        console.log('mmm that was tasty')
+        step++
+        t.equals(step, 6)
+      })
 
+    })
+
+    newTest('Listener can fire a new command of same name within trailing callback without calling said trailing callback again ', (t) => {
+
+    //test.only('Listener can fire a new command of same name within trailing callback without calling said trailing callback again ', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+
+      t.plan(2)
+
+      let normalListenerCount = 0
+      let trailingCallbackCount = 0
+      stack.on('make-block', (next) => {
+        next.fire('create-block', (next) => {
+          trailingCallbackCount++
+          next.fire('create-block', (next) => {
+            trailingCallbackCount++
+            next.fire('ship-block')
+          })
+        })
+      })
+
+      stack.on('create-block', () => {
+        normalListenerCount++
+      })
+
+      stack.fire('make-block')
+
+      t.equals(normalListenerCount, 2)
+      t.equals(trailingCallbackCount, 2)
     })
 
     newTest('stack.first() as an array of paths', (t) => {

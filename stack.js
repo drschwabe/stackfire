@@ -399,7 +399,6 @@ stack.fire = (...args) => {
     //(do not keep this listener for subsequent fires of the same path)
     matchingCommand.listeners[0].one_time = true
   } else if(callback && !callbackOn) {
-    //console.log('run only once')
     stack.once(pathname, callback)
   }
 
@@ -567,6 +566,7 @@ const runCommand = (commandToRun) => {
       if(listener.buffer) listenerEnty.buffer = true
       if(listener.every) listenerEnty.every = true
       if(listener.before) listenerEnty.before = true
+      if(listener.one_time) listenerEnty.one_time = true
       listenerEnty._id = listener._id
 
 
@@ -608,7 +608,6 @@ const runCommand = (commandToRun) => {
       if(cell.enties[0].done) return callback ()
 
       //if any other commands are underway; we need to exit this loop!
-
 
       var incompleteListeners = _.filter(thisColumnsCells, (cell) => {
         var enty = gg.examine(stack.grid, cell)
@@ -687,6 +686,7 @@ const runCommand = (commandToRun) => {
         cell.enties[0].done = true
         cell.enties[0].end_time = new Date()
         cell.enties[0].total_time = cell.enties[0].end_time - cell.enties[0].start_time
+
         if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
 
         var allCallbacksDone = _.chain(stack.grid.enties)
@@ -735,6 +735,11 @@ const runCommand = (commandToRun) => {
 
       //do not execute if there is another next in prog!
       if(stack.async_nexting) return
+      //remove it from the listeners before firing if its a one time...
+      if(cell.enties[0].one_time) {
+        let correspondingListener = _.findWhere( commandToRun.listeners, { _id : cell.enties[0]._id  }  )
+        commandToRun.listeners = _.without(commandToRun.listeners, correspondingListener)
+      }
       cell.enties[0].func(stack.next)
 
       //Wait for stack.next to be called, unless the user did not supply it

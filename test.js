@@ -3226,7 +3226,7 @@ var testObj = {
 
     newTest('Listener can fire a new command of same name within trailing callback without calling said trailing callback again ', (t) => {
 
-    //test.only('Listener can fire a new command of same name within trailing callback without calling said trailing callback again ', (t) => {
+      //test.only('Listener can fire a new command of same name within trailing callback without calling said trailing callback again ', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
 
@@ -3252,6 +3252,38 @@ var testObj = {
 
       t.equals(normalListenerCount, 2)
       t.equals(trailingCallbackCount, 2)
+    })
+
+    test.only('more complex', (t) => {
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      if(process.browser) window.stack = stack
+      t.plan(1)
+
+      stack.on('init', () => console.log('/init regular listener'))
+
+      stack.on('draggable-absolute-separator/init/:cellNum', () => console.log('/draggable-absolute-separator/init regular listener'))
+
+      stack.on('folder', () => console.log('/folder regular listener'))
+
+      stack.on('folder-tree/refresh', ()=> {
+        console.log('/folder-tree/refresh regular listener')
+        t.pass()
+      })
+
+      stack.fire('init', (next) => {
+        console.log('/init trailling listener')
+        next.fire('folder', (next) => {
+          console.log('/folder trailing listener')
+          debugger
+          next.fire('draggable-absolute-separator/init/3', (next) => {
+            console.log('draggable-absolute-separator/init trailing listener (first fire)')
+            next.fire('draggable-absolute-separator/init/4', (next) => {
+              console.log('draggable-absolute-separator/init trailing listener (second fire)')
+              next.fire('folder-tree/refresh')
+            })
+          })
+        })
+      })
     })
 
     newTest('stack.first() as an array of paths', (t) => {

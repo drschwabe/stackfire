@@ -413,6 +413,7 @@ stack.fire = (...args) => {
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
     //add the callback if one was provided:
+    debugger
     if(callback) stack.once(matchingCommand, callback)
     stack.commands.push(matchingCommand)
   }
@@ -738,7 +739,12 @@ const runCommand = (commandToRun) => {
       //remove it from the listeners before firing if its a one time...
       if(cell.enties[0].one_time) {
         let correspondingListener = _.findWhere( commandToRun.listeners, { _id : cell.enties[0]._id  }  )
-        commandToRun.listeners = _.without(commandToRun.listeners, correspondingListener)
+        commandToRun.listeners = _.filter(commandToRun.listeners, (listener) => {
+          let match = listener._id != correspondingListener._id
+          debugger
+          return match
+        })
+        debugger
       }
       cell.enties[0].func(stack.next)
 

@@ -402,6 +402,16 @@ stack.fire = (...args) => {
     stack.once(pathname, callback)
   }
 
+  //make sure listeners underway aren't included in new command
+  let underwayListeners = _.filter(stack.grid.enties, (enty) => enty.underway )
+  matchingCommand.listeners.forEach((listener) => {
+    underwayListeners.forEach((underwayListener) => {
+      if(listener.func == underwayListener.func) listener.is_underway = true
+    })
+  })
+
+  matchingCommand.listeners = _.reject( matchingCommand.listeners, (listener) => listener.is_underway )
+
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
     //create a new copy, this time with a uid...
@@ -413,7 +423,6 @@ stack.fire = (...args) => {
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
     //add the callback if one was provided:
-    debugger
     if(callback) stack.once(matchingCommand, callback)
     stack.commands.push(matchingCommand)
   }
@@ -739,12 +748,12 @@ const runCommand = (commandToRun) => {
       //remove it from the listeners before firing if its a one time...
       if(cell.enties[0].one_time) {
         let correspondingListener = _.findWhere( commandToRun.listeners, { _id : cell.enties[0]._id  }  )
-        commandToRun.listeners = _.filter(commandToRun.listeners, (listener) => {
-          let match = listener._id != correspondingListener._id
-          debugger
-          return match
-        })
-        debugger
+        if(correspondingListener) {
+          commandToRun.listeners = _.filter(commandToRun.listeners, (listener) => {
+            let match = listener._id != correspondingListener._id
+            return match
+          })
+        }
       }
       cell.enties[0].func(stack.next)
 

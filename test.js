@@ -3224,7 +3224,7 @@ var testObj = {
 
     })
 
-    newTest('Listener can fire a new command of same name within trailing callback without calling said trailing callback again ', (t) => {
+    newTest('Listener can fire a new command of same name within trailing callback without calling said trailing callback again', (t) => {
 
       //test.only('Listener can fire a new command of same name within trailing callback without calling said trailing callback again ', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
@@ -3254,7 +3254,7 @@ var testObj = {
       t.equals(trailingCallbackCount, 2)
     })
 
-    test.only('more complex', (t) => {
+    newTest('More complex listener within a listener (invovling params)', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
       t.plan(1)

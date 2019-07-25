@@ -226,6 +226,8 @@ stack.sixth = (pathOrPaths, callback) => stack.nth(pathOrPaths, 6, callback)
 
 stack.nth = (pathOrPaths, priority, callback) => stack.on(pathOrPaths, priority, callback)
 
+stack.last = (pathOrPaths, callback) => stack.nth(pathOrPaths, 999, callback)
+
 stack.before = (path, callback) => {
   path = prefixPath(path)
   route = new routeParser(path)

@@ -783,6 +783,7 @@ const runCommand = (commandToRun) => {
         commandToRun.done = true
         commandToRun.end_time = new Date()
         commandToRun.total_time = commandToRun.end_time - commandToRun.start_time
+        stack.params = null
 
         //reset the row back to 0
         stack.row = 0

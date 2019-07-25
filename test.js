@@ -3370,6 +3370,21 @@ var testObj = {
       stack.fire('move/north')
     })
 
+    newTest("stack.params clear after subsequent (non-child) fires", (t) => {
+      t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      stack.on('ui-grid/insert/3/3/:elementName', () => {
+        t.equals(stack.params.elementName, 'path-bar')
+      })
+
+      stack.fire('ui-grid/insert/3/3/path-bar')
+
+      console.log(stack.params)
+      t.ok(_.isEmpty(stack.params))
+
+    })
+
 
     if(run) {
       console.log('run tests...')

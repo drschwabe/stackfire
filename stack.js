@@ -417,6 +417,7 @@ stack.fire = (...args) => {
   //Determine if this is a new instance of the command....
   if(matchingCommand.done) {
     //create a new copy, this time with a uid...
+    var originalMatchingCommand = _.clone(matchingCommand)
     matchingCommand = _.clone(matchingCommand)
     matchingCommand.listeners = _.chain(matchingCommand.listeners)
       .map(listener => listener.one_time ? false : listener)
@@ -424,7 +425,19 @@ stack.fire = (...args) => {
       .value()
     matchingCommand._id = _.uniqueId() + Date.now()
     matchingCommand.done = false
-    //add the callback if one was provided:
+    //add the callback if one was provided....
+    //but if the callback was already ran as part of the original matching command, don't run it again:
+    if(!originalMatchingCommand.route.isWild) {
+      originalMatchingCommand.listeners.forEach((listener) => {
+        let aLiveListener = liveListener()
+        //if the listener.func is same as callback, BUT we are running in the context of no other commands in progress
+        //(ie- fresh command) then callback is OK run it again
+        if(aLiveListener) {
+          if(listener.func == callback) callback = false
+          //this prevents trailing callbacks from being run/re-added to stack infinitely or doubled up on later fires
+        }
+      })
+    }
     if(callback) stack.once(matchingCommand, callback)
     stack.commands.push(matchingCommand)
   }

@@ -2480,7 +2480,7 @@ var testObj = {
 
       var fireEat = () => {
         stack.fire('eat', () => {
-          console.log('eat a little more... but only one time')
+          console.log('eat a little more... but only one time (per command fired)')
           t.pass()
           //(test ensures this last callback is never skipped)
         })
@@ -3303,7 +3303,7 @@ var testObj = {
       stack.fire('run')
     })
 
-    newTest("Can use Coalan's Async lib within a stack listener", (t) => {
+    test.skip("Can use Coalan's Async lib within a stack listener", (t) => {
       t.plan(10)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       let async = process.browser ? require('async') : requireUncached('async')
@@ -3385,6 +3385,52 @@ var testObj = {
 
     })
 
+    //this one fires out of order ...
+    newTest("Explicit listener works in combination with a listener with same pattern but using parameter", (t) => {
+      t.plan(3)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      stack.on('keyup/:anyKey', () => {
+        t.pass('any key was hit')
+      })
+
+      stack.on('keyup/:anyKey', () => {
+        t.pass('any key was hit (2nd listener invoked)')
+      })
+
+      stack.on('keyup/Backspace', (next) => {
+        t.pass('backspace was hit')
+        next()
+      })
+
+      stack.fire('keyup/Backspace')
+    })
+
+
+    newTest("No doubling up of one time listener/trailing callbacks", (t) => {
+      t.plan(6)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      stack.on('player-movement/:direction', (next) => {
+      	console.log('player-movement/' + stack.params.direction)
+        next.fire('world-grid-create-new/' + 44, (next) => {
+          t.pass('world-grid-create-new/' + stack.params.cellNum + ' trailing callback ran' )
+          next.fire('enter-next-world-grid/' + stack.params.direction)
+        })
+      })
+
+      stack.on('world-grid-create-new/:cellNum', () => {
+        t.pass('world-grid-create-new/' + stack.params.cellNum + ' regular listener ran' )
+      })
+
+      stack.on('enter-next-world-grid/:direction', () => {
+        t.pass('enter-next-world-grid/' + stack.params.direction + ' regular listener ran' )
+      })
+
+      stack.fire('player-movement/north')
+      stack.fire('player-movement/north')
+
+    })
 
     if(run) {
       console.log('run tests...')

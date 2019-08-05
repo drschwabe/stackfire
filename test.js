@@ -3432,6 +3432,28 @@ var testObj = {
 
     })
 
+    newTest("Original params restored after child command completes", (t) => {
+      t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      stack.on('save-favv/:id', (next) => {
+      	console.log('whatup')
+      	next.fire('save-list-to-db')
+      })
+
+      stack.on('save-list-to-db', () => {
+        console.log('do stuff')
+      })
+
+      stack.on('save-favv/:id', () => {
+        t.ok(_.isObject(stack.params))
+      	t.equals(stack.params.id, 'Morrowind')
+      })
+
+      stack.fire('save-favv/Morrowind')
+
+    })
+
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:

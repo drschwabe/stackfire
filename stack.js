@@ -520,6 +520,7 @@ stack.fire = (...args) => {
 const runCommand = (commandToRun) => {
 
   commandToRun.start_time = new Date()
+  commandToRun.params = _.clone(stack.params)
 
   //console.log('run command: ' + commandToRun.route.spec)
 
@@ -824,6 +825,7 @@ const runCommand = (commandToRun) => {
           })
           if(remainingCommandListeners.length) {
             stack.path = remainingCommandListeners[0].command.route.spec
+            stack.params = remainingCommandListeners[0].command.params
             updateGridColumn(remainingCommandListeners[0].command, stack.column)
             return gridLoop(null, () => {
               //<!-- duplicating --->

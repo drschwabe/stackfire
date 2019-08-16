@@ -29,6 +29,7 @@
     "async": "^2.6.1",
     "detect-node": "^2.0.3",
     "function-arguments": "^1.0.8",
+    "gamegrids": "^0.8.5",
     "is-electron": "^2.1.0",
     "lodash": "^4.17.4",
     "route-parser": "0.0.5",

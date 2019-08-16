@@ -3,7 +3,7 @@
 var async = require('async'),
     routeParser = require('route-parser'),
     _ = require('underscore'),
-    gg = require('gg'),
+    gg = require('gamegrids'),
     fnArgs = require('function-arguments'),
     uuid = require('uuid'),
     _s = require('underscore.string')

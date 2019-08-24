@@ -151,7 +151,7 @@ var testObj = {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
 
       stack.on('orange', () => {
@@ -212,7 +212,7 @@ var testObj = {
       t.plan(11)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('strawberry', () => {
         console.log('/strawberry "on" (listener function in progress)')
@@ -979,7 +979,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
 
       stack.on('apple', () => {
@@ -1272,7 +1272,7 @@ var testObj = {
     //   t.plan(6)
     //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
     //   if(process.browser) window.stack = stack
-    //   let gg = process.browser ? require('gg') : requireUncached('gg')
+    //   let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
     //   stack.on('green', (state) => {
     //     t.pass('green light on')
@@ -1407,7 +1407,7 @@ var testObj = {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('shake', () => {
         //The shake command is not done yet:
@@ -1499,7 +1499,7 @@ var testObj = {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.state.gold = false
 
@@ -1553,7 +1553,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.fire('dig', (next) => {
         log('dug')
@@ -1703,7 +1703,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('bannana-shake', (next) => {
         console.log('brrshh-zzzzzze....')
@@ -1737,7 +1737,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('bannana-shake', (next) => {
         console.log('brrshh-zzzzzze....')
@@ -1781,7 +1781,7 @@ var testObj = {
       t.plan(8)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       stack.fire('fruits', () => {
         stack.fire('apple')
         stack.fire('bannana')
@@ -1812,7 +1812,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.fire('stone', () => {
         //next()
@@ -1840,7 +1840,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       let async = process.browser ? require('async') : requireUncached('async')
 
       var loaded = false
@@ -1884,7 +1884,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('apple', (next) => {
         next.fire('bannana')
@@ -1901,7 +1901,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('cherry', (next) => {
         next.fire('date', (next) => {
@@ -1923,7 +1923,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('asparagus', (next) => {
         next.fire('bean-sprouts')
@@ -1939,7 +1939,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('bean-sprouts', () => {
         console.log('bean-sprouts in progress')
@@ -1960,7 +1960,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('bean-sprouts', (next) => {
         console.log('bean-sprouts in progress')
@@ -1982,7 +1982,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('apple', (next) => {
         next.fire('orange')
@@ -1998,7 +1998,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.fire('apple', (next) => {
         next.fire('green', (next) => next.fire('red', next))
@@ -2022,7 +2022,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('connect', () => {
         console.log('do something')
@@ -2049,7 +2049,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       //Order is important here...
       //the parameter version 'on' needs to like reverse itself
@@ -2078,7 +2078,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('save', (next) => {
         t.pass('save stuff')
@@ -2100,7 +2100,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('/favvorite-main-save', (next) => {
         //next.fire('elements/render', next) //< TODO accommodate for this syntax
@@ -2235,7 +2235,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('ready', (next) => {
         next.fire('init', next)
@@ -2492,7 +2492,7 @@ var testObj = {
 
     newTest('ttt', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       if(process.browser) window.stack = stack
 
       t.plan(3)
@@ -2512,7 +2512,7 @@ var testObj = {
 
     newTest('stack.every fires everytime', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       if(process.browser) window.stack = stack
 
       t.plan(3)
@@ -2535,7 +2535,7 @@ var testObj = {
 
     newTest('Grid expands to accommodate multiple incomplete listeners', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      let gg = process.browser ? require('gg') : requireUncached('gg')
+      let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       if(process.browser) window.stack = stack
 
       t.plan(9)
@@ -2582,7 +2582,7 @@ var testObj = {
 
     newTest('All listeners run (after a re-stack)', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      //let gg = process.browser ? require('gg') : requireUncached('gg')
+      //let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       if(process.browser) window.stack = stack
 
       t.plan(12)

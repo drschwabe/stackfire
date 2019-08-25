@@ -3454,6 +3454,44 @@ var testObj = {
 
     })
 
+    newTest('Params restore to original command after two children commands execute', (t) => {
+      t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+    	stack.on('mouse/click/mf-doc', (next) => {
+        console.log('mouse/click/mf-doc')
+        next.fire('selectable-docs/select/abc')
+    	})
+
+      stack.on('selectable-docs/select/:docId', (next) => {
+        console.log('1st param listener')
+        t.equals(stack.params.docId, 'abc')
+        next.fire('selectable-docs/deselect')
+      })
+
+      stack.on('selectable-docs/select/:docId', () => {
+        console.log('2nd param listener')
+        t.equals(stack.params.docId, 'abc')
+      })
+
+      stack.on('selectable-docs/deselect', () => {
+        console.log("third command's first listener")
+      })
+
+      stack.on('selectable-docs/deselect', (next) => {
+        console.log("third command's second listener")
+        next.fire('property-panel/render')
+      })
+
+      stack.on('property-panel/render', () => {
+        console.log("fourth command's only listener")
+        console.log('woot woot')
+      })
+
+      stack.fire('mouse/click/mf-doc')
+
+    })
+
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:

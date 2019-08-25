@@ -326,6 +326,23 @@ stack.endCommand = (next) => {
   return //(otherwise do nothing)
 }
 
+stack.endParent = () => {
+  var parentCommandListenersIncomplete = _.filter(stack.grid.enties, (enty) => {
+    if(enty.command.column != stack.column - 1) return false
+    if(enty.underway || !enty.done) return true
+    return false
+  })
+  if(!parentCommandListenersIncomplete) return console.warn('no parents')
+  //mark the parentListener's command and all other listeners 'done' (and 'skipped' for template)
+   parentCommandListenersIncomplete.forEach((listener, index) => {
+    //corresponding live listener...
+    listener.done = true
+    if(index == 0) return 
+    listener.skipped = true
+  })
+  if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
+}
+
 //For now set this as last cause there is no way to determine all listeners..
 //unless stack.on is updated to check for any stack.every's ? hmmm
 

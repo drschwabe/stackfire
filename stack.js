@@ -858,6 +858,7 @@ const runCommand = (commandToRun) => {
           if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
           //if parentListener is done, we still need to check other commands..
           if(stack.column > 0) stack.column--;
+          if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
           gridLoop()
           if(!stack.queue.length) return trimGrid()
           return runCommand( stack.queue.pop() )

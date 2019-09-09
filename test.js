@@ -3415,7 +3415,7 @@ var testObj = {
       	console.log('player-movement/' + stack.params.direction)
         next.fire('world-grid-create-new/' + 44, (next) => {
           //should only run twice:
-          debugger 
+          //debugger
           t.pass('world-grid-create-new/' + stack.params.cellNum + ' trailing callback ran' )
           next.fire('enter-next-world-grid/' + stack.params.direction)
         })
@@ -3430,6 +3430,7 @@ var testObj = {
       })
 
       stack.fire('player-movement/north')
+      debugger
       stack.fire('player-movement/north')
 
     })

@@ -456,9 +456,19 @@ stack.fire = (...args) => {
             //SOLUTION HERE
 
             //else:
-            //callback = false
+            //if(!originalMatchingCommand.done) callback = false
+            // console.log('setting callback = false here fixes "Double nested fire trailing callback runs after" test')
+            console.log(listener.one_time)
+
+            //find the live version of this listener ...
+            let thisLiveListener = _.find(stack.grid.enties, (enty) => enty.func == listener.func)
+
+            debugger
+
+            console.log('setting callback = false here breaks "Double nested fire trailing callback runs after" but fixes "No doubling up of one time listener/trailing callbacks" ')
+            callback = false
             //setting callback to false prevents trailing callbacks from being run/re-added to stack infinitely or doubled up on later fires
-            //but we need to make sure we allow it in some circumstances 
+            //but we need to make sure we allow it in some circumstances
           }
 
         }
@@ -618,7 +628,16 @@ const runCommand = (commandToRun) => {
       if(listener.buffer) listenerEnty.buffer = true
       if(listener.every) listenerEnty.every = true
       if(listener.before) listenerEnty.before = true
-      if(listener.one_time) listenerEnty.one_time = true
+      if(listener.one_time) {
+        //return
+        console.log('^ returning here would pass "No doubling up of one time listener/trailing callbacks"')
+        listenerEnty.one_time = true
+        debugger
+        //listenerEnty.one_time_ran = true
+        //return
+        //don't add it under certain circumstances
+        //seems like sometimes one_time gets here and we want to not add it but other times it is needed
+      }
       listenerEnty._id = listener._id
 
 
@@ -793,6 +812,7 @@ const runCommand = (commandToRun) => {
       //remove it from the listeners before firing if its a one time...
       if(cell.enties[0].one_time) {
         let correspondingListener = _.findWhere( commandToRun.listeners, { _id : cell.enties[0]._id  }  )
+        debugger
         if(correspondingListener) {
           commandToRun.listeners = _.filter(commandToRun.listeners, (listener) => {
             let match = listener._id != correspondingListener._id

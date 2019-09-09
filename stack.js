@@ -337,7 +337,7 @@ stack.endParent = () => {
    parentCommandListenersIncomplete.forEach((listener, index) => {
     //corresponding live listener...
     listener.done = true
-    if(index == 0) return 
+    if(index == 0) return
     listener.skipped = true
   })
   if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
@@ -450,8 +450,17 @@ stack.fire = (...args) => {
         //if the listener.func is same as callback, BUT we are running in the context of no other commands in progress
         //(ie- fresh command) then callback is OK run it again
         if(aLiveListener) {
-          if(listener.func == callback) callback = false
-          //this prevents trailing callbacks from being run/re-added to stack infinitely or doubled up on later fires
+          if(listener.func == callback) {
+            //set to false in some condition....
+            //the missing condition is...
+            //SOLUTION HERE
+
+            //else:
+            //callback = false
+            //setting callback to false prevents trailing callbacks from being run/re-added to stack infinitely or doubled up on later fires
+            //but we need to make sure we allow it in some circumstances 
+          }
+
         }
       })
     }

@@ -3414,6 +3414,8 @@ var testObj = {
       stack.on('player-movement/:direction', (next) => {
       	console.log('player-movement/' + stack.params.direction)
         next.fire('world-grid-create-new/' + 44, (next) => {
+          //should only run twice:
+          debugger 
           t.pass('world-grid-create-new/' + stack.params.cellNum + ' trailing callback ran' )
           next.fire('enter-next-world-grid/' + stack.params.direction)
         })
@@ -3489,6 +3491,35 @@ var testObj = {
       })
 
       stack.fire('mouse/click/mf-doc')
+
+    })
+
+    newTest('Double nested fire trailing callback runs after ', (t) => {
+      t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      stack.on('keyup/e', (next) => {
+        console.log('/keyup/e')
+        next.fire('/edit-selected-doc')
+      })
+
+      stack.on('edit-selected-doc', (next) => {
+        t.pass('edit!')
+        next.fire('create-note', () => { //< gets called twice
+          debugger
+          t.pass('re-populate and focus!')
+        })
+      })
+
+      stack.on('selectable-docs/deselect', () => console.log('/selectable-docs/deselect'))
+
+      stack.first(['create-note','create-folder'], (next) => next.fire('selectable-docs/deselect'))
+      // console.log('/create-note (stack.first)')
+
+      debugger
+      stack.fire('create-note')
+      debugger
+      stack.fire('keyup/e')
 
     })
 

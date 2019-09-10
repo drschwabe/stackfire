@@ -10,7 +10,7 @@ var testObj = {
   tests : [],
   //Run tests unless the param is provided
   //(typically when required/consumed by another module)
-  queue : (run) => {
+  queue : (run, testName) => {
     //Prepare an array and function for populating it with tests
     var newTest = (testName, testFunc) => {
       testObj.tests.push({
@@ -3495,7 +3495,7 @@ var testObj = {
 
     })
 
-    newTest('Double nested fire trailing callback runs after ', (t) => {
+    newTest('Double nested fire trailing callback runs after', (t) => {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
@@ -3524,12 +3524,19 @@ var testObj = {
 
     })
 
+    //run only a specific test by name:
+    if(testName) {
+      let testToRun = _.findWhere(testObj.tests, { name : testName })
+      testObj.only = testToRun
+    }
+
+    //run test immediately...
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:
         return testObj.only.func(testObj.only.name)
       }
-      testObj.tests.forEach((entry) => {
+      testObj.tests.forEach((entry) => { //< otherwise run all tests
         entry.func(entry.name)
       })
     }

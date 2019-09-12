@@ -3427,6 +3427,7 @@ var testObj = {
 
       stack.on('enter-next-world-grid/:direction', () => {
         t.pass('enter-next-world-grid/' + stack.params.direction + ' regular listener ran' )
+        debugger
       })
 
       stack.fire('player-movement/north')

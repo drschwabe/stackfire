@@ -1,6 +1,6 @@
 {
   "name": "stackfire",
-  "description": "A command driven middleware stack for managing control flow / application state",
+  "description": "Command driven middleware stack for managing control flow / application state",
   "keywords": [
     "router",
     "async",
@@ -12,18 +12,19 @@
     "stack",
     "command stack",
     "fire",
-    "stack fire"
+    "stack fire",
+    "stackfire"
   ],
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.3",
   "contributors": [
     "Derrick Schwabe <admin@nerdbusiness.com>"
   ],
-  "homepage": "https://github.com/drschwabe/stack",
+  "homepage": "https://github.com/drschwabe/stackfire",
   "repository": {
     "type": "git",
-    "url": "https://github.com/drschwabe/stack"
+    "url": "https://github.com/drschwabe/stackfire"
   },
-  "bugs": "http://github.com/drschwabe/stack/issues",
+  "bugs": "https://github.com/drschwabe/stackfire/issues",
   "license": "MIT",
   "dependencies": {
     "async": "^2.6.1",

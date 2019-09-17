@@ -180,7 +180,6 @@ var testObj = {
 
       stack.on('/grapefruit', () => {
         console.log('/grapefruit again')
-        debugger
         t.equal(stack.path, '/grapefruit', "state.path equals the path of the current 'on' listener.")
         //next()
       })
@@ -3274,7 +3273,6 @@ var testObj = {
         console.log('/init trailling listener')
         next.fire('folder', (next) => {
           console.log('/folder trailing listener')
-          debugger
           next.fire('draggable-absolute-separator/init/3', (next) => {
             console.log('draggable-absolute-separator/init trailing listener (first fire)')
             next.fire('draggable-absolute-separator/init/4', (next) => {
@@ -3415,7 +3413,6 @@ var testObj = {
       	console.log('player-movement/' + stack.params.direction)
         next.fire('world-grid-create-new/' + 44, (next) => {
           //should only run twice:
-          //debugger
           t.pass('world-grid-create-new/' + stack.params.cellNum + ' trailing callback ran' )
           next.fire('enter-next-world-grid/' + stack.params.direction)
         })
@@ -3427,11 +3424,9 @@ var testObj = {
 
       stack.on('enter-next-world-grid/:direction', () => {
         t.pass('enter-next-world-grid/' + stack.params.direction + ' regular listener ran' )
-        debugger
       })
 
       stack.fire('player-movement/north')
-      debugger
       stack.fire('player-movement/north')
 
     })
@@ -3501,14 +3496,12 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('keyup/e', (next) => {
-        console.log('/keyup/e')
         next.fire('/edit-selected-doc')
       })
 
       stack.on('edit-selected-doc', (next) => {
         t.pass('edit!')
         next.fire('create-note', () => { //< gets called twice
-          debugger
           t.pass('re-populate and focus!')
         })
       })
@@ -3516,11 +3509,8 @@ var testObj = {
       stack.on('selectable-docs/deselect', () => console.log('/selectable-docs/deselect'))
 
       stack.first(['create-note','create-folder'], (next) => next.fire('selectable-docs/deselect'))
-      // console.log('/create-note (stack.first)')
 
-      debugger
       stack.fire('create-note')
-      debugger
       stack.fire('keyup/e')
 
     })

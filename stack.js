@@ -337,7 +337,7 @@ stack.endParent = () => {
    parentCommandListenersIncomplete.forEach((listener, index) => {
     //corresponding live listener...
     listener.done = true
-    if(index == 0) return 
+    if(index == 0) return
     listener.skipped = true
   })
   if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
@@ -401,7 +401,7 @@ stack.fire = (...args) => {
 
   if(!matchingCommand && !callback) {
     //check if there are any listener parameters...
-    console.log("there are no listeners (or callback) existing for this command '" + pathname + "'")
+    console.warn("there are no listeners (or callback) existing for this command '" + pathname + "'")
     if(stack.next_firing) return stack.next()
     return
   }
@@ -450,8 +450,25 @@ stack.fire = (...args) => {
         //if the listener.func is same as callback, BUT we are running in the context of no other commands in progress
         //(ie- fresh command) then callback is OK run it again
         if(aLiveListener) {
-          if(listener.func == callback) callback = false
-          //this prevents trailing callbacks from being run/re-added to stack infinitely or doubled up on later fires
+          if(listener.func == callback) {
+
+            //find the live version of this listener ...
+            let thisLiveListener = _.find(stack.grid.enties, (enty) => enty.func == listener.func)
+
+
+            let matchingExistingCommand = _.chain(stack.commands).where((existingCommand) => {
+              existingCommand.route.spec == command.route.spec
+            }).last().value()
+            //^ use the most recent command (last in the stack.commands)
+
+            matchingListenerInExistingCommand  = _.find(matchingExistingCommand.listeners, (existingListener) => {
+              return listener.func == existingListener.func
+            })
+
+            if(matchingListenerInExistingCommand) callback = false
+
+          }
+
         }
       })
     }
@@ -499,17 +516,10 @@ stack.fire = (...args) => {
 
     //determine if matchingCommand has been called from the current command's column,
     //in which case - we should run it now:
-    //var liveListener = _.find(stack.grid.enties, (enty) => enty.underway)
-    //var liveCommand = _.find(stack.grid.enties, (enty) => enty.underway).command
-    //might want to update this to also facto rin column; to ensure we are choosing
-    //from rightmost such that multiple underway listeners don't interferer here
-    //if(matchingCommand.callee == liveCommand.callee) {
     if(!liveListener() || !liveListener().async) {
       commandToRunNow = matchingCommand
 
       //if the command is async, we wait - otherwise, run now:
-      //i think callee and caller need to be on the listeners; not the command
-      //seems like all commands may share the same callee ?
     } else if(liveListener().async && stack.next_firing) {
       commandToRunNow = matchingCommand
       stack.next_firing = false
@@ -567,6 +577,25 @@ const runCommand = (commandToRun) => {
 
     command.listeners.forEach((listener, index) => {
 
+      if(listener.one_time) {
+        let matchingExistingCommand = _.chain(stack.commands).where((existingCommand) => {
+          existingCommand.route.spec == command.route.spec
+        }).last().value()
+        //^ use the most recent command (last in the stack.commands)
+
+        matchingListenerInExistingCommand  = _.find(matchingExistingCommand.listeners, (existingListener) => {
+          return listener.func == existingListener.func
+        })
+
+
+        if(matchingListenerInExistingCommand) {
+          if( matchingExistingCommand.done ) return
+        }
+
+        if(listener.one_time_ran) return
+
+      }
+
       //Do a pre grid expansion if necessary:
       if( _.isNaN(stack.column) || stack.column >= stack.grid.width || gg.someEntyIsOnBottomEdge(stack.grid)  || gg.someEntyIsOnRightEdge(stack.grid)) {
         stack.grid = gg.expandGrid(stack.grid)
@@ -610,6 +639,7 @@ const runCommand = (commandToRun) => {
       if(listener.every) listenerEnty.every = true
       if(listener.before) listenerEnty.before = true
       if(listener.one_time) listenerEnty.one_time = true
+
       listenerEnty._id = listener._id
 
 
@@ -929,13 +959,6 @@ const runCommand = (commandToRun) => {
         return match
       })
       if(!currentListener) {
-        //console.log('no currentListener!?')
-        //maybe moving TOO fast?
-        //var liveListener2 = liveListener()
-        //setTimeout(() => )path
-
-        //TODO: return early from this loop
-
         return false
       }
       if(currentListener.done) return true
@@ -966,8 +989,6 @@ const runCommand = (commandToRun) => {
           //^ accommodate for each enty to move (one new row required)
 
           if(!nextOpenRow) { //expand the grid:
-           // console.log('do grid expansion')
-
             //convert startCell to xy so it can convert to the new grid :
             var startCellRC = gg.indexToXy(stack.grid, startCell)
 
@@ -1007,7 +1028,6 @@ const runCommand = (commandToRun) => {
                 return true
               }
               if(!enty.command) {
-                //console.log("what the fack")
                 return false
               }
               //I believe this line checks to make sure the column is behind and not ahead...

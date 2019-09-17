@@ -10,7 +10,7 @@ var testObj = {
   tests : [],
   //Run tests unless the param is provided
   //(typically when required/consumed by another module)
-  queue : (run) => {
+  queue : (run, testName) => {
     //Prepare an array and function for populating it with tests
     var newTest = (testName, testFunc) => {
       testObj.tests.push({
@@ -3414,6 +3414,8 @@ var testObj = {
       stack.on('player-movement/:direction', (next) => {
       	console.log('player-movement/' + stack.params.direction)
         next.fire('world-grid-create-new/' + 44, (next) => {
+          //should only run twice:
+          //debugger
           t.pass('world-grid-create-new/' + stack.params.cellNum + ' trailing callback ran' )
           next.fire('enter-next-world-grid/' + stack.params.direction)
         })
@@ -3425,9 +3427,11 @@ var testObj = {
 
       stack.on('enter-next-world-grid/:direction', () => {
         t.pass('enter-next-world-grid/' + stack.params.direction + ' regular listener ran' )
+        debugger
       })
 
       stack.fire('player-movement/north')
+      debugger
       stack.fire('player-movement/north')
 
     })
@@ -3492,12 +3496,48 @@ var testObj = {
 
     })
 
+    newTest('Double nested fire trailing callback runs after', (t) => {
+      t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      stack.on('keyup/e', (next) => {
+        console.log('/keyup/e')
+        next.fire('/edit-selected-doc')
+      })
+
+      stack.on('edit-selected-doc', (next) => {
+        t.pass('edit!')
+        next.fire('create-note', () => { //< gets called twice
+          debugger
+          t.pass('re-populate and focus!')
+        })
+      })
+
+      stack.on('selectable-docs/deselect', () => console.log('/selectable-docs/deselect'))
+
+      stack.first(['create-note','create-folder'], (next) => next.fire('selectable-docs/deselect'))
+      // console.log('/create-note (stack.first)')
+
+      debugger
+      stack.fire('create-note')
+      debugger
+      stack.fire('keyup/e')
+
+    })
+
+    //run only a specific test by name:
+    if(testName) {
+      let testToRun = _.findWhere(testObj.tests, { name : testName })
+      testObj.only = testToRun
+    }
+
+    //run test immediately...
     if(run) {
       console.log('run tests...')
       if(testObj.only) { //Only run the one test:
         return testObj.only.func(testObj.only.name)
       }
-      testObj.tests.forEach((entry) => {
+      testObj.tests.forEach((entry) => { //< otherwise run all tests
         entry.func(entry.name)
       })
     }

@@ -26,25 +26,39 @@ const stack = {
 stack.on = (...params) => {
 //stack.on = (pathOrPathsOrCommand, priority, callback) => {
 
-  let pathOrPathsOrCommand = params[0],
+  let pathOrPathsOrCommandOrFunction = params[0],
       priority = _.find(params, (param) => _.isNumber(param) ),
-      callback = _.find(params, (param) => _.isFunction(param)),
+      callback = _.find(params, (param) => _.isFunction(param) && _.indexOf(params, param) != 0),
       path,
-      existingCommand
+      existingCommand,
+      func
 
-  //if we provide a command we can skip the path stuff...
-  if(_.isObject(pathOrPathsOrCommand) && !_.isArray(pathOrPathsOrCommand)) {
-    path = pathOrPathsOrCommand.route.spec
-    existingCommand = pathOrPathsOrCommand
+  if(_.isFunction( pathOrPathsOrCommandOrFunction)) {
+    console.log('we got a function')
+    //find the corresponding function in stack.libraries...
+    func = pathOrPathsOrCommandOrFunction
+    let matchingFunc = false
+    stack.libraries.forEach((lib) => {
+      let match = _.find(lib, (libProperty) => libProperty == func)
+      if(match) {
+        matchingFunc = match
+        path = 'function/' + _.findKey(lib, (libProperty) => libProperty == func)
+        console.log(path)
+      }
+    })
+    //if we provide a command we can skip the path stuff...
+  } else if(_.isObject(pathOrPathsOrCommandOrFunction) && !_.isArray(pathOrPathsOrCommandOrFunction)) {
+    path = pathOrPathsOrCommandOrFunction.route.spec
+    existingCommand = pathOrPathsOrCommandOrFunction
   //If an array...
-  } else if(_.isArray(pathOrPathsOrCommand)) { //just re-call this function with each path:
-    pathOrPathsOrCommand.forEach( (path) => {
+  } else if(_.isArray(pathOrPathsOrCommandOrFunction)) { //just re-call this function with each path:
+    pathOrPathsOrCommandOrFunction.forEach( (path) => {
       if(priority) return stack.on(path, priority, callback)
       stack.on(path, callback)
     })
     return
   } else { //otherwise continue with the single path:
-    path = pathOrPathsOrCommand
+    path = pathOrPathsOrCommandOrFunction
   }
 
   //Ensure path always is prefixed with a slash:
@@ -100,7 +114,7 @@ stack.on = (...params) => {
     existingCommands.forEach((theCommand) => {
       theCommand.listeners.push(newListener)
     })
-  } else if(!pathHasParams || pathHasParams && _.isObject(pathOrPathsOrCommand)){
+  } else if(!pathHasParams || pathHasParams && _.isObject(pathOrPathsOrCommandOrFunction)){
     //If the command already exists, just push this new
     //listener into the command's existing stack...
     existingCommand.listeners.push(newListener)
@@ -191,7 +205,20 @@ stack.on = (...params) => {
   } else if(!existingCommand) {
     newListener.priority = 1
   }
-  return
+
+  //create another on listener which includes the function itself if the function listener has not yet already been added...
+  if(func) {
+    //TODO check the length of the existing command; and lookup to see if this is added yet..
+    stack.on(path, (next) => {
+      let preNextCallback = (err, res) => {
+        if(err) stack.err = err
+        if(res) stack.res = res
+        next()
+      }
+      let partialFunc = _.partial(func, _, preNextCallback)
+      partialFunc(stack.params.body)
+    })
+  }
 }
 
 stack.once = (pathOrCommand, callback) => {
@@ -349,14 +376,35 @@ stack.endParent = () => {
 stack.row = 0
 
 stack.fire = (...args) => {
-  var pathname, callback, body
+  var pathname, func, callback, body
 
-  if(!_.isString(args[0])) return console.error('path is not a string')
+  if(_.isFunction( args[0] ) ) {
+    console.log('we are trying to fire a function!')
+    //find the corresponding function in stack.libraries...
+    func = args[0]
+    let matchingFunc = false
+    stack.libraries.forEach((lib) => {
+      let match = _.find(lib, (libProperty) => libProperty == func)
+      if(match) {
+        matchingFunc = match
+        pathname = 'function/' + _.findKey(lib, (libProperty) => libProperty == func)
+        console.log(pathname)
+      }
+    })
+    if(matchingFunc) {
+      console.log('found the matching func')
+    }
+  } else if(!_.isString(args[0])) {
+    return console.error('path is not a string')
+  } else {
+    pathname = args[0]
+  }
 
-  pathname = args[0]
-  callback = _.find(args, (arg) =>  _.isFunction(arg))
-  body = _.find(args, (arg) => arg != pathname && arg != callback)
 
+  callback = _.find(args, (arg) =>  _.isFunction(arg) && _.indexOf(args, arg) != 0 )
+  body = _.find(args, (arg) => arg != pathname && arg != callback && arg != func)
+
+  debugger
   //TODO: some better logic to prevent 'rapid fires'; fires interrupting other fires
 
   //IF a sibling fire (not a parent) is underway and NOT finished,
@@ -418,8 +466,11 @@ stack.fire = (...args) => {
     //(do not keep this listener for subsequent fires of the same path)
     matchingCommand.listeners[0].one_time = true
   } else if(callback && !callbackOn) {
+    debugger
     stack.once(pathname, callback)
   }
+
+  //TODO: ^^ add some logic to catch if we have supplied a library function and add the library function itself to thie matchingCommand (if not already)
 
   //make sure listeners underway aren't included in new command
   let underwayListeners = _.filter(stack.grid.enties, (enty) => enty.underway )
@@ -1182,5 +1233,7 @@ stack.aliaser = function() {
   stack.aliaser = aliaser
   return aliaser
 }
+
+stack.libraries = []
 
 module.exports = stack

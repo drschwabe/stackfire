@@ -42,6 +42,8 @@
     "test": "tape run-test.js | tap-spec"
   },
   "devDependencies": {
+    "pouchdb": "^7.1.1",
+    "pouchdb-adapter-memory": "^7.1.1",
     "jquery": "^3.2.1",
     "require-uncached": "1.0.3",
     "tap-spec": "4.1.1",

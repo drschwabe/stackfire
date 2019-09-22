@@ -19,7 +19,7 @@ const stack = {
   queue : [],
   grid : gg.populateCells(gg.createGrid(1,1)),
   utils : [],  //< For third party mods to execute at each hook
-  trimming : false //< Do not clear the grid after every command (slower)
+  trimming : true //< If false, does not clear the grid after every command (for debugging only; gets exponentially slow)
 }
 
 //Listener creation function:

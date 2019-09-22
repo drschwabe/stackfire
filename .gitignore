@@ -1,3 +1,2 @@
 node_modules
-
-demos/crypt-issue/bundle\.js
+.vscode

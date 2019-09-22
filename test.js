@@ -36,6 +36,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/do-something', () => {
         t.ok(stack.state, 'listener invoked and stack state established')
@@ -51,6 +52,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/boot', () => {
         t.ok(stack.path == '/boot', 'first boot listener ran')
@@ -69,6 +71,7 @@ var testObj = {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/boot', () => {
         t.ok(stack.path == '/boot', 'first boot listener ran')
@@ -97,6 +100,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/boot', () => t.ok(stack.path == '/boot', 'first boot listener ran'))
 
@@ -123,6 +127,7 @@ var testObj = {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/apple', (next) => {
         console.log('/apple "on" (listener function in progress).')
@@ -151,6 +156,7 @@ var testObj = {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
 
@@ -211,6 +217,7 @@ var testObj = {
       t.plan(11)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('strawberry', () => {
@@ -271,6 +278,7 @@ var testObj = {
     newTest("stack.fire nested within stack.on, which was nested in another stack.on", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(3)
       stack.on('green', (next) => {
         t.pass("green listener's callback invoked")
@@ -295,6 +303,7 @@ var testObj = {
     newTest("stack.fire nested within stack.on, which was nested in another stack.on (complex)", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(9)
 
       stack.on('green', () => {
@@ -344,6 +353,7 @@ var testObj = {
     newTest("stack.fire nested spiderweb", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(11)
 
       stack.on('green', () => {
@@ -404,6 +414,7 @@ var testObj = {
       //to execute after all other listener callbacks finish
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(1)
 
@@ -417,6 +428,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(2)
 
@@ -434,6 +446,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(3)
 
@@ -454,6 +467,7 @@ var testObj = {
     newTest("stack.fire can be fired from another fire callback", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(3)
 
@@ -476,6 +490,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       var firstSip = (next) => {
         stack.state.listener = 'first'
@@ -524,6 +539,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       var executeSyncly = () => console.log('executed syncly')
       var executeAsyncly = (next) => setTimeout( () => {
@@ -555,6 +571,7 @@ var testObj = {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/apple', () => {
 
@@ -610,6 +627,7 @@ var testObj = {
       //root command; will wnat to make a visualization of this.
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/land-on-moon', () => {
         stack.state.landed = true
@@ -639,6 +657,7 @@ var testObj = {
     newTest("Different command listeners should not fire from a single command", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(2)
 
@@ -663,6 +682,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(2)
 
@@ -685,6 +705,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/inventory/:item/deliver', () => {
 
@@ -708,6 +729,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(2)
 
@@ -731,6 +753,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.fire('/take-off', (next) => {
         t.equals(stack.state, stack.state, 'stack.state equals the newly returned state')
@@ -745,6 +768,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/*wild', () => {
         t.pass('wildcard listener ran')
@@ -758,6 +782,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('green/*wild', () => {
         t.pass('green wildcard listener ran')
@@ -773,6 +798,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('anything', () => {
         t.pass('specific listener ran')
@@ -808,6 +834,7 @@ var testObj = {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('*wild', () => {
         t.pass('wildcard listener ran')
@@ -826,6 +853,7 @@ var testObj = {
     test.skip("Wildcard plays nicely with other listeners (wildcard listener established BEFORE other routes)", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(2)
 
       stack.on('heart', () => {
@@ -851,6 +879,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(2)
 
       stack.on('heart', () => {
@@ -873,6 +902,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(3)
 
       stack.on('ten', () => {
@@ -909,6 +939,7 @@ var testObj = {
     newTest("Wildcard value stored on stack.params.wild correctly", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(1)
       stack.on('vegetable/*typeOfVeggie', () => {
         t.equals(stack.params.wild, 'carrot')
@@ -920,6 +951,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(5)
 
       stack.on('party', () => {
@@ -952,6 +984,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.ok(_.isArray(stack.grid.cells))
 
@@ -978,6 +1011,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
 
@@ -1016,6 +1050,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.fire('silence', () => {
         console.log('no listeners except for this callback')
@@ -1032,6 +1067,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('warning-alarm', (next) => {
         console.log('you have 2 seconds to comply')
@@ -1075,6 +1111,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       //Defining a wildcard listener atop of the stack seems to result in
       //subsequent listeners being fired even though their command was not issued...
@@ -1109,6 +1146,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('/bomb/:anything', () => {
         t.pass('this should invoke on every fire (involving bomb slash anything)')
@@ -1137,6 +1175,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('robot/assemble/:product', (next) => {
         console.log('"robot/assemble/:product" on!')
@@ -1176,6 +1215,7 @@ var testObj = {
     //   t.plan(2)
     //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
     //   if(process.browser) window.stack = stack
+  //stack.trimming = false
     //   let async = process.browser ? require('async') : requireUncached('async')
 
     //   stack.on('element/init/:prefix', () => {
@@ -1249,6 +1289,7 @@ var testObj = {
     //   t.plan(3)
     //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
     //   if(process.browser) window.stack = stack
+  //stack.trimming = false
 
     //   stack.on('green', () => {
     //     t.pass('green light')
@@ -1271,6 +1312,7 @@ var testObj = {
     //   t.plan(6)
     //   let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
     //   if(process.browser) window.stack = stack
+  //stack.trimming = false
     //   let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
     //   stack.on('green', (state) => {
@@ -1307,6 +1349,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       stack.on('bake-cookie', () => {
         t.ok(stack.path, '/bake-cookie')
       })
@@ -1319,6 +1362,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       stack.on('apples', (state, next) => {
         t.pass('apples on!')
         next(null, state)
@@ -1345,6 +1389,7 @@ var testObj = {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       stack.on('apples', (state, next) => {
         t.pass('apples on!')
         stack.fire('oranges', (err, state) => {
@@ -1369,6 +1414,7 @@ var testObj = {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('shake', (state, next) => {
         //The shake command is not done yet:
@@ -1406,6 +1452,7 @@ var testObj = {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('shake', () => {
@@ -1469,6 +1516,7 @@ var testObj = {
       t.plan(10)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('milkshake', (state, next) => {
 
@@ -1498,6 +1546,7 @@ var testObj = {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.state.gold = false
@@ -1552,6 +1601,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.fire('dig', (next) => {
@@ -1602,6 +1652,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.fire('dig', (next) => {
         log('dug')
@@ -1629,6 +1680,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('water', (next) => {
         t.pass('flowing...')
@@ -1646,6 +1698,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('apple', () => {
         t.pass()
@@ -1668,6 +1721,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('init', (next) => {
         t.pass('/init on')
@@ -1702,6 +1756,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('bannana-shake', (next) => {
@@ -1736,6 +1791,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('bannana-shake', (next) => {
@@ -1780,6 +1836,7 @@ var testObj = {
       t.plan(8)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       stack.fire('fruits', () => {
         stack.fire('apple')
@@ -1811,6 +1868,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.fire('stone', () => {
@@ -1839,6 +1897,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       let async = process.browser ? require('async') : requireUncached('async')
 
@@ -1883,6 +1942,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('apple', (next) => {
@@ -1900,6 +1960,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('cherry', (next) => {
@@ -1922,6 +1983,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('asparagus', (next) => {
@@ -1938,6 +2000,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('bean-sprouts', () => {
@@ -1959,6 +2022,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('bean-sprouts', (next) => {
@@ -1981,6 +2045,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('apple', (next) => {
@@ -1997,6 +2062,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.fire('apple', (next) => {
@@ -2021,6 +2087,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('connect', () => {
@@ -2048,6 +2115,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       //Order is important here...
@@ -2077,6 +2145,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('save', (next) => {
@@ -2099,6 +2168,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('/favvorite-main-save', (next) => {
@@ -2124,6 +2194,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       stack.fire('first', (next) => {
         next.fire('second', (next) => {
           next.fire('third', (next) => {
@@ -2143,6 +2214,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('go', () => {
         t.pass('first wildcard')
@@ -2165,6 +2237,7 @@ var testObj = {
       t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('*wild', () => {
         t.pass('first wildcard')
@@ -2187,6 +2260,7 @@ var testObj = {
       t.plan(2)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
 
       stack.on('click', (next) => {
@@ -2210,6 +2284,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.on('apples', () => {
         //need not run
@@ -2234,6 +2309,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
 
       stack.on('ready', (next) => {
@@ -2309,6 +2385,7 @@ var testObj = {
 
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       stack.trimming = true
 
@@ -2418,6 +2495,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       var going = false
       var stillGoing = false
@@ -2450,6 +2528,7 @@ var testObj = {
     newTest('One time callback is executed only once', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(1)
 
@@ -2470,6 +2549,7 @@ var testObj = {
     newTest('One time callback is executed again if included again', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(2)
 
@@ -2493,6 +2573,7 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(3)
 
@@ -2513,6 +2594,7 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(3)
 
@@ -2536,6 +2618,7 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(9)
 
@@ -2583,6 +2666,7 @@ var testObj = {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       //let gg = process.browser ? require('gamegrids') : requireUncached('gamegrids')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(12)
 
@@ -2656,6 +2740,7 @@ var testObj = {
     newTest('stack.endCommand ends a command early', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(3)
 
@@ -2683,6 +2768,7 @@ var testObj = {
     newTest('stack.before ensures listener runs before previously established listeners', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(2)
 
       var count = 0
@@ -2706,6 +2792,7 @@ var testObj = {
     newTest('can supply an array of commands', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(1)
       stack.on(['jump-around', 'jumping'], () => t.pass('a jump has occurred'))
       stack.fire('jumping')
@@ -2714,6 +2801,7 @@ var testObj = {
     newTest('parameter routes fire (param route defined afer a related listener established)', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(3)
 
       stack.on('keyup/f', () => {
@@ -2734,6 +2822,7 @@ var testObj = {
     newTest('Multiple parameter listeners fire when called', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(2)
 
       stack.on('/keyup/:key', () => {
@@ -2750,6 +2839,7 @@ var testObj = {
     newTest('Parameter commands store the actual parameter supplied', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(1)
 
       stack.on('/fruit/:typeOfFruit', () => {
@@ -2762,6 +2852,7 @@ var testObj = {
     newTest('Child commmand gets correct wild/paramter and then parent gets correct parameter after', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(5)
 
       stack.on('vegetable/*typeOfVegetable', (next) => {
@@ -2784,6 +2875,7 @@ var testObj = {
     newTest('More complex listener arrangement involving stack.nth functions', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(1)
 
       let folderlistenersRanCount = 0
@@ -2828,6 +2920,7 @@ var testObj = {
     newTest('Empty wildcard', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(2)
 
       stack.on('folder/*path', (next) => {
@@ -2847,6 +2940,7 @@ var testObj = {
     newTest('Fire that triggers commmand with parameter listener runs callback', (t)  => {
       global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(2)
 
       stack.on('/fruit/:typeOfFruit', () => {
@@ -2862,6 +2956,7 @@ var testObj = {
     newTest('Can run parameter command twice', (t)  => {
       global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(4)
 
       var executionCount = 0
@@ -2879,6 +2974,7 @@ var testObj = {
     newTest('Multiple parameter listeners fire when called twice', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(4)
 
       stack.on('/keyup/:key', () => {
@@ -2897,6 +2993,7 @@ var testObj = {
     newTest('Async next.fire within a seconary listener runs asyncronously (after a previous async execution)', (t)  => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(4)
 
       var executionCount = 0
@@ -2942,6 +3039,7 @@ var testObj = {
     newTest('Wildcard listener makes its path available', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(1)
 
       stack.on('*anything', () => {
@@ -2958,6 +3056,7 @@ var testObj = {
       console.log('whatup')
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(1)
 
       stack.on('init', () => {
@@ -2975,6 +3074,7 @@ var testObj = {
     newTest('stack.once works as expected', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(3)
       let goCount = 0
       stack.once('go', () => {
@@ -3026,6 +3126,7 @@ var testObj = {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       stack.before('dinosaurs', () => t.ok('fired before dinosaurs'))
       stack.fire('dinosaurs')
     })
@@ -3034,6 +3135,7 @@ var testObj = {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       //async alt:
       stack.on('green', () => {
@@ -3058,6 +3160,7 @@ var testObj = {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       const fire = new stack.aliaser()
 
@@ -3090,6 +3193,7 @@ var testObj = {
     test.skip('Wildcards and folders', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(4)
       stack.on(['folder/*path', 'docs-feed-render'], () => t.pass('folder/* (in an array with 1 other listener) listened') )
       stack.on('folder/*path', () => t.pass('folder/*path listened'))
@@ -3182,6 +3286,7 @@ var testObj = {
       t.plan(6)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       let step = 0
 
@@ -3228,6 +3333,7 @@ var testObj = {
       //test.only('Listener can fire a new command of same name within trailing callback without calling said trailing callback again ', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
 
       t.plan(2)
 
@@ -3256,6 +3362,7 @@ var testObj = {
     newTest('More complex listener within a listener (invovling params)', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(1)
 
       stack.on('init', () => console.log('/init regular listener'))
@@ -3287,6 +3394,7 @@ var testObj = {
     newTest('stack.first() as an array of paths', (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack
+      stack.trimming = false
       t.plan(1)
       let runCount = 0
       stack.on('run', () => {

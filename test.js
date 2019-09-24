@@ -3623,6 +3623,51 @@ var testObj = {
 
     })
 
+    newTest('Can fire an async function from another library', (t) => {
+      t.plan(2)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      let PouchDB = require('pouchdb')
+      PouchDB.plugin(require('pouchdb-adapter-memory'));
+      let db = new PouchDB('test', {adapter: 'memory'})
+      stack.libraries.push(db)
+
+      //before:
+      stack.on(db.post, () => {
+        console.log('w000t')
+        t.pass()
+      })
+
+      var doc = { _id : 'blue', testing : true, subject : 'awesomeness' }
+
+      stack.on('create-note/save',  (next) => {
+        next.fire(db.post, doc, (next) => {
+          //after function runs
+          if(stack.err) return console.log(stack.err)
+          console.log('latest doc saved to db.')
+
+          db.get('blue', (err, res) => {
+            if(err) return console.warn(err)
+            console.log(res)
+            doc._rev = stack.res.rev
+            next()
+          })
+
+        })
+      })
+
+      stack.on('create-note/save', () => {
+        console.log('this should run last and have the latest doc data from db:')
+        console.log(doc)
+        t.ok(doc._rev)
+      })
+
+      stack.fire('create-note/save')
+
+      //todo: make another assertion/check that there are 3 listeners in total for function/post (the explicit on listener we established, a listener that wraps and executes the function itself and a trailing callback)
+
+    })
+
     //run only a specific test by name:
     if(testName) {
       let testToRun = _.findWhere(testObj.tests, { name : testName })

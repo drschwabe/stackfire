@@ -1,3 +1,5 @@
+![stackfire logo](./logo.svg)
+
 # Stackfire
 
 Route driven async control flow library (and pattern) for your next game or app
@@ -130,7 +132,7 @@ node run-test.js "No doubling up of one time listener/trailing callbacks" | tap-
 - fix bugs
 - website
 - launch
-- Tools/Visualizer, and extra utility modules 
+- Tools/Visualizer, and extra utility modules
 
 #### License
 MIT

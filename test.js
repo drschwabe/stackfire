@@ -3560,6 +3560,37 @@ var testObj = {
 
     })
 
+    newTest('Can fire the same async lib function again', (t) => {
+      t.plan(6)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      let PouchDB = require('pouchdb')
+      PouchDB.plugin(require('pouchdb-adapter-memory'));
+      let db = new PouchDB('test', {adapter: 'memory'})
+      stack.libraries.push(db)
+
+      //each of these should run twice:
+      stack.on(db.post, () => {
+        console.log('w000t')
+        t.pass()
+      })
+
+      stack.on(db.post, () => {
+        console.log('huzzah!')
+        t.pass()
+      })
+
+      stack.fire(db.post, { _id : 'red', hot: true }, (next) => {
+        if(stack.err) return console.log(err)
+        t.equals(stack.res.id, 'red')
+
+        next.fire(db.post, { _id : 'green', organic : true }, (next) => {
+          if(stack.err) return console.log(err)
+          t.equals(stack.res.id, 'green')
+        })
+      })
+    })
+
     //run only a specific test by name:
     if(testName) {
       let testToRun = _.findWhere(testObj.tests, { name : testName })

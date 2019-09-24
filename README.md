@@ -102,10 +102,16 @@ If next.fire is called within a listener, as shown on line 2 above, it will invo
 
 ----
 
+
 #### stack.params
 `property`   
+
 Parameters as part of the current command in progress (ie: `do-something/:time`) are available as a property of the `stack.params` object  (ie: `stack.params.time`).
 
+----
+
+## Experimental features
+The following features are not well tested or supported yet:
 
 #### stack.aliaser
 
@@ -118,11 +124,47 @@ fire.fruitApple()
 // > 'good in shakes'
 ```
 
-#### Testing / dev
+#### stack.buffer
 
-To run only a specific test update test.js with newTest.only or from command line without needing to modify the script you can run:
+Creates a listener ala `stack.on` but instead of running one time it will run before and after every other listener established in the stack.
 
+```javascript
+stack.on('snow', () => console.log("shovel sidewalk"))
+stack.buffer('snow', () => console.log("it's snowing"))
+
+stack.fire('snow')
+// > it's snowing
+// > shovel sidewalk
+// > it's snowing
 ```
+
+#### stack.first
+Same as `stack.on` but your listener will run first
+
+#### stack.second
+Same as `stack.on` but your listener will run second.  `stack.third`, `stack.fourth` etc also work or use stack.nth(priority) where priority is an integer indicating at what place the listener should run.
+
+#### stack.last
+Same as `stack.on` but your listener will last
+
+#### stack.endCommand
+Prematurely end a command, prevents any further listeners down the stack from running on this call.
+
+
+#### stack.endParent
+Same as `stack.endCommand` but ends the parent command of the current listener.
+
+#### stack.utils
+Synchronously executed array of functions that will run at various points of stack's execution.
+
+----
+
+#### Testing
+
+Git clone the repo and run `npm install; npm test`
+
+To run only a specific test edit test.js with `newTest.only` (instead of `newTest`) or from command line without needing to modify the script you can run:
+```bash
 node run-test.js "No doubling up of one time listener/trailing callbacks" | tap-spec
 ```
 

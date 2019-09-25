@@ -157,6 +157,28 @@ Same as `stack.endCommand` but ends the parent command of the current listener.
 #### stack.utils
 Synchronously executed array of functions that will run at various points of stack's execution.
 
+#### stack.libs
+Array of async libraries you can feed stack for the purpose of wrapping functions to 'stackify' them ie- to fire them in your stack.
+
+```javascript
+const Pouchdb = require('pouchdb')
+const db = new PouchDB('example')
+stack.libs.push(db)
+
+let data = { awesome : true }
+stack.on(db.post, () => {
+  console.log('about to post to db...')
+  stack.params.body.data = false
+})
+stack.fire(db.post, data, () => {
+  console.log('posted data to db!')
+  console.log(stack.err)
+  //> null
+  console.log(stack.res)
+  //> { awesome : false }
+})
+```
+
 ----
 
 #### Testing

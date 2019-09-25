@@ -44,6 +44,8 @@ stack.on = (...params) => {
         matchingFunc = match
         path = 'function/' + _.findKey(lib, (libProperty) => libProperty == func)
         console.log(path)
+      } else {
+        console.warn('there was no matching function found')
       }
     })
     //if we provide a command we can skip the path stuff...
@@ -203,16 +205,29 @@ stack.on = (...params) => {
     existingCommand.listeners = _.sortBy(existingCommand.listeners, (listener) => listener.priority)
     stack.commands.push(existingCommand)
   } else if(!existingCommand) {
-    newListener.priority = 1
+    if(func) {
+      //in this case the listener we created above is the callback so we want it to run after the
+      //listener we create below:
+      newListener.priority = 999
+    } else {
+      newListener.priority = 1
+    }
   }
+
+  debugger
 
   //create another on listener which includes the function itself if the function listener has not yet already been added...
   if(func) {
-    //TODO check the length of the existing command; and lookup to see if this is added yet..
-    stack.on(path, (next) => {
+
+
+    //Check to see if this is added yet..
+    if(existingCommand) return
+
+    stack.on(path, 1, (next) => {
       let preNextCallback = (err, res) => {
         if(err) stack.err = err
         if(res) stack.res = res
+        //at this point the res has been set
         next()
       }
       let partialFunc = _.partial(func, _, preNextCallback)
@@ -404,7 +419,6 @@ stack.fire = (...args) => {
   callback = _.find(args, (arg) =>  _.isFunction(arg) && _.indexOf(args, arg) != 0 )
   body = _.find(args, (arg) => arg != pathname && arg != callback && arg != func)
 
-  debugger
   //TODO: some better logic to prevent 'rapid fires'; fires interrupting other fires
 
   //IF a sibling fire (not a parent) is underway and NOT finished,
@@ -455,7 +469,7 @@ stack.fire = (...args) => {
   }
   if(!matchingCommand && callback) {
     //make the callback a listener; register it now:
-    stack.on(pathname, callback)
+    func? stack.on(func, callback) : stack.on(pathname, callback)
     //now match it:
     var matchedRoute
     var matchingCommand = _.find(stack.commands, (command) => {
@@ -466,7 +480,6 @@ stack.fire = (...args) => {
     //(do not keep this listener for subsequent fires of the same path)
     matchingCommand.listeners[0].one_time = true
   } else if(callback && !callbackOn) {
-    debugger
     stack.once(pathname, callback)
   }
 

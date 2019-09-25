@@ -3516,7 +3516,7 @@ var testObj = {
     })
 
     newTest('Can fire an async function from another library', (t) => {
-      t.plan(2)
+      t.plan(3)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       let PouchDB = require('pouchdb')
@@ -3536,6 +3536,9 @@ var testObj = {
         next.fire(db.post, doc, (next) => {
           //after function runs
           if(stack.err) return console.log(stack.err)
+          console.log(stack.res)
+          t.ok(stack.res)
+
           console.log('latest doc saved to db.')
 
           db.get('blue', (err, res) => {
@@ -3571,24 +3574,121 @@ var testObj = {
 
       //each of these should run twice:
       stack.on(db.post, () => {
-        console.log('w000t')
-        t.pass()
+        t.pass('regular listener A ran (this should run twice)')
       })
 
       stack.on(db.post, () => {
-        console.log('huzzah!')
-        t.pass()
+        t.pass('regular listener B ran (this should run twice)')
       })
 
       stack.fire(db.post, { _id : 'red', hot: true }, (next) => {
-        if(stack.err) return console.log(err)
+        if(stack.err) return console.log(stack.err)
         t.equals(stack.res.id, 'red')
-
         next.fire(db.post, { _id : 'green', organic : true }, (next) => {
-          if(stack.err) return console.log(err)
+          if(stack.err) return console.log(stack.err)
           t.equals(stack.res.id, 'green')
         })
       })
+    })
+
+    newTest('Lib function fires without any pre-existing .on listener', (t) => {
+      t.plan(3)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      let PouchDB = require('pouchdb')
+      PouchDB.plugin(require('pouchdb-adapter-memory'));
+      let db = new PouchDB('test', {adapter: 'memory'})
+      stack.libraries.push(db)
+
+      console.log('pushed db library')
+
+      stack.on('create-note/save', (next) => {
+        console.log('create-note/save')
+        debugger
+        next.fire(db.post, doc, (next) => {
+          if(stack.err) return console.log(err)
+          console.log('edited doc saved to db.')
+          t.ok(stack.res) //< check that there is a response obj
+          t.ok(stack.res && stack.res.rev) //< and that it has data returned from db
+          next()
+        })
+      })
+
+      let pick = ['_id', '_rev', 'date', 'content']
+      
+      let doc = {
+        _id : 'test',
+        content : 'this is a test',
+        date : Date.now()
+      }
+      //do a db operation the normal way:
+      db.post(doc, (err, res) => {
+        console.log('db post natively')
+        debugger
+        //update with rev so we can put it back again after another change...
+        doc._rev = res.rev
+        doc.content = 'this is a COOL test'
+        //now fire it so the stack tek can try putting:
+        stack.fire('create-note/save', ()=> {
+          t.pass('fire complete')
+          debugger
+        })
+      })
+
+    })
+
+    newTest('stack.last occurs before the trailing callback', (t) => {
+      t.plan(4)
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let count = 0
+      stack.last('something', () => {
+        count++
+        console.log('this should occur before the trailing callback')
+      })
+      stack.fire('something', () => {
+        count++
+        console.log('this should actually occur last')
+        t.equals(count, 2)
+      })
+
+      //now try async
+      let anotherCount = 0
+
+      stack.last('something-else', (next) => {
+        setTimeout(() => {
+          anotherCount++
+          console.log('this should occur before the trailing callback')
+          next()
+        }, 200)
+      })
+
+      stack.fire('something-else', () => {
+        anotherCount++
+        console.log('this should actually occur last (again)')
+        t.equals(count, 2)
+      })
+
+      //now try async with a nextfire (2 assertions):
+      let yetAnotherCount = 0
+
+      stack.last('something-else-yet-again', (next) => {
+        setTimeout(() => {
+          yetAnotherCount++
+          t.equals(yetAnotherCount, 1)
+          console.log('this should occur before the trailing callback')
+          next()
+        }, 200)
+      })
+
+      stack.on('something-else-again', (next) => {
+        next.fire('something-else-yet-again', () => {
+          yetAnotherCount++
+          console.log('this should actually occur last (yet again)')
+          t.equals(yetAnotherCount, 2)
+        })
+      })
+      stack.fire('something-else-again')
+
     })
 
     //run only a specific test by name:

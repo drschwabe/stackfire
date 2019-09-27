@@ -404,7 +404,6 @@ stack.fire = (...args) => {
   callback = _.find(args, (arg) =>  _.isFunction(arg) && _.indexOf(args, arg) != 0 )
   body = _.find(args, (arg) => arg != pathname && arg != callback && arg != func)
 
-  debugger
   //TODO: some better logic to prevent 'rapid fires'; fires interrupting other fires
 
   //IF a sibling fire (not a parent) is underway and NOT finished,
@@ -466,7 +465,6 @@ stack.fire = (...args) => {
     //(do not keep this listener for subsequent fires of the same path)
     matchingCommand.listeners[0].one_time = true
   } else if(callback && !callbackOn) {
-    debugger
     stack.once(pathname, callback)
   }
 

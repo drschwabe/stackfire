@@ -14,20 +14,18 @@ npm install stackfire --save
 const stack = require('stackfire')
 
 stack.on('moon-shot', () =>
-console.log('we about to shoot for the moon!')
+  console.log('we about to shoot for the moon!')
 ) //^this listener is synchronous
 
 stack.on('moon-shot', (next) => {
   console.log('launch!!')
   launchCraft()
-  setTimeout(next), 1000)
+  setTimeout(next, 1000)
 })
 //^this listener is asynchronous
 //(note the use of next)
 
-stack.on('moon-shot', () => {
-  showText('craft launched!')
-})
+stack.on('moon-shot', () => showText('craft launched!'))
 //^this listener will execute last
 //(even though it is synchronous)
 

@@ -40,7 +40,7 @@ stack.fire('moon-shot')
 Fire `command`; invokes all listeners for said command in sequence, followed by an optional concluding callback
 ```javascript
 stack.fire('green')
-stack.fire('red', console.log('runs last'))
+stack.fire('red', () => console.log('runs last'))
 ```
 
 ### stack.on
@@ -52,7 +52,7 @@ stack.on('green', () => console.log('its green'))
 
 ### stack.on(next)
 `stack.on((next) => callback)`   
-Pass an optional `next` object to `stack.on` to make your listener asynchronous; the entire stack will hold while said listener executes (until the `next` object itself is invoked).
+Pass an optional `next` object to `stack.on` to make your listener asynchronous; the entire stack will hold while said listener executes until the `next` object itself is invoked.
 
 ```javascript
 stack.on('go', (next) => {
@@ -62,10 +62,8 @@ stack.on('go', (next) => {
   }, 100)
 })
 
-stack.on('go', () => {
-  console.log('going!')
-  //^ executes last (after 100ms) despite being synchronous function
-})
+stack.on('go', () => console.log('going!'))
+//^ executes last (after 100ms) despite being synchronous function
 
 stack.fire('go')
 ```

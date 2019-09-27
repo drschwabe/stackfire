@@ -1233,5 +1233,6 @@ stack.aliaser = function() {
 }
 
 stack.libraries = []
+stack.libs = stack.libraries 
 
 module.exports = stack

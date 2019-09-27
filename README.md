@@ -14,8 +14,7 @@ npm install stackfire --save
 const stack = require('stackfire')
 
 stack.on('moon-shot', () =>
-console.log('we about to shoot for
-the moon!')
+console.log('we about to shoot for the moon!')
 ) //^this listener is synchronous
 
 stack.on('moon-shot', (next) => {
@@ -164,18 +163,17 @@ Array of async libraries you can feed stack for the purpose of wrapping function
 const Pouchdb = require('pouchdb')
 const db = new PouchDB('example')
 stack.libs.push(db)
-
-let data = { awesome : true }
+let data = { _id: 'cashews', awesome : true }
 stack.on(db.post, () => {
   console.log('about to post to db...')
-  stack.params.body.data = false
+  stack.params.body.data.awesome = false
 })
 stack.fire(db.post, data, () => {
   console.log('posted data to db!')
   console.log(stack.err)
   //> null
   console.log(stack.res)
-  //> { awesome : false }
+  //> { _id: 'cashews', _rev : '1-967a00dff5e', awesome : false }
 })
 ```
 
@@ -193,10 +191,8 @@ node run-test.js "No doubling up of one time listener/trailing callbacks" | tap-
 #### TODO
 - finish documenting features
 - improve performance
-- fix bugs
-- website
-- launch
-- Tools/Visualizer, and extra utility modules
+- fix bugs / add more test cases and more thorough testing of different configurations
+- Tools/Visualizer and extra utility modules
 
 #### License
 MIT

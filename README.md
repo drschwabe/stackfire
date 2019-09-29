@@ -137,17 +137,17 @@ stack.fire('snow')
 Same as `stack.on` but your listener will run first
 
 #### stack.second
-Same as `stack.on` but your listener will run second.  `stack.third`, `stack.fourth` etc also work or use stack.nth(priority) where priority is an integer indicating at what place the listener should run.
+Same as `stack.on` but your listener will run second. `stack.third`, `stack.fourth` etc also work or use `stack.nth(priority)` where `priority` is an integer indicating at what place the listener should run.
 
 #### stack.last
 Same as `stack.on` but your listener will last
 
 #### stack.endCommand
-Prematurely end a command, prevents any further listeners down the stack from running on this call.
+Invoke this function from within a listener to rematurely end a command, prevents any further listeners down the stack from running on this call.
 
 
 #### stack.endParent
-Same as `stack.endCommand` but ends the parent command of the current listener.
+Same as `stack.endCommand` but ends the parent command of the current command (of the listener from which you invoke this function) in progress.
 
 #### stack.utils
 Synchronously executed array of functions that will run at various points of stack's execution.

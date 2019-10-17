@@ -44,6 +44,8 @@ stack.on = (...params) => {
         matchingFunc = match
         path = 'function/' + _.findKey(lib, (libProperty) => libProperty == func)
         console.log(path)
+      } else {
+        console.warn('there was no matching function found')
       }
     })
     //if we provide a command we can skip the path stuff...
@@ -203,16 +205,29 @@ stack.on = (...params) => {
     existingCommand.listeners = _.sortBy(existingCommand.listeners, (listener) => listener.priority)
     stack.commands.push(existingCommand)
   } else if(!existingCommand) {
-    newListener.priority = 1
+    if(func) {
+      //in this case the listener we created above is the callback so we want it to run after the
+      //listener we create below:
+      newListener.priority = 999
+    } else {
+      newListener.priority = 1
+    }
   }
+
+  debugger
 
   //create another on listener which includes the function itself if the function listener has not yet already been added...
   if(func) {
-    //TODO check the length of the existing command; and lookup to see if this is added yet..
-    stack.on(path, (next) => {
+
+
+    //Check to see if this is added yet..
+    if(existingCommand) return
+
+    stack.on(path, 1, (next) => {
       let preNextCallback = (err, res) => {
         if(err) stack.err = err
         if(res) stack.res = res
+        //at this point the res has been set
         next()
       }
       let partialFunc = _.partial(func, _, preNextCallback)
@@ -454,7 +469,7 @@ stack.fire = (...args) => {
   }
   if(!matchingCommand && callback) {
     //make the callback a listener; register it now:
-    stack.on(pathname, callback)
+    func? stack.on(func, callback) : stack.on(pathname, callback)
     //now match it:
     var matchedRoute
     var matchingCommand = _.find(stack.commands, (command) => {

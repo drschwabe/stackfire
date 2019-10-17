@@ -162,7 +162,7 @@ stack.libs.push(db)
 let data = { _id: 'cashews', awesome : true }
 stack.on(db.post, () => {
   console.log('about to post to db...')
-  stack.params.body.data.awesome = false
+  stack.params.body.awesome = false
 })
 stack.fire(db.post, data, () => {
   console.log('posted data to db!')

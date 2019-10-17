@@ -103,6 +103,13 @@ If next.fire is called within a listener, as shown on line 2 above, it will invo
 
 Parameters as part of the current command in progress (ie: `do-something/:time`) are available as a property of the `stack.params` object  (ie: `stack.params.time`).
 
+If an object is supplied as parameter in a `stack.fire` that object will be available to all listeners down the chain via `stack.params.body`
+
+Ex:
+```js
+stack.on('green', () => console.log(stack.params.body.fruit)) //> "apple"
+stack.fire('green', { fruit : "apple" })
+```
 ----
 
 ## Experimental features

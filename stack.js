@@ -214,8 +214,6 @@ stack.on = (...params) => {
     }
   }
 
-  debugger
-
   //create another on listener which includes the function itself if the function listener has not yet already been added...
   if(func) {
 
@@ -1248,6 +1246,6 @@ stack.aliaser = function() {
 }
 
 stack.libraries = []
-stack.libs = stack.libraries 
+stack.libs = stack.libraries
 
 module.exports = stack

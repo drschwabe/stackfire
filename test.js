@@ -3796,6 +3796,26 @@ var testObj = {
         })
       })
       stack.fire('something-else-again')
+    })
+
+    test('stack.params.body retained with array parameter based listeners', (t) => {
+      t.plan(2)
+      global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+
+      stack.on('selectable-docs/deselect', () => {
+        console.log('do some stuff')
+      })
+
+      stack.on('create-note', (next) => {
+        next.fire('selectable-docs/deselect')
+      })
+
+      stack.on('create-note', () => {
+        t.ok(stack.params.body, 'stack.params.body retained')
+        t.equals(stack.params.body, 'The sky is blue.', 'retained value is correct')
+      })
+
+      stack.fire('create-note', 'The sky is blue.')
 
     })
 

@@ -740,7 +740,7 @@ const runCommand = (commandToRun) => {
       if(cell < startCell) return callback()
       stack.cell = cell
       //cell change, so also update the params back to the ones on this cell's enty's original command:
-      stack.params = cell.enties[0].command.params
+      stack.params = _.clone(cell.enties[0].command.params)
       if(stack.utils.length) stack.utils.forEach((utilFunc) => utilFunc())
       if( _.indexOf(stack.grid.cells, cell) < 0) return callback()
       if(cell.enties[0].done) return callback ()

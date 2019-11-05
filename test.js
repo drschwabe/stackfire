@@ -3798,9 +3798,9 @@ var testObj = {
       stack.fire('something-else-again')
     })
 
-    test('stack.params.body retained with array parameter based listeners', (t) => {
+    newTest('stack.params.body retained with array parameter based listeners', (t) => {
       t.plan(2)
-      global.stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
+      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
 
       stack.on('selectable-docs/deselect', () => {
         console.log('do some stuff')
@@ -3816,7 +3816,6 @@ var testObj = {
       })
 
       stack.fire('create-note', 'The sky is blue.')
-
     })
 
     //run only a specific test by name:

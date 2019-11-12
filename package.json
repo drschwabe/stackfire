@@ -1,0 +1,46 @@
+{
+  "name": "stackfire",
+  "description": "Command driven middleware stack for managing control flow / application state",
+  "keywords": [
+    "router",
+    "async",
+    "control flow",
+    "state",
+    "state management",
+    "service bus",
+    "pubsub",
+    "stack",
+    "command stack",
+    "fire",
+    "stack fire",
+    "stackfire"
+  ],
+  "version": "4.0.0-alpha.1",
+  "contributors": [
+    "Derrick Schwabe <admin@nerdbusiness.com>"
+  ],
+  "homepage": "https://github.com/drschwabe/stackfire",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drschwabe/stackfire"
+  },
+  "bugs": "https://github.com/drschwabe/stackfire/issues",
+  "license": "MIT",
+  "dependencies": {
+    "async": "2.6.1",
+    "gamegrids": "0.8.6"
+  },
+  "scripts": {
+    "test": "tape run-test.js | tap-spec"
+  },
+  "devDependencies": {
+    "pouchdb": "^7.1.1",
+    "pouchdb-adapter-memory": "^7.1.1",
+    "jquery": "^3.2.1",
+    "require-uncached": "1.0.3",
+    "tap-spec": "^5.0.0",
+    "tape": "4.6.0",
+    "tape-catch": "1.0.6"
+  },
+  "main": "stack.js"
+}

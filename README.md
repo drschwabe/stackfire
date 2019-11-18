@@ -188,7 +188,7 @@ Git clone the repo and run `npm install; npm test`
 
 To run only a specific test edit test.js with `newTest.only` (instead of `newTest`) or from command line without needing to modify the script you can run:
 ```bash
-node run-test.js "No doubling up of one time listener/trailing callbacks" | tap-spec
+node run-test.js "No doubling up of one time listener/trailing callbacks" | ./node_modules/.bin/tap-spec
 ```
 
 #### TODO

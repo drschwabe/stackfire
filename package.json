@@ -28,12 +28,15 @@
   "license": "MIT",
   "dependencies": {
     "async": "2.6.1",
-    "gamegrids": "0.8.6"
+    "gamegrids": "0.8.6",
+    "route-parser": "0.0.5"
   },
   "scripts": {
     "test": "tape run-test.js | tap-spec"
   },
   "devDependencies": {
+    "browserify": "^16.5.0",
+    "watchify": "^3.11.1",
     "pouchdb": "^7.1.1",
     "pouchdb-adapter-memory": "^7.1.1",
     "jquery": "^3.2.1",

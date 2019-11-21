@@ -410,18 +410,6 @@ var testObj = {
 
 
 
-    newTest('stack.fire can be supplied with a callback', (t) => {
-      //to execute after all other listener callbacks finish
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack
-      stack.trimming = false
-
-      t.plan(1)
-
-      stack.fire('test', () => {
-        t.pass('callback is executed')
-      })
-    })
 
 
     newTest('stack.fire can be supplied with a callback (plus a listner)', (t) => {

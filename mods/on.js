@@ -15,6 +15,9 @@ module.exports = (stack) => {
       //create a route from the path:
       route : new routeParser(path)
     }
+
+    stack.listeners.push(listener)
+
     return listener
   }
 }

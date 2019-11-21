@@ -430,28 +430,6 @@ var testObj = {
 
     })
 
-    newTest('stack.fire can be supplied with a callback (plus multiple listeners)', (t) => {
-
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack
-      stack.trimming = false
-
-      t.plan(3)
-
-      stack.on('test', () => {
-        t.pass('listener invoked')
-      })
-
-      stack.on('test', () => {
-        t.pass('second listener invoked')
-      })
-
-      stack.fire('test', () => {
-        t.pass('callback is executed')
-      })
-
-    })
-
     newTest("stack.fire can be fired from another fire callback", (t) => {
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
       if(process.browser) window.stack = stack

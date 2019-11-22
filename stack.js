@@ -523,7 +523,7 @@ stack.fire = (...args) => {
             }).last().value()
             //^ use the most recent command (last in the stack.commands)
 
-            matchingListenerInExistingCommand  = _.find(matchingExistingCommand.listeners, (existingListener) => {
+            let matchingListenerInExistingCommand  = _.find(matchingExistingCommand.listeners, (existingListener) => {
               return listener.func == existingListener.func
             })
 
@@ -540,14 +540,6 @@ stack.fire = (...args) => {
 
   //Pre-grid modification check to see if this command should be queued or not:
   //if there is a path active:
-
-  var callee = arguments.callee,
-      caller
-
-  if(arguments.callee.caller) caller = arguments.callee.caller.toString()
-  matchingCommand.caller = caller
-  matchingCommand.callee = callee
-
 
   if(!stack.params) stack.params = {}
 
@@ -645,10 +637,9 @@ const runCommand = (commandToRun) => {
         }).last().value()
         //^ use the most recent command (last in the stack.commands)
 
-        matchingListenerInExistingCommand  = _.find(matchingExistingCommand.listeners, (existingListener) => {
+        let matchingListenerInExistingCommand  = _.find(matchingExistingCommand.listeners, (existingListener) => {
           return listener.func == existingListener.func
         })
-
 
         if(matchingListenerInExistingCommand) {
           if( matchingExistingCommand.done ) return
@@ -794,17 +785,6 @@ const runCommand = (commandToRun) => {
       //needs to happen after the listener's callback is executed:
 
       //if func has 'next' we assume this is an async...
-
-      var callee = arguments.callee,
-          caller
-
-      cell.enties[0].callee = callee
-      //cell.enties[0].callee_str = callee.toString()
-
-      if(arguments.callee.caller) {
-        caller = arguments.callee.caller.toString()
-        cell.enties[0].caller = caller
-      }
 
       var entyFuncArgs = fnArgs( cell.enties[0].func  )
       if( entyFuncArgs.length ) cell.enties[0].async = true

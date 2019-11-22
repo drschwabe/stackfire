@@ -452,55 +452,6 @@ var testObj = {
 
     })
 
-    newTest('basic async example', (t) => {
-      t.plan(6)
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack
-      stack.trimming = false
-
-      var firstSip = (next) => {
-        stack.state.listener = 'first'
-        setTimeout(() => {
-          console.log('first sip (takes 100 ms)')
-          t.equals(stack.state.listener, 'first')
-          next()
-        }, 100)
-      }
-
-      var secondSip = (next) => {
-        stack.state.listener = 'second'
-        setTimeout(() => {
-          console.log('second sip (takes 200 ms)')
-          t.equals(stack.state.listener, 'second')
-          next()
-        }, 200)
-      }
-
-      var thirdSip = (next) => {
-        stack.state.listener = 'third'
-        setTimeout(() => {
-          console.log('third sip (takes 300 ms)')
-          t.equals(stack.state.listener, 'third')
-        }, 300)
-      }
-
-      stack.on('sip latte', firstSip)
-
-      stack.on('sip latte', secondSip)
-
-      stack.on('sip latte', thirdSip)
-
-      stack.fire('sip latte')
-
-      setTimeout(() => {
-        //check that the functions are placed in the same order:
-        t.equals( stack.grid.enties[0].func.toString(), firstSip.toString() )
-        t.equals( stack.grid.enties[1].func.toString(), secondSip.toString() )
-        t.equals( stack.grid.enties[2].func.toString(), thirdSip.toString() )
-      }, 700)
-
-    })
-
     newTest('Presence of next param in cb fn determines if to be async or not', (t) => {
       t.plan(1)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

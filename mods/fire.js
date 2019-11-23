@@ -12,6 +12,9 @@ module.exports = (stack) => {
     //clone them so we do not mutate the original:
     command.listener_instances = _.map(matchedListeners, (listener) => _.clone(listener))
 
+    //sort them based on priority:
+    command.listener_instances = _.sortBy(command.listener_instances, (listener) => listener.priority)
+
     //queue command:
     stack.queue.push(command)
 

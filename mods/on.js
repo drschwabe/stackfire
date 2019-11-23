@@ -7,7 +7,8 @@ module.exports = (stack) => {
   stack.on = (...params) => {
 
     let path = params[0]
-    let func = params[1]
+    let func = _.find(params, (param) => _.isFunction(param))
+    let priority = _.find(params, (param) => _.isNumber(param))
 
     //Establish a listener obj...
     let listener = {
@@ -22,9 +23,19 @@ module.exports = (stack) => {
       listener.async = fnArgs(func).length ?  true : false
     }
 
+    if(priority) listener.priority = priority
+
     stack.listeners.push(listener)
 
     return listener
   }
-}
 
+  stack.first = (...params) => stack.nth(...params, 1)
+  stack.second = (...params) => stack.nth(...params, 2)
+  stack.third = (...params) => stack.nth(...params, 3)
+  stack.fourth = (...params) => stack.nth(...params, 4)
+  stack.fifth = (...params) => stack.nth(...params, 5)
+  stack.sixth = (...params) => stack.nth(...params, 6)
+
+  stack.nth = (...params) => stack.on(...params)
+}

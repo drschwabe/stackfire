@@ -32,21 +32,6 @@ var testObj = {
     //the tests
 
     //Now write each test as normal, but call it with queuing function:
-    newTest("stack.fire invokes stack.on", (t) => {
-      t.plan(2)
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack
-      stack.trimming = false
-
-      stack.on('/do-something', () => {
-        t.ok(stack.state, 'listener invoked and stack state established')
-        t.equal(stack.path, '/do-something', "state.path equals '/do-something'")
-      })
-
-      stack.fire('/do-something')
-
-    })
-
 
     newTest("Mulitiple listeners invoke in a series (not parallel)", (t) => {
       t.plan(3)

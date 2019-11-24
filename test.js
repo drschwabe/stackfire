@@ -33,25 +33,6 @@ var testObj = {
 
     //Now write each test as normal, but call it with queuing function:
 
-    newTest("Mulitiple listeners invoke in a series (not parallel)", (t) => {
-      t.plan(3)
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack
-      stack.trimming = false
-
-      stack.on('/boot', () => {
-        t.ok(stack.path == '/boot', 'first boot listener ran')
-        stack.state.booting = true
-      })
-
-      stack.on('/boot', () => {
-        t.ok(stack.path == '/boot', 'second boot listener ran')
-        t.ok(stack.state.booting, 'variable set on state during first listener exists with expected value')
-      })
-
-      stack.fire('/boot')
-    })
-
     newTest("Mulitiple listeners are placed in the same column of the grid (not on row)", (t) => {
       t.plan(4)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

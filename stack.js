@@ -29,8 +29,10 @@ stack.match
 //### stack.loop
 require('./mods/loop.js')(stack)
 
+require('./mods/buffer.js')(stack)
 
-require('./mods/grid.js')(stack)
+
+//require('./mods/grid.js')(stack)
 
 
 stack.path = () => {

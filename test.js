@@ -1211,34 +1211,6 @@ var testObj = {
       t.equals(null, stack.path, 'command path finished/is null')
     })
 
-
-    test.skip('buffer fires every fire', (t) => {
-      t.plan(6)
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack
-      stack.trimming = false
-      stack.on('apples', (state, next) => {
-        t.pass('apples on!')
-        next(null, state)
-      })
-      stack.on('oranges', (state, next) => {
-        t.pass('oranges on!')
-        next(null, state)
-      })
-      stack.on('/_buffer', (state, next) => {
-        console.log('/buffer')
-        t.pass('/_buffer on!') //< Should run twice.
-        next(null, state)
-      })
-      stack.fire('apples', (err, state, next) => {
-        t.pass('apples fire ran OK')
-        next()
-      })
-      stack.fire('oranges', (err, state, next) => {
-        t.pass('oranges fire ran OK')
-      })
-    })
-
     test.skip('buffer fires every fire (complex)', (t) => {
       t.plan(5)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

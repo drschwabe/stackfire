@@ -15,6 +15,19 @@ module.exports = (stack) => {
     //sort them based on priority:
     command.listener_instances = _.sortBy(command.listener_instances, (listener) => listener.priority)
 
+    //### Buffer feature ###
+    //if there is a buffer listener, we need to take that one and 'buffer' it between all other listeners
+    //ie- so the buffer runs before and after every listener in this chain...
+    if(stack.buffer_func) {
+      let listenerInstancesBuffered = []
+      command.listener_instances.forEach(listener => {
+        let bufferListener =
+        listenerInstancesBuffered.push(  { func : stack.buffer_func } )
+        listenerInstancesBuffered.push(listener)
+      })
+      command.listener_instances = listenerInstancesBuffered
+    }
+
     //queue command:
     stack.queue.push(command)
 

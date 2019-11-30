@@ -89,35 +89,6 @@ var testObj = {
       stack.fire('/strap')
     })
 
-    newTest("stack.fire nested within stack.on", (t) => {
-      t.plan(5)
-      let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')
-      if(process.browser) window.stack = stack
-      stack.trimming = false
-
-      stack.on('/apple', (next) => {
-        console.log('/apple "on" (listener function in progress).')
-        t.equal(stack.path, '/apple', "state.path equals the path of the current 'on' listener.")
-        //stack.fire('/bannana', (next) => next)
-        next.fire('/bannana')
-      })
-
-      stack.on('/bannana', () => {
-        console.log('/bannana "on" listener in progress. state.path:')
-        console.log(stack.path)
-        t.ok(stack.state, 'root level listener invoked from a nested fire')
-        t.equal(stack.path, '/bannana', "state.path equals the path of the current 'on' listener.")
-        //next()
-        //at this point, apple should be done too
-      })
-      console.log('about to fire /apple')
-      stack.fire('apple')
-      t.ok( stack.grid.cells[0].enties[0].done , 'Original command is immediately done')
-      setTimeout( () => {
-        t.ok( stack.grid.cells[0].enties[0].done , 'Original command is done (after checking again with some setTimeout delay)')
-      }, 2)
-    })
-
     newTest("stack.fire nested within stack.on (complex)", (t) => {
       t.plan(13)
       let stack = process.browser ? require('./stack.js') : requireUncached('./stack.js')

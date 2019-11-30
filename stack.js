@@ -1,6 +1,7 @@
 // #### STACKFIRE4 ####
 
 const async = require('async')
+const _ = require('underscore')
 
 const stack = {
   commands : [], //< list of commands invoked via stack.fire
@@ -35,7 +36,7 @@ require('./mods/grid.js')(stack)
 stack.path = () => {
   //determine the current path based on current model of the grid and the data model; not by checking properties
   //(ie- not much state is saved so we try to determine this in a way that doesnt require it to be set expelicity)
-  if(stack.queue.length) return stack.queue[0].path
+  if(stack.queue.length) return _.last(stack.queue).path
   return null
 }
 

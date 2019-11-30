@@ -19,8 +19,12 @@ module.exports = (stack) => {
 
     if(func) { //(generally a func is included)
       listener.func = func
-      //if the function was supplied with a 'next' argument it is async:
-      listener.async = fnArgs(func).length ?  true : false
+      let listenerFuncArgs = fnArgs(func)
+      if(listenerFuncArgs.length) {
+        //if the function was supplied with a 'next' argument it is async:
+        listener.async = true
+        listener.args = listenerFuncArgs
+      }
     }
 
     if(priority) listener.priority = priority

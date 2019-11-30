@@ -27,6 +27,7 @@ module.exports = (test, stack) => {
       setTimeout(() => {
         console.log('third sip (takes 300 ms)')
         t.equals(state.listener, 'third')
+        next()
       }, 300)
     }
 

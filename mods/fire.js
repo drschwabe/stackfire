@@ -38,6 +38,7 @@ module.exports = (stack) => {
     //otherwise feed into stack.loop:
     stack.loop(command, () => {
       stack.queue.shift() //< remove the command from queue
+      stack.utils.forEach((util) => util('stack.fire_completed', command))
       if(callback) return callback()
     })
   }

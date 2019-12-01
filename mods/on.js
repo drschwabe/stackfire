@@ -30,7 +30,7 @@ module.exports = (stack) => {
     if(priority) listener.priority = priority
 
     stack.listeners.push(listener)
-
+    stack.utils.forEach((util) => util('stack.on_completed', listener))
     return listener
   }
 

@@ -8,7 +8,8 @@ const stack = {
   params : {}, //reference to the params of the live command/listener in progress
   //this is updated when the live command changes; ie- column change
   listeners : [],
-  queue : []
+  queue : [],
+  utils : [] //< for 'hooking' into stack's internal control flow
 }
 
 //### stack.on

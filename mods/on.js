@@ -9,6 +9,7 @@ module.exports = (stack) => {
     let path = params[0]
     let func = _.find(params, (param) => _.isFunction(param))
     let priority = _.find(params, (param) => _.isNumber(param))
+    let onceOnly = _.find(params, param => _.isBoolean(param))
 
     //Establish a listener obj...
     let listener = {
@@ -28,6 +29,7 @@ module.exports = (stack) => {
     }
 
     if(priority) listener.priority = priority
+    if(onceOnly) listener.onceOnly = true
 
     stack.listeners.push(listener)
     stack.utils.forEach((util) => util('stack.on_completed', listener))

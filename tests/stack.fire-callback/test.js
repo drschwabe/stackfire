@@ -5,9 +5,11 @@ module.exports = (test, stack) => {
 
     stack.fire('test', () => {
       t.pass('callback is executed')
-      t.notOk(stack.path(), 'there is no stack.path')
-      t.notOk(stack.queue.length, 'stack.queue is clear')
     })
+
+    t.notOk(stack.path(), 'there is no stack.path')
+    t.notOk(stack.queue.length, 'stack.queue is clear')
+
   })
 }
 

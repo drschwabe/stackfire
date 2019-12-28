@@ -3,6 +3,7 @@ const _ = require('underscore')
 
 module.exports = (stack) => {
   stack.loop = (command, callback) => {
+    stack.utils.forEach((util) => util('stack.loop_started', command))
     async.eachSeries(command.listener_instances, (listenerInstance, eachSeriesCallback) => {
       if(listenerInstance.async) {
         eachSeriesCallback.fire = (path) => stack.fire(path, eachSeriesCallback )

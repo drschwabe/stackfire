@@ -1,6 +1,7 @@
 {
   "scripts" : {
-    "watch" : "../../node_modules/.bin/watchify client.js -o client.bundle.js",
-    "test" : "../../node_modules/.bin/tape terminal.js | ../../node_modules/.bin/tap-spec"
+    "watch" : "../../node_modules/.bin/watchify  -g [ stringify --extensions [ .html .svg ] ] -t [ babelify --presets ['@babel/preset-env'] ]  client.js -o client.bundle.js -d -v",
+    "test" : "../../node_modules/.bin/tape terminal.js | ../../node_modules/.bin/tap-spec",
+    "start" : "echo 'http://localhost:8000'; python -m SimpleHTTPServer"
   }
 }

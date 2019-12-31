@@ -54,7 +54,7 @@ module.exports = (stack) => {
     stack.queue.push(command)
 
     //if dontRun flag is provided or a command is already in progress
-    //put the command into queue so it can be run later (and return the command itself)
+    //return early (with the command itself)
     if(dontRun) return command
 
     //otherwise feed into stack.loop:

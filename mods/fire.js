@@ -11,8 +11,19 @@ module.exports = (stack) => {
       stack.on(path, callback, 601, true)
     }
 
-    //find matching listeners
-    let matchedListeners = _.filter(stack.listeners, (listener) => listener.route.match(path))
+    command.params = null
+
+    //find matching listeners:
+    let matchedListeners = _.filter(stack.listeners, (listener) => {
+      let match = listener.route.match(path)
+      //resulting match is an object containing params, so collect them now...
+      if(match) { //make object if not already...
+        if(_.isNull(command.params)) command.params = {}
+        command.params = _.extend(command.params, match)
+      }
+      //and return if there was a match or not for filter criteria:
+      return match
+    })
 
     //clone them so we do not mutate the original:
     command.listener_instances = _.map(matchedListeners, (listener) => _.clone(listener))

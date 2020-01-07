@@ -29,6 +29,8 @@ function Stack() {
     return null
   }
 
+  stack.params = () => _.last(stack.queue).params
+
   stack.parentCommand = () => {
     //shortcut to access the parent command of current command/listener in progress. ex:
     //stack.parentCommand().params.body

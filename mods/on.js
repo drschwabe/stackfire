@@ -6,6 +6,9 @@ module.exports = (stack) => {
 
   stack.on = (...params) => {
 
+    if(_.isArray(params[0])) {
+      return params[0].forEach( path => stack.on(path, ..._.rest( params )))
+    }
     let path = params[0]
     let func = _.find(params, (param) => _.isFunction(param))
     let priority = _.find(params, (param) => _.isNumber(param))

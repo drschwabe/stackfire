@@ -59,7 +59,7 @@ module.exports = (stack) => {
 
     //otherwise feed into stack.loop:
     stack.loop(command, () => {
-      stack.queue.shift() //< remove the command from queue
+      stack.queue = _.without(stack.queue, command)
       stack.utils.forEach((util) => util('stack.fire_completed', command))
     })
   }

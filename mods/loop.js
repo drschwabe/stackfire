@@ -8,7 +8,9 @@ module.exports = (stack) => {
       stack.utils.forEach((util) => util('stack.listener_invoked', listenerInstance))
       if(listenerInstance.async) {
         eachSeriesCallback.end = () => eachSeriesCallback(true) //< exit the loop early
-        eachSeriesCallback.fire = (...params) => stack.fire(...params, eachSeriesCallback )
+        eachSeriesCallback.fire = (...params) => {
+          stack.fire(...params, { parent_listener : listenerInstance }, eachSeriesCallback )
+        }
         return listenerInstance.func(eachSeriesCallback)
       }
       //otherwise it's a sync function so just run it and call eachCallback immediately:

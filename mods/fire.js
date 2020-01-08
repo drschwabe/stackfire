@@ -5,12 +5,14 @@ module.exports = (stack) => {
   stack.fire = (path, ...params) => {
 
     let callback = _.find( params, param => _.isFunction(param) )
+    let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
     let body = _.find(params, param => param != path && param != callback)
 
     path = prefixPath(path)
 
     //create a command
     let command = { path : path, body : body }
+    if(parentListenerObj) command.parentListener = parentListenerObj.parent_listener
 
     //is there a callback?  add it now as a listener
     if(callback) { //note: dupe code from on.js; consider condensing into a single 'create listener' func
@@ -43,6 +45,7 @@ module.exports = (stack) => {
     command.listener_instances = _.map(command.listener_instances, listener => {
       //if a given listener doesn't have a priority; assign it one now:
       if(!listener.priority) listener.priority = _.indexOf(command.listener_instances, listener) + 10
+      listener.command = command //< convenient reference to parent command
       return listener
     })
 

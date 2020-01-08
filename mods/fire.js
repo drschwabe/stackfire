@@ -5,7 +5,7 @@ module.exports = (stack) => {
   stack.fire = (path, ...params) => {
 
     let callback = _.find( params, param => _.isFunction(param) )
-    body = _.find(params, param => param != path && param != callback)
+    let body = _.find(params, param => param != path && param != callback)
 
     path = prefixPath(path)
 

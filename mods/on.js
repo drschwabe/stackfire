@@ -1,6 +1,7 @@
 const _ = require('underscore')
 const routeParser = require('route-parser')
 const fnArgs = require('function-arguments')
+const prefixPath = require('../mods/prefix-path.js')
 
 module.exports = (stack) => {
 
@@ -9,7 +10,8 @@ module.exports = (stack) => {
     if(_.isArray(params[0])) {
       return params[0].forEach( path => stack.on(path, ..._.rest( params )))
     }
-    let path = params[0]
+
+    let path = prefixPath(params[0]) //< ensure prefixed with '/'
     let func = _.find(params, (param) => _.isFunction(param))
     let priority = _.find(params, (param) => _.isNumber(param))
     let onceOnly = _.find(params, param => _.isBoolean(param))

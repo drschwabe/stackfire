@@ -1,7 +1,11 @@
 const _ = require('underscore')
+const prefixPath = require('../mods/prefix-path.js')
 
 module.exports = (stack) => {
   stack.fire = (path, callback, dontRun) => {
+
+    path = prefixPath(path)
+
     //create a command
     let command = { path : path }
 

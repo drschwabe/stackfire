@@ -4,13 +4,13 @@ module.exports = (test, stack) => {
 
     stack.on('apple', (next) => {
       console.log('apple "on" (listener function in progress).')
-      t.equal(stack.path(), 'apple', "stack.path() equals the path of the current 'on' listener.")
+      t.equal(stack.path(), '/apple', "stack.path() equals the path of the current 'on' listener.")
       next.fire('bannana')
     })
 
     stack.on('bannana', () => {
       console.log('bannana "on" listener in progress. state.path:')
-      t.equal(stack.path(), 'bannana', "stack.path() equals the path of the current 'on' listener.")
+      t.equal(stack.path(), '/bannana', "stack.path() equals the path of the current 'on' listener.")
       //at this point, apple is done too
     })
     console.log('about to fire apple')

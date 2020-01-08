@@ -6,6 +6,7 @@ module.exports = (stack) => {
     stack.utils.forEach((util) => util('stack.loop_started', command))
     async.eachSeries(command.listener_instances, (listenerInstance, eachSeriesCallback) => {
       if(listenerInstance.async) {
+        eachSeriesCallback.end = () => eachSeriesCallback(true) //< exit the loop early
         eachSeriesCallback.fire = (...params) => stack.fire(...params, eachSeriesCallback )
         return listenerInstance.func(eachSeriesCallback)
       }

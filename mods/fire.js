@@ -2,12 +2,15 @@ const _ = require('underscore')
 const prefixPath = require('../mods/prefix-path.js')
 
 module.exports = (stack) => {
-  stack.fire = (path, callback, dontRun) => {
+  stack.fire = (path, ...params) => {
+
+    let callback = _.find( params, param => _.isFunction(param) )
+    body = _.find(params, param => param != path && param != callback)
 
     path = prefixPath(path)
 
     //create a command
-    let command = { path : path }
+    let command = { path : path, body : body }
 
     //is there a callback?  add it now as a listener
     if(callback) { //note: dupe code from on.js; consider condensing into a single 'create listener' func
@@ -67,10 +70,6 @@ module.exports = (stack) => {
 
     //queue command:
     stack.queue.push(command)
-
-    //if dontRun flag is provided or a command is already in progress
-    //return early (with the command itself)
-    if(dontRun) return command
 
     //otherwise feed into stack.loop:
     stack.loop(command, () => {

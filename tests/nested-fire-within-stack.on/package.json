@@ -1,6 +1,6 @@
 {
   "scripts" : {
-    "watch" : "../../node_modules/.bin/watchify client.js -o client.bundle.js",
+    "watch" : "../../node_modules/.bin/watchify  -g [ stringify --extensions [ .html .svg ] ] -t [ babelify --global  --sourceType unambiguous --presets ['@babel/preset-env' ] ] client.js -o client.bundle.js -d -v",
     "test" : "../../node_modules/.bin/tape terminal.js | ../../node_modules/.bin/tap-spec"
   }
 }

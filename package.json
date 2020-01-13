@@ -15,7 +15,7 @@
     "stack fire",
     "stackfire"
   ],
-  "version": "3.0.0-alpha.12b",
+  "version": "4.0.0-alpha.1",
   "contributors": [
     "Derrick Schwabe <admin@nerdbusiness.com>"
   ],
@@ -28,24 +28,24 @@
   "license": "MIT",
   "dependencies": {
     "async": "2.6.1",
-    "detect-node": "2.0.3",
-    "function-arguments": "1.0.8",
+    "function-arguments": "^1.0.8",
     "gamegrids": "0.8.6",
-    "is-electron": "2.1.0",
-    "lodash": "4.17.15",
-    "route-parser": "0.0.5",
-    "underscore": "1.8.3",
-    "underscore.string": "3.3.5",
-    "uuid": "3.3.2"
+    "route-parser": "0.0.5"
   },
   "scripts": {
     "test": "tape run-test.js | tap-spec"
   },
   "devDependencies": {
+    "@babel/core": "7.5.5",
+    "@babel/preset-env": "7.5.5",
+    "babelify": "10.0.0",
+    "browserify": "^16.5.0",
+    "watchify": "^3.11.1",
     "pouchdb": "^7.1.1",
     "pouchdb-adapter-memory": "^7.1.1",
     "jquery": "^3.2.1",
     "require-uncached": "1.0.3",
+    "stringify": "^5.2.0",
     "tap-spec": "^5.0.0",
     "tape": "4.6.0",
     "tape-catch": "1.0.6"

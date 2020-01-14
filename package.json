@@ -29,7 +29,8 @@
   "dependencies": {
     "async": "2.6.1",
     "function-arguments": "^1.0.8",
-    "route-parser": "0.0.5"
+    "route-parser": "0.0.5",
+    "underscore": "^1.9.2"
   },
   "scripts": {
     "test": "tape run-test.js | tap-spec"
@@ -39,16 +40,15 @@
     "@babel/preset-env": "7.5.5",
     "babelify": "10.0.0",
     "browserify": "^16.5.0",
-    "watchify": "^3.11.1",
+    "jquery": "^3.2.1",
     "pouchdb": "^7.1.1",
     "pouchdb-adapter-memory": "^7.1.1",
-    "jquery": "^3.2.1",
     "require-uncached": "1.0.3",
-    "stackfire-tools": "^1.0.0-alpha.2",
     "stringify": "^5.2.0",
     "tap-spec": "^5.0.0",
     "tape": "4.6.0",
-    "tape-catch": "1.0.6"
+    "tape-catch": "1.0.6",
+    "watchify": "^3.11.1"
   },
   "main": "stack.js"
 }

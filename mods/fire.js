@@ -44,7 +44,7 @@ module.exports = (stack) => {
 
     command.listener_instances = _.map(command.listener_instances, listener => {
       //if a given listener doesn't have a priority; assign it one now:
-      if(!listener.priority) listener.priority = _.indexOf(command.listener_instances, listener) + 10
+      if(!listener.priority) listener.priority = _.indexOf(command.listener_instances, listener) + 100
       listener.command = command //< convenient reference to parent command
       return listener
     })

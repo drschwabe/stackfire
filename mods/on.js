@@ -51,4 +51,6 @@ module.exports = (stack) => {
   stack.last = (...params) => stack.nth(...params, 500)
 
   stack.nth = (...params) => stack.on(...params)
+
+  stack.once = (...params) => stack.on(...params, true)
 }

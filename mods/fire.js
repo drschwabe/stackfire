@@ -1,5 +1,6 @@
 const _ = require('underscore')
 const prefixPath = require('../mods/prefix-path.js')
+const async = require('async')
 
 module.exports = (stack) => {
   stack.fire = (path, ...params) => {
@@ -74,11 +75,36 @@ module.exports = (stack) => {
     //queue command:
     stack.queue.push(command)
 
-    //otherwise feed into stack.loop:
-    stack.loop(command, () => {
-      stack.queue = _.without(stack.queue, command)
-      stack.utils.forEach((util) => util('stack.fire_completed', command))
-    })
+    //determine if we need to wait for current command to finish...
+    //OR if we need to immediately invoke a new loop...
+
+    if(!command.parentListener && stack.queue.length > 1) return //< if there is already a command in queue, wait unles...
+    if(command.parentListener) { //< if the command has a parent listener, don't wait - loop now:
+      return stack.loop(command, () => {
+        stack.queue = _.without(stack.queue, command)
+        stack.utils.forEach((util) => util('stack.fire_completed', command))
+        //probably need to proceed to the async.whilst below at this point
+        //ie- via an async.eachSeries
+      })
+    }
+
+    //otherwise proceed...
+
+    //feed into stack.loop, wrapped in a async.whilst so that we run
+    //the loop for as long as necessary to crunch all the commands in queue
+    //(this allows subsequent stack.fires to occur without interrupting
+    //an in-progress fire already invoked)
+    async.whilst(
+      () => stack.queue.length,
+      (callback) => {
+        let commandToRun = stack.queue[0]
+        stack.loop(commandToRun, () => {
+          stack.queue = _.without(stack.queue, commandToRun)
+          stack.utils.forEach((util) => util('stack.fire_completed', commandToRun))
+          callback()
+        })
+      }
+    )
   }
 
   stack.load = (path, callback) => stack.fire(path,callback,true)

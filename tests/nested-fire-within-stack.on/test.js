@@ -1,6 +1,6 @@
 module.exports = (test, stack) => {
   test("stack.fire nested within stack.on", (t) => {
-    t.plan(2)
+    t.plan(3)
 
     stack.on('apple', (next) => {
       console.log('apple "on" (listener function in progress).')
@@ -11,6 +11,8 @@ module.exports = (test, stack) => {
     stack.on('bannana', () => {
       console.log('bannana "on" listener in progress. state.path:')
       t.equal(stack.path(), '/bannana', "stack.path() equals the path of the current 'on' listener.")
+      //stack.command is bannana so its parent should be apple:
+      t.equal( stack.command.parentListener.command.path,  '/apple', 'bannana parent is apple' )
       //at this point, apple is done too
     })
     console.log('about to fire apple')

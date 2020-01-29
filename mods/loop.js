@@ -3,6 +3,7 @@ const _ = require('underscore')
 
 module.exports = (stack) => {
   stack.loop = (command, callback) => {
+    stack.command = command
     stack.utils.forEach((util) => util('stack.loop_started', command))
     async.eachSeries(command.listener_instances, (listenerInstance, eachSeriesCallback) => {
       stack.utils.forEach((util) => util('stack.listener_invoked', listenerInstance))

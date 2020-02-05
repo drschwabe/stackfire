@@ -11,6 +11,7 @@ module.exports = (stack) => {
         eachSeriesCallback.command = command
         eachSeriesCallback.end = () => eachSeriesCallback(true) //< exit the loop early
         eachSeriesCallback.fire = (...params) => {
+          stack.utils.forEach((util) => util('next.fire_invoked', listenerInstance))
           stack.fire(...params, { parent_listener : listenerInstance }, eachSeriesCallback )
         }
         return listenerInstance.func(eachSeriesCallback)

@@ -69,7 +69,7 @@ module.exports = (stack) => {
 
       let listenerInstancesBuffered = []
 
-      command.listener_instances.forEach(listener => {
+      command.listener_instances.forEach((listener, index) => {
         if(listener.priority == 601) {
           //do not buffer the trailing callback:
           listenerInstancesBuffered.push(listener)
@@ -82,7 +82,9 @@ module.exports = (stack) => {
         bufferListenerAfter.priority = listener.priority + 1
         bufferListenerAfter.command = listener.command
 
-        listenerInstancesBuffered.push(bufferListenerBefore) //< buffer before
+        if(index === 0) {
+          listenerInstancesBuffered.push(bufferListenerBefore) //< buffer before
+        }
         listenerInstancesBuffered.push(listener)
         listenerInstancesBuffered.push(bufferListenerAfter) //< buffer after
       })

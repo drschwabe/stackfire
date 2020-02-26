@@ -6,21 +6,24 @@ module.exports = (stack) => {
     stack.command = command
     stack.utils.forEach((util) => util('stack.loop_started', command))
     async.eachSeries(command.listener_instances, (listenerInstance, eachSeriesCallback) => {
+      stack.next = eachSeriesCallback //< makes it possible to invoke next listener outside of the listener
       stack.utils.forEach((util) => util('stack.listener_invoked', listenerInstance))
+
+      eachSeriesCallback.command = command
+      eachSeriesCallback.end = () => eachSeriesCallback(true) //< exit the loop early
+      eachSeriesCallback.fire = (...params) => {
+        stack.utils.forEach((util) => util('next.fire_invoked', listenerInstance))
+        stack.fire(...params, { parent_listener : listenerInstance }, () => {
+          stack.command = eachSeriesCallback.command //< set this reference back to original parent command
+          eachSeriesCallback()
+        })
+      }
+      
       if(listenerInstance.async ) {
         if(stack.pausing) { //if pausing, the eachSeriesCallback becomes a sort of phantom call...
           eachSeriesCallback = _.wrap(eachSeriesCallback, originalEachSeriesCallback => {
             stack.unpause = originalEachSeriesCallback //< putting the real callback here
           }) //(so that the UI can call this func to advance loop)
-        }
-        eachSeriesCallback.command = command
-        eachSeriesCallback.end = () => eachSeriesCallback(true) //< exit the loop early
-        eachSeriesCallback.fire = (...params) => {
-          stack.utils.forEach((util) => util('next.fire_invoked', listenerInstance))
-          stack.fire(...params, { parent_listener : listenerInstance }, () => {
-            stack.command = eachSeriesCallback.command //< set this reference back to original parent command
-            eachSeriesCallback()
-          })
         }
         return listenerInstance.func(eachSeriesCallback)
       }
@@ -36,6 +39,7 @@ module.exports = (stack) => {
       listenerInstance.func()
       return eachSeriesCallback()
     }, () => {
+      stack.command = null
       callback()
     })
   }

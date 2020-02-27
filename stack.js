@@ -37,6 +37,8 @@ function Stack() {
     //stack.parentCommand().params.body
   }
 
+  require('./mods/wrap')(stack)
+
 }
 
 module.exports = Stack

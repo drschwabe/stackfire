@@ -2,7 +2,7 @@
 module.exports = (test, stack) => {
 
   test('Can wrap a normal function in a fire', t => {
-    t.plan(4)
+    t.plan(5)
 
     let helloWorld = () => {
       console.log('hello world')
@@ -15,8 +15,9 @@ module.exports = (test, stack) => {
       t.pass('helloWorld listener ran')
     })
 
-    helloWorld()
-    stack.fire('helloWorld')
+    helloWorld()  //< invokes 2 listeners
+    stack.fire('helloWorld') //< invokes 2 listeners
+    stack.fire('hello-world')  //< invokes just the original function since above we are listening for the camel case one
 
   })
 

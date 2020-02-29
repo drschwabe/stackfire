@@ -30,7 +30,8 @@
     "async": "2.6.1",
     "function-arguments": "^1.0.8",
     "route-parser": "0.0.5",
-    "underscore": "^1.9.2"
+    "underscore": "^1.9.2",
+    "underscore.string": "^3.3.5"
   },
   "scripts": {
     "test": "tape run-test.js | tap-spec"

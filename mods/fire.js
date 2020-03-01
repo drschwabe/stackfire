@@ -50,46 +50,6 @@ module.exports = (stack) => {
       listener.command = command //< convenient reference to parent command
       return listener
     })
-    //### Buffer feature ###
-    //if there is a buffer listener, we need to take that one and 'buffer' it between all other listeners
-    //ie- so the buffer runs before and after every listener in this chain...
-    if(stack.buffer_func) {
-      //determine if its async or not:
-      let bufferFuncArgs = fnArgs(stack.buffer_func)
-      let bufferListener = {
-        func : stack.buffer_func,
-        buffer : true
-      }
-      if(bufferFuncArgs.length) {
-        //if the function was supplied with a 'next' argument it is async:
-        bufferListener.async = true
-        bufferListener.args = bufferFuncArgs
-      }
-      //TODO: this is 2nd place where doing this same fnArgs and async stamping; make it a re-usable
-
-      let listenerInstancesBuffered = []
-
-      command.listener_instances.forEach((listener, index) => {
-        if(listener.priority == 601) {
-          //do not buffer the trailing callback:
-          listenerInstancesBuffered.push(listener)
-          return
-        }
-        let bufferListenerBefore = _.clone( bufferListener )
-        bufferListenerBefore.priority = listener.priority - 1
-        bufferListenerBefore.command = listener.command
-        let bufferListenerAfter =  _.clone( bufferListener )
-        bufferListenerAfter.priority = listener.priority + 1
-        bufferListenerAfter.command = listener.command
-
-        if(index === 0) {
-          listenerInstancesBuffered.push(bufferListenerBefore) //< buffer before
-        }
-        listenerInstancesBuffered.push(listener)
-        listenerInstancesBuffered.push(bufferListenerAfter) //< buffer after
-      })
-      command.listener_instances = listenerInstancesBuffered
-    }
 
     //sort them based on priority:
     command.listener_instances = _.sortBy(command.listener_instances, (listener) => listener.priority)

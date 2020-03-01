@@ -20,7 +20,6 @@ function Stack() {
 
   //### stack.loop
   require('./mods/loop.js')(stack)
-  require('./mods/buffer.js')(stack)
 
   stack.path = () => {
     //determine the current path based on current model of the grid and the data model; not by checking properties

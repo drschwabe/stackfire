@@ -61,16 +61,8 @@ module.exports = (stack) => {
     //OR if we need to immediately invoke a new loop...
 
     if(!command.parentListener && stack.queue.length > 1) return //< if there is already a command in queue, wait unles...
-    if(command.parentListener) { //< if the command has a parent listener, don't wait - loop now:
-      return stack.loop(command, () => {
-        stack.queue = _.without(stack.queue, command)
-        stack.utils.forEach((util) => util('stack.fire_completed', command))
-        //probably need to proceed to the async.whilst below at this point
-        //ie- via an async.eachSeries
-      })
-    }
 
-    //otherwise proceed...
+    //otherwise proceed with a fresh loop from the top of the stack.queue...
 
     //feed into stack.loop, wrapped in a async.whilst so that we run
     //the loop for as long as necessary to crunch all the commands in queue
@@ -79,9 +71,10 @@ module.exports = (stack) => {
     async.whilst(
       () => stack.queue.length,
       (callback) => {
-        let commandToRun = stack.queue[0]
+        let commandToRun = command.parentListener ? command : stack.queue[0]
         stack.loop(commandToRun, () => {
           stack.queue = _.without(stack.queue, commandToRun)
+          commandToRun.complete = true
           stack.utils.forEach((util) => util('stack.fire_completed', commandToRun))
           callback()
         })

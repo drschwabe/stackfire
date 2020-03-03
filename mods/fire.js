@@ -9,6 +9,7 @@ module.exports = (stack) => {
     let callback = _.find( params, param => _.isFunction(param) )
     let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
     let body = _.find(params, param => param != path && param != callback)
+    let secondaryCallback = _.find( params, param => _.isFunction(param) && param != callback)
 
     path = prefixPath(path)
 
@@ -20,6 +21,10 @@ module.exports = (stack) => {
     if(callback) { //note: dupe code from on.js; consider condensing into a single 'create listener' func
       command.callback = callback
       stack.on(path, callback, 601, true)
+    }
+    //is there a secondary callback?
+    if(secondaryCallback) {
+      stack.on(path, secondaryCallback, 602, true)
     }
 
     command.params = null
@@ -76,8 +81,14 @@ module.exports = (stack) => {
           stack.queue = _.without(stack.queue, commandToRun)
           commandToRun.complete = true
           stack.utils.forEach((util) => util('stack.fire_completed', commandToRun))
+          //the nested fire should accommodate re-suming the parent's listener chain
+          //in which case, exit the loop:
+          if(command.parentListener) return callback(true)
           callback()
         })
+      },
+      (err) => {
+        //console.log('loop done')
       }
     )
   }

@@ -8,13 +8,24 @@ module.exports = (stack) => {
 
     let callback = _.find( params, param => _.isFunction(param) )
     let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
-    let body = _.find(params, param => param != path && param != callback)
+    let body = []
+    params.forEach( param => {
+      if(param === path || param === callback || _.isFunction(param)) return
+      body.push(param)
+    })
+    let stackBody
+    if(body.length > 1 ) {
+      stackBody = body
+      stackBody.packed = true
+    } else {
+      stackBody = body[0]
+    }
     let secondaryCallback = _.find( params, param => _.isFunction(param) && param != callback)
 
     path = prefixPath(path)
 
     //create a command
-    let command = { path : path, body : body }
+    let command = { path : path, body : stackBody }
     if(parentListenerObj) command.parentListener = parentListenerObj.parent_listener
 
     //is there a callback?  add it now as a listener

@@ -27,31 +27,35 @@ module.exports = stack => {
       return console.error('invalid params')
     }
 
-    stack.on( stackPath , () => {
-      if(functionToWrap.wrapping) return
-      functionToWrap(stack.body()) //< we supply stack.body as param as way to transfer the params in this context
-      //ie- stack.fire(functionToWrap.name, 'some extra param' ) //< stack.body() is 'some extra param'
-    })
+    //existing wrapped listener?  there can only be one:
+    let existingWrapListener = _.find( stack.listeners, listener => listener.path === stackPath && listener.wrapped )
+
+    if(!existingWrapListener) {
+      stack.on( stackPath , () => {
+        //we supply stack.body as param as way to transfer the params in this context:
+        let body = stack.body() //determine if its a 'packed' array (function supplied with multiple params)...
+        if(!body) return functionToWrap()
+        if(body.packed) return functionToWrap(...body)
+        //or if body is single param
+        functionToWrap(body)
+        //ie- stack.fire(functionToWrap.name, 'some extra param' ) //< stack.body() is 'some extra param'
+      }, { wrapped : true})
+    }
 
     return _.wrap( functionToWrap,  (func, ...params) => {
-
       let executeFunc = () => func(...params)
+      executeFunc.wrapped = true
       //if we are already in a create-doc/save fire (ie- fired from another place in app) just run the func:
-      if(stack.command && stack.command.path == stackPath) return executeFunc()
+      //if(stack.command && stack.command.path == stackPath) return executeFunc()
       //otherwise we invoke the fire on a one-time listener:
-      func.wrapping = true
-      stack.once(stackPath, executeFunc, 50)
+      //func.wrapping = true
+      //stack.once(stackPath, executeFunc, 50)
       //if a command is in progress use next otherwise fire direct:
-      if(stack.queue && stack.queue.length) {
-        stack.next.fire(stackPath, () => {
-          func.wrapping = false
-        })
-      } else {
-        stack.fire(stackPath, () => {
-          func.wrapping = false
-        })
-      }
+      stack.fire(stackPath, ...params, () => {
+        //func.wrapping = false
+        //next()
+        console.log('fired wrapped function')
+      })
     })
   }
-
 }

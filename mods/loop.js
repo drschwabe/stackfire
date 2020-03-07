@@ -17,11 +17,12 @@ module.exports = (stack) => {
           stack.command.complete = true
           stack.utils.forEach((util) => util('stack.fire_completed', stack.command))
           stack.command = eachSeriesCallback.command //< set this reference back to original parent command
+          stack.next = eachSeriesCallback
           eachSeriesCallback()
         })
       }
       
-      if(listenerInstance.async ) {
+      if(listenerInstance.async || listenerInstance.func.wrapped) {
         if(stack.pausing) { //if pausing, the eachSeriesCallback becomes a sort of phantom call...
           eachSeriesCallback = _.wrap(eachSeriesCallback, originalEachSeriesCallback => {
             stack.unpause = originalEachSeriesCallback //< putting the real callback here

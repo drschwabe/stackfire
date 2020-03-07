@@ -15,6 +15,7 @@ module.exports = (stack) => {
     let func = _.find(params, (param) => _.isFunction(param))
     let priority = _.find(params, (param) => _.isNumber(param))
     let onceOnly = _.find(params, param => _.isBoolean(param))
+    let otherOptions = _.find(params, param => _.isObject(param) && param !== func )
 
     //Establish a listener obj...
     let listener = {
@@ -35,6 +36,8 @@ module.exports = (stack) => {
 
     if(priority) listener.priority = priority
     if(onceOnly) listener.onceOnly = true
+
+    if(otherOptions) listener = _.extend(listener, otherOptions)
 
     stack.listeners.push(listener)
     stack.utils.forEach((util) => util('stack.on_completed', listener))

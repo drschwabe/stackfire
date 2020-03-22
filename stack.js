@@ -24,12 +24,12 @@ function Stack() {
   stack.path = () => {
     //determine the current path based on current model of the grid and the data model; not by checking properties
     //(ie- not much state is saved so we try to determine this in a way that doesnt require it to be set expelicity)
-    if(stack.queue.length) return _.last(stack.queue).path
+    if(stack.queue.length) return stack.command.path
     return null
   }
 
-  stack.params = () => stack.queue[0].params
-  stack.body = () => stack.queue[0].body
+  stack.params = () => stack.command.params
+  stack.body = () =>  stack.command.body
 
   stack.parentCommand = () => {
     //shortcut to access the parent command of current command/listener in progress. ex:

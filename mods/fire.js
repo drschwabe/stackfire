@@ -10,7 +10,7 @@ module.exports = (stack) => {
     let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
     let body = []
     params.forEach( param => {
-      if(param === path || param === callback || _.isFunction(param)) return
+      if(param === path || param === callback || _.isFunction(param) || param == parentListenerObj) return
       body.push(param)
     })
     let stackBody

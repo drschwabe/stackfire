@@ -42,8 +42,8 @@ module.exports = (stack) => {
       listenerInstance.func()
       return eachSeriesCallback()
     }, () => {
-      if( stack.command.parentListener ) {
-        stack.command = stack.command.parentListener.command
+      if( command.parentListener ) {
+        stack.command = command.parentListener.command
       }
       callback()
     })

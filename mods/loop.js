@@ -33,13 +33,16 @@ module.exports = (stack) => {
       //it's a sync function ...
       if(stack.pausing) { //but if we are pausing a sync func,
         stack.unpause = () => { //this unpause func will call...
-          listenerInstance.func() //< the sync func...
+          let listenerResult = listenerInstance.func() //< the sync func...
+          if(listenerResult) command.body = listenerResult
           eachSeriesCallback() //< and the async callback immediately after...
         }//to advance the loop!
         return
       }
       //otherwise just run them now:
-      listenerInstance.func()
+      let listenerResult = listenerInstance.func()
+      if(listenerResult) command.body = listenerResult
+      //^ capture the result and if existing apply it as the new body
       return eachSeriesCallback()
     }, () => {
       if( command.parentListener ) {

@@ -11,16 +11,16 @@ module.exports = (test, stack) => {
       listenerCount++
     }
 
-    helloWorld = stack.wrap(helloWorld)
+    stack.wrap(helloWorld)
 
     console.log('hello.world() ...')
-    helloWorld()  //< invokes 1 listener
-    t.equals(  listenerCount , 1, 'holloWorld() called after stack.wrap(helloWorld) invokes')
+    stack.fire.helloWorld()  //< invokes 1 listener
+    t.equals(  listenerCount , 1, 'helloWorld() called after stack.wrap(helloWorld) invokes')
 
     listenerCount = 0
     console.log('stack.fire("hello-world") ...')
-    stack.fire('hello-world')  //< invokes just the original function since above we are listening for the camel case one
-    t.equals(  listenerCount , 1, 'stack.fire("hello-world")invokes the stack.wrap(helloWorld) original function')
+    stack.fire('helloWorld')  //< invokes just the original function
+    t.equals(  listenerCount , 1, 'stack.fire("helloWorld")invokes the stack.wrap(helloWorld) original function')
 
     const hello = {}
     hello.world = () => {
@@ -28,27 +28,26 @@ module.exports = (test, stack) => {
       listenerCount++
     }
 
-    stack.on('hello/world', () => {
+    stack.on('hello.world', () => {
       console.log('hello/world listener ran')
       listenerCount++
     })
 
     //hello.world = stack.wrap(hello.world, 'hello/world')
-    hello.world = stack.wrap(hello, 'hello.world')
+    stack.wrap(hello, 'hello.world')
 
     listenerCount = 0
 
-    console.log('hello.world() ...')
-    hello.world()
+    console.log('stack.fire.hello.world() ...')
+    stack.fire.hello.world()
 
-    t.equals(  listenerCount , 2, 'hello.world() called after stack.wrap(hello, "hello.world") invokes')
-    //^ you must currently provide the stack path of manual
+    t.equals(  listenerCount , 2, 'hello.world() called after stack.wrap(hello, "hello.world") and stack.fire.hello.world() invoked')
 
     listenerCount = 0
 
-    console.log('stack.fire("hello/world") ...')
-    stack.fire('hello/world')
-    t.equals(  listenerCount , 2, 'stack.fire("hello/world") called after stack.wrap(hello, "hello.world") invokes')
+    console.log('stack.fire("hello.world") ...')
+    stack.fire('hello.world')
+    t.equals(  listenerCount , 2, 'stack.fire("hello.world") called after stack.wrap(hello, "hello.world") and stack.fire("hello.world") invoked')
 
   })
 

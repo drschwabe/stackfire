@@ -14,15 +14,18 @@ module.exports = stack => {
     //or in the case of a lib func like hello.world() it becomes avail as stack.fire('hello/world')
     let functionToWrap
     let stackPath
+    let objName
+    let funcName
     if(_.isFunction(params[0])) {
       functionToWrap = params[0]
-      stackPath = camelCaseToDash(functionToWrap.name).split('.').join('/')
+      stackPath = functionToWrap.name
     } else if(_.isObject(params[0]) && _.isString( params[1] ) ) {
       //user called:  stack.wrap( obj, 'obj.functionName')
-      let objName = _s.strLeft( params[1], '.' )
-      let funcName = _s.strRight(params[1], '.' )
+      objName = _s.strLeft( params[1], '.' )
+      funcName = _s.strRight(params[1], '.' )
       functionToWrap = params[0][funcName]
-      stackPath = camelCaseToDash(params[1]).split('.').join('/')
+      stackPath =  params[1]
+      stack.fire[objName] = params[0]
     } else {
       return console.error('invalid params')
     }
@@ -42,7 +45,7 @@ module.exports = stack => {
       }, { wrapped : true})
     }
 
-    return _.wrap( functionToWrap,  (func, ...params) => {
+    let wrappedFunc = _.wrap( functionToWrap,  (func, ...params) => {
       let executeFunc = () => func(...params)
       executeFunc.wrapped = true
       //if we are already in a create-doc/save fire (ie- fired from another place in app) just run the func:
@@ -57,5 +60,8 @@ module.exports = stack => {
         console.log('fired wrapped function')
       })
     })
+
+    if(objName) return stack.fire[objName][funcName] = wrappedFunc
+    stack.fire[stackPath] = wrappedFunc
   }
 }

@@ -40,7 +40,7 @@ module.exports = stack => {
         if(!body) return functionToWrap()
         if(body.packed) return functionToWrap(...body)
         //or if body is single param
-        functionToWrap(body)
+        return functionToWrap(body)
         //ie- stack.fire(functionToWrap.name, 'some extra param' ) //< stack.body() is 'some extra param'
       }, { wrapped : true})
     }

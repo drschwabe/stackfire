@@ -2,7 +2,7 @@
 module.exports = (test, stack) => {
 
   test('Can invoke a next.fire.wrappedFunction', t => {
-    t.plan(6)
+    t.plan(7)
 
     //2 'warm up' tests...
     stack.on('ready', next => {
@@ -42,6 +42,18 @@ module.exports = (test, stack) => {
     })
 
     stack.fire('takeoff')
+
+    //forth test:  using next.fire to access a wrapped 'lib.function' :
+    const submarine = {
+      submerge : () => t.pass('submarine (original function)')
+    }
+    stack.wrap(submarine, 'submarine.submerge')
+
+    stack.on('deploy', next => {
+      next.fire.submarine.submerge()
+    })
+
+    stack.fire('deploy')
 
   })
 

@@ -26,14 +26,17 @@ module.exports = (stack) => {
       stack.wrapped.forEach( wrappedFuncOrLibFunc => {
         let functionToWrap
         let stackPath
-
-        if(wrappedFuncOrLibFunc.stackPath) {
-          //object func, ie: cars.stop()
-          stackPath = wrappedFuncOrLibFunc.stackPath
-          functionToWrap = wrappedFuncOrLibFunc[wrappedFuncOrLibFunc.objName][wrappedFuncOrLibFunc.funcName]
-        } else { //not an object; just a named function ie: stop()
+        let key = _.keys(wrappedFuncOrLibFunc)[0]
+        let isLib = false
+        if( _.isFunction(wrappedFuncOrLibFunc[key]) ) {
+          //not an object; just a named function ie: stop()
           functionToWrap = wrappedFuncOrLibFunc
           stackPath =  _.keys(wrappedFuncOrLibFunc)[0]
+        } else {
+          isLib = true
+          //object func, ie: cars.stop()
+          stackPath = wrappedFuncOrLibFunc[key].stackPath
+          functionToWrap = wrappedFuncOrLibFunc[key][wrappedFuncOrLibFunc[key].funcName]
         }
 
         let wrappedFunc = _.wrap( functionToWrap,  (func, ...params) => {
@@ -50,12 +53,10 @@ module.exports = (stack) => {
         })
 
         //extend 'next.fire' with this function, using a nested obj if it was supplied as a library:
-        if(wrappedFuncOrLibFunc.stackPath) {
-          eachSeriesCallback.fire = _.extend( eachSeriesCallback.fire, {
-            [wrappedFuncOrLibFunc.objName] : {
-              [wrappedFuncOrLibFunc.funcName] : wrappedFunc
-            }
-          })
+        if(isLib) {
+          eachSeriesCallback.fire[key] = {
+            [wrappedFuncOrLibFunc[key].funcName] : wrappedFunc
+          }
         } else {
           eachSeriesCallback.fire = _.extend( eachSeriesCallback.fire, { [stackPath] : wrappedFunc  })
         }

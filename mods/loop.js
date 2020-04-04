@@ -63,11 +63,6 @@ module.exports = (stack) => {
       })
       
       if(listenerInstance.async || listenerInstance.func.wrapped) {
-        if(stack.pausing) { //if pausing, the eachSeriesCallback becomes a sort of phantom call...
-          eachSeriesCallback = _.wrap(eachSeriesCallback, originalEachSeriesCallback => {
-            stack.unpause = originalEachSeriesCallback //< putting the real callback here
-          }) //(so that the UI can call this func to advance loop)
-        }
         return listenerInstance.func(eachSeriesCallback)
       }
       //it's a sync function ...

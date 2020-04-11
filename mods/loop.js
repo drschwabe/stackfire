@@ -61,13 +61,17 @@ module.exports = (stack) => {
           eachSeriesCallback.fire = _.extend( eachSeriesCallback.fire, { [stackPath] : wrappedFunc  })
         }
       })
-      
+
       if(listenerInstance.async || listenerInstance.func.wrapped) {
+        if(stack.pausing) {
+          stack.next = () => listenerInstance.func(eachSeriesCallback)
+          return
+        }
         return listenerInstance.func(eachSeriesCallback)
       }
       //it's a sync function ...
       if(stack.pausing) { //but if we are pausing a sync func,
-        stack.unpause = () => { //this unpause func will call...
+        stack.next = () => { //this unpause func will call...
           let listenerResult = listenerInstance.func() //< the sync func...
           if(listenerResult) command.body = listenerResult
           eachSeriesCallback() //< and the async callback immediately after...

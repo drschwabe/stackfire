@@ -15,6 +15,7 @@ module.exports = (stack) => {
         stack.utils.forEach((util) => util('next.fire_invoked', listenerInstance))
         stack.fire(...params, { parent_listener : listenerInstance }, () => {
           stack.command.complete = true
+          stack.queue = _.without(stack.queue, stack.command)
           stack.utils.forEach((util) => util('stack.fire_completed', stack.command))
           stack.command = eachSeriesCallback.command //< set this reference back to original parent command
           stack.next = eachSeriesCallback
@@ -45,6 +46,7 @@ module.exports = (stack) => {
             //next()
             console.log('next fired wrapped function')
             stack.command.complete = true
+            stack.queue = _.without(stack.queue, stack.command)
             stack.utils.forEach((util) => util('stack.fire_completed', stack.command))
             stack.command = eachSeriesCallback.command //< set this reference back to original parent command
             stack.next = eachSeriesCallback

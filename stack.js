@@ -9,6 +9,7 @@ function Stack() {
   stack.queue = []
   //for 'hooking' into stack's internal control flow:
   stack.utils = []
+  stack.mods = [] //< for thirdparty mods; central place to access their functions and properties/config
 
   //### stack.on
   //Establishes a listener that will wait in stack.listeners until it is matched and then queued into a command via stack.fire

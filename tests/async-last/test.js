@@ -45,7 +45,7 @@ module.exports = (test, stack) => {
       })
     })
 
-    stack.on('new-favv-and-topic', () => console.log('new favv and topic'))
+    stack.on('new-favv-and-topic', () => console.log('new-favv-and-topic'))
     stack.on('list-menu-toggle/off', () => console.log('list-menu-toggle/off'))
 
     stack.on('start/close', next => {

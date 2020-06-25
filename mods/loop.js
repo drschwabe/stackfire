@@ -1,7 +1,19 @@
 const async = require('async')
 const _ = require('underscore')
 
+
+
 module.exports = (stack) => {
+
+  const concludingListener = eachSeriesCallback => {
+    stack.command.complete = true
+    stack.queue = _.without(stack.queue, stack.command)
+    stack.utils.forEach((util) => util('stack.fire_completed', stack.command))
+    stack.command = eachSeriesCallback.command //< set this reference back to original parent command
+    stack.next = eachSeriesCallback
+    eachSeriesCallback()
+  }
+
   stack.loop = (command, callback) => {
     stack.command = command
     stack.utils.forEach((util) => util('stack.loop_started', command))
@@ -13,14 +25,9 @@ module.exports = (stack) => {
       eachSeriesCallback.end = () => eachSeriesCallback(true) //< exit the loop early
       eachSeriesCallback.fire = (...params) => {
         stack.utils.forEach((util) => util('next.fire_invoked', listenerInstance))
-        stack.fire(...params, { parent_listener : listenerInstance }, () => {
-          stack.command.complete = true
-          stack.queue = _.without(stack.queue, stack.command)
-          stack.utils.forEach((util) => util('stack.fire_completed', stack.command))
-          stack.command = eachSeriesCallback.command //< set this reference back to original parent command
-          stack.next = eachSeriesCallback
-          eachSeriesCallback()
-        })
+        let concludingListenerWithCallback = _.partial( concludingListener, eachSeriesCallback )
+        concludingListenerWithCallback.concluding_listener = true
+        stack.fire(...params, { parent_listener : listenerInstance }, concludingListenerWithCallback)
       }
 
       //also accommodate for wrapped functions..
@@ -43,7 +50,7 @@ module.exports = (stack) => {
         let wrappedFunc = _.wrap( functionToWrap,  (func, ...params) => {
           stack.utils.forEach((util) => util('next.fire_invoked', listenerInstance))
           stack.fire(stackPath, ...params,  { parent_listener : listenerInstance }, () => {
-            //next()
+            //TODO: use concludingListener /  concludingListenerWithCallback tek as the other .fire above.
             console.log('next fired wrapped function')
             stack.command.complete = true
             stack.queue = _.without(stack.queue, stack.command)
@@ -80,10 +87,12 @@ module.exports = (stack) => {
         }//to advance the loop!
         return
       }
-      //otherwise just run them now:
+      //otherwise just run them now..
+      //if the function is not a utility...
       let listenerResult = listenerInstance.func()
       if(listenerResult) command.body = listenerResult
       //^ capture the result and if existing apply it as the new body
+      if(listenerInstance.func.concluding_listener) return //< the listener will call the eachSeriesCallback()
       return eachSeriesCallback()
     }, () => {
       if( command.parentListener ) {

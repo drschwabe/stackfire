@@ -22,7 +22,10 @@ module.exports = (stack) => {
       stack.utils.forEach((util) => util('stack.listener_invoked', listenerInstance))
 
       eachSeriesCallback.command = command
-      eachSeriesCallback.end = () => eachSeriesCallback(true) //< exit the loop early
+      eachSeriesCallback.end = () => {
+        stack.utils.forEach((util) => util('next.end_invoked', listenerInstance))
+        eachSeriesCallback(true) //< exit the loop early
+      }
       eachSeriesCallback.fire = (...params) => {
         stack.utils.forEach((util) => util('next.fire_invoked', listenerInstance))
         let concludingListenerWithCallback = _.partial( concludingListener, eachSeriesCallback )

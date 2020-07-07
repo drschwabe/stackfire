@@ -16,6 +16,8 @@ module.exports = (stack) => {
 
   stack.loop = (command, callback) => {
     stack.command = command
+    if(command.parentListener && command.parentListener.fireEaching) return
+    //^ fireEaching manages its own loop
     stack.utils.forEach((util) => util('stack.loop_started', command))
     async.eachSeries(command.listener_instances, (listenerInstance, eachSeriesCallback) => {
       stack.next = eachSeriesCallback //< makes it possible to invoke next listener outside of the listener
@@ -31,6 +33,22 @@ module.exports = (stack) => {
         let concludingListenerWithCallback = _.partial( concludingListener, eachSeriesCallback )
         concludingListenerWithCallback.concluding_listener = true
         stack.fire(...params, { parent_listener : listenerInstance }, concludingListenerWithCallback)
+      }
+
+      eachSeriesCallback.fireEach = (list, pathFunc, fireEachCallback) => {
+        command.fireEaching = true
+        //list, command (with context ie: 'delete/ + list.item.uniqueId), callback 
+        async.eachSeries(list, (listItem, fireEachSeriesCallback) => {
+          fireEachSeriesCallback.command = command
+          let path = pathFunc(listItem)
+          let concludingListenerWithCallback = _.partial( concludingListener, fireEachSeriesCallback )
+          console.log(stack.params())
+          stack.fire(path, { parent_listener : listenerInstance }, concludingListenerWithCallback)
+        }, () => {
+          console.log('reached end of eachSeriesCallback.fireEach')
+          command.fireEaching = false
+          fireEachCallback()
+        })
       }
 
       //also accommodate for wrapped functions..
@@ -98,8 +116,12 @@ module.exports = (stack) => {
       if(listenerInstance.func.concluding_listener) return //< the listener will call the eachSeriesCallback()
       return eachSeriesCallback()
     }, () => {
-      if( command.parentListener ) {
+      if( command.parentListener && !command.parentListener.command.fireEaching) {
+        //^ do not restore command to parent yet while fireEaching; that loop needs to complete first.
         stack.command = command.parentListener.command
+      } else if(command.parentListener && command.parentListener.command.fireEaching) {
+        console.log('not existing loop yet; still fireEaching...')
+        return //< do not callback yet; the fireEaching loop must finish first. 
       }
       callback()
     })

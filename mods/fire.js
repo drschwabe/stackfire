@@ -88,7 +88,6 @@ module.exports = (stack) => {
       () => stack.queue.length,
       (callback) => {
         let commandToRun = command.parentListener ? command : stack.queue[0]
-        //debugger
         stack.loop(commandToRun, () => {
           stack.queue = _.without(stack.queue, commandToRun)
           commandToRun.complete = true

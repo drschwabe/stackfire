@@ -32,7 +32,7 @@
     "function-arguments": "1.0.8",
     "gamegrids": "0.8.6",
     "is-electron": "2.1.0",
-    "lodash": "4.17.15",
+    "lodash": "4.17.19",
     "route-parser": "0.0.5",
     "underscore": "1.8.3",
     "underscore.string": "3.3.5",

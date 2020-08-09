@@ -97,7 +97,15 @@ module.exports = (stack) => {
           stack.next = () => listenerInstance.func(eachSeriesCallback)
           return
         }
-        return listenerInstance.func(eachSeriesCallback)
+        if(command.body) {
+          return listenerInstance.func( (err, body) => {
+            if(err) return console.error(err)
+            if(body) command.body = body
+            eachSeriesCallback()
+          })
+        } else {
+          return listenerInstance.func(eachSeriesCallback)
+        }
       }
       //it's a sync function ...
       if(stack.pausing) { //but if we are pausing a sync func,

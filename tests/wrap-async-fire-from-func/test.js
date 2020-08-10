@@ -13,7 +13,6 @@ module.exports = (test, stack) => {
 
     stack.wrap(helloWorld)
 
-    //DOESNT WORK:
     stack.on('helloWorld', next => {
       console.log('helloWorld async listener ran')
       listenerCount++

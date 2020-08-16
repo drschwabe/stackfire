@@ -5,13 +5,13 @@ const _ = require('underscore')
 
 module.exports = (stack) => {
 
-  const concludingListener = eachSeriesCallback => {
+  const concludingListener = reduceCallback => {
     stack.command.complete = true
     stack.queue = _.without(stack.queue, stack.command)
     stack.utils.forEach((util) => util('stack.fire_completed', stack.command))
-    stack.command = eachSeriesCallback.command //< set this reference back to original parent command
-    stack.next = eachSeriesCallback
-    eachSeriesCallback()
+    stack.command = reduceCallback.command //< set this reference back to original parent command
+    stack.next = reduceCallback
+    reduceCallback()
   }
 
   stack.loop = (command, callback) => {
@@ -19,34 +19,34 @@ module.exports = (stack) => {
     if(command.parentListener && command.parentListener.fireEaching) return
     //^ fireEaching manages its own loop
     stack.utils.forEach((util) => util('stack.loop_started', command))
-    async.reduce(command.listener_instances, {}, (memo, listenerInstance, eachSeriesCallback) => {
+    async.reduce(command.listener_instances, {}, (memo, listenerInstance, reduceCallback) => {
       if(!_.isEmpty(memo)) command.body = memo 
-      stack.next = eachSeriesCallback //< makes it possible to invoke next listener outside of the listener
+      stack.next = reduceCallback //< makes it possible to invoke next listener outside of the listener
       stack.utils.forEach((util) => util('stack.listener_invoked', listenerInstance))
 
-      eachSeriesCallback.command = command
-      eachSeriesCallback.end = () => {
+      reduceCallback.command = command
+      reduceCallback.end = () => {
         stack.utils.forEach((util) => util('next.end_invoked', listenerInstance))
-        eachSeriesCallback(true) //< exit the loop early
+        reduceCallback(true) //< exit the loop early
       }
-      eachSeriesCallback.fire = (...params) => {
+      reduceCallback.fire = (...params) => {
         stack.utils.forEach((util) => util('next.fire_invoked', listenerInstance))
-        let concludingListenerWithCallback = _.partial( concludingListener, eachSeriesCallback )
+        let concludingListenerWithCallback = _.partial( concludingListener, reduceCallback )
         concludingListenerWithCallback.concluding_listener = true
         stack.fire(...params, { parent_listener : listenerInstance }, concludingListenerWithCallback)
       }
 
-      eachSeriesCallback.fireEach = (list, pathFunc, fireEachCallback) => {
+      reduceCallback.fireEach = (list, pathFunc, fireEachCallback) => {
         command.fireEaching = true
         //list, command (with context ie: 'delete/ + list.item.uniqueId), callback 
-        async.eachSeries(list, (listItem, fireEachSeriesCallback) => {
-          fireEachSeriesCallback.command = command
+        async.eachSeries(list, (listItem, firereduceCallback) => {
+          firereduceCallback.command = command
           let path = pathFunc(listItem)
-          let concludingListenerWithCallback = _.partial( concludingListener, fireEachSeriesCallback )
+          let concludingListenerWithCallback = _.partial( concludingListener, firereduceCallback )
           console.log(stack.params())
           stack.fire(path, { parent_listener : listenerInstance }, concludingListenerWithCallback)
         }, () => {
-          console.log('reached end of eachSeriesCallback.fireEach')
+          console.log('reached end of reduceCallback.fireEach')
           command.fireEaching = false
           fireEachCallback()
         })
@@ -77,35 +77,35 @@ module.exports = (stack) => {
             stack.command.complete = true
             stack.queue = _.without(stack.queue, stack.command)
             stack.utils.forEach((util) => util('stack.fire_completed', stack.command))
-            stack.command = eachSeriesCallback.command //< set this reference back to original parent command
-            stack.next = eachSeriesCallback
-            eachSeriesCallback()
+            stack.command = reduceCallback.command //< set this reference back to original parent command
+            stack.next = reduceCallback
+            reduceCallback()
           })
         })
 
         //extend 'next.fire' with this function, using a nested obj if it was supplied as a library:
         if(isLib) {
-          eachSeriesCallback.fire[key] = {
+          reduceCallback.fire[key] = {
             [wrappedFuncOrLibFunc[key].funcName] : wrappedFunc
           }
         } else {
-          eachSeriesCallback.fire = _.extend( eachSeriesCallback.fire, { [stackPath] : wrappedFunc  })
+          reduceCallback.fire = _.extend( reduceCallback.fire, { [stackPath] : wrappedFunc  })
         }
       })
 
       if(listenerInstance.async || listenerInstance.func.wrapped) {
         if(stack.pausing) {
-          stack.next = () => listenerInstance.func(eachSeriesCallback)
+          stack.next = () => listenerInstance.func(reduceCallback)
           return
         }
-        return listenerInstance.func(eachSeriesCallback)
+        return listenerInstance.func(reduceCallback)
       }
       //it's a sync function ...
       if(stack.pausing) { //but if we are pausing a sync func,
         stack.next = () => { //this unpause func will call...
           let listenerResult = listenerInstance.func() //< the sync func...
           if(listenerResult) command.body = listenerResult
-          eachSeriesCallback() //< and the async callback immediately after...
+          reduceCallback() //< and the async callback immediately after...
         }//to advance the loop!
         return
       }
@@ -114,8 +114,8 @@ module.exports = (stack) => {
       let listenerResult = listenerInstance.func()
       if(listenerResult) command.body = listenerResult
       //^ capture the result and if existing apply it as the new body
-      if(listenerInstance.func.concluding_listener) return //< the listener will call the eachSeriesCallback()
-      return eachSeriesCallback()
+      if(listenerInstance.func.concluding_listener) return //< the listener will call the reduceCallback()
+      return reduceCallback()
     }, (err) => {
       if( command.parentListener && !command.parentListener.command.fireEaching) {
         //^ do not restore command to parent yet while fireEaching; that loop needs to complete first.

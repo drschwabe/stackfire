@@ -97,13 +97,39 @@ module.exports = (stack) => {
           stack.next = () => listenerInstance.func(eachSeriesCallback)
           return
         }
-        if(command.body) {
-          return listenerInstance.func( (err, body) => {
-            if(err) return console.error(err)
+        //return listenerInstance.func(eachSeriesCallback)
+        //^returning early here breaks/fails: "body-mutable-async" test
+        //(sync body modification is fine but it breaks the async body mutation ie- next({ some:'thing'})
+
+        //however,  allowing this to proceed; next.fire becomes undefined
+        //ie- next.fire.docsPool.add( stack.body()
+        //failing the "wrap-async-fire-from-func-2" test
+
+        if(command.body && !listenerInstance.func.wrapped) {
+          //can we modify the body here?
+         // console.log(command.body)
+          //well its not needed cause for wrap-aysn-cfire-from-func2 test its already up to date
+          //(ie- sync body update is already updated; maybe could check if previous listener is async or not (instead of this listener directly which is indeed async)
+          //there is 2 situations; one is we need to pass
+         // console.log(eachSeriesCallback)
+          //wrap it / apply this eachSeriesCallback
+          let wrappedEachSeriesCallback = _.wrap(eachSeriesCallback, (func, err, body) => {
             if(body) command.body = body
-            eachSeriesCallback()
+            return func()
           })
+          let wrappedListenerInstance = _.wrap(listenerInstance.func , (func) => {
+            //somehow have the eachSeriesCallback do the body update as indicated below
+            return func( wrappedEachSeriesCallback )
+          })
+          return wrappedListenerInstance(eachSeriesCallback)
+          //   return wrappedListenerInstance(eachSeriesCallback => {
+          // //return listenerInstance.func(body => {
+          //   //never seems to run
+          //   if(body) command.body = body
+          //   eachSeriesCallback()
+          // })
         } else {
+          //probably this... 
           return listenerInstance.func(eachSeriesCallback)
         }
       }
@@ -123,7 +149,7 @@ module.exports = (stack) => {
       //^ capture the result and if existing apply it as the new body
       if(listenerInstance.func.concluding_listener) return //< the listener will call the eachSeriesCallback()
       return eachSeriesCallback()
-    }, () => {
+    }, (err) => {
       if( command.parentListener && !command.parentListener.command.fireEaching) {
         //^ do not restore command to parent yet while fireEaching; that loop needs to complete first.
         stack.command = command.parentListener.command

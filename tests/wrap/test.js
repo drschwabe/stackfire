@@ -1,6 +1,25 @@
 
 module.exports = (test, stack) => {
 
+  test('Does not run if original function called', t => {
+    t.plan(4)
+
+    let listenerCount = 0
+
+    let helloWorld = () => {
+      console.log('helloWorld original function ran')
+      listenerCount++
+    }
+
+    stack.wrap(helloWorld)
+
+    helloWorld()
+
+    stack.fire('helloWorld')
+
+    t.equals(listenerCount, 1, 'helloWorld function ran only once')
+  })
+
   test('Can wrap a normal function in a fire', t => {
     t.plan(4)
 
@@ -13,7 +32,7 @@ module.exports = (test, stack) => {
 
     stack.wrap(helloWorld)
 
-    console.log('hello.world() ...')
+    console.log('stack.fire.helloWorld() ...')
     stack.fire.helloWorld()  //< invokes 1 listener
     t.equals(  listenerCount , 1, 'helloWorld() called after stack.wrap(helloWorld) invokes')
 

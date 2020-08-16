@@ -2,13 +2,7 @@
 module.exports = (test, stack) => {
 
   test('More wrap tests', t => {
-    t.plan(5)
-
-    let helloWorld = () => console.log('helloWorld original function ran')
-    let helloMoon = () => console.log('helloMooon original function ran')
-
-    stack.wrap(helloWorld)
-    stack.wrap(helloMoon)
+    t.plan(1)
 
     let greetings = {
       goodbye : () => console.log('goodbye!')
@@ -16,36 +10,27 @@ module.exports = (test, stack) => {
 
     stack.wrap(greetings, 'greetings.goodbye')
 
-    stack.on('helloWorld', next => {
-      t.pass('helloWorld async listener ran')
-      setTimeout(next, 100)
+    // stack.on('say-stuff', () => {
+    //   return 'stuff said'
+    // })
+
+    stack.on('say-stuff', () => {
+      console.log('stuff said')
+      return 'stuff said'
     })
 
-    stack.last('helloWorld', () => {
-      t.pass(`stack.last('helloWorld') listener ran`)
-    })
-
-    stack.last('helloWorld', next => {
-      t.pass(`second stack.last('helloWorld') listener ran (async)`)
-      next()
-    })
-
-    stack.last('helloWorld', next => {
-      next.fire.helloMoon() 
-    })
-
-
-    stack.on('helloMoon', () => {
-      t.pass('helloMoon ran')
+    stack.on('say-stuff', next => {
+      t.equals (   stack.body()  , 'stuff said', 'body is correct' )
+      console.log('say stuff!')
+      next.fire.greetings.goodbye()
+      //next()
     })
 
     stack.on('greetings.goodbye', () => {
       t.pass('greetings.goodbye ran')
     })
 
-    stack.fire.helloWorld()
-    //stack.fire.helloMoon() 
-    stack.fire.greetings.goodbye() 
+    stack.fire('say-stuff')
 
   })
 }

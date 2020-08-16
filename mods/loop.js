@@ -19,7 +19,8 @@ module.exports = (stack) => {
     if(command.parentListener && command.parentListener.fireEaching) return
     //^ fireEaching manages its own loop
     stack.utils.forEach((util) => util('stack.loop_started', command))
-    async.eachSeries(command.listener_instances, (listenerInstance, eachSeriesCallback) => {
+    async.reduce(command.listener_instances, {}, (memo, listenerInstance, eachSeriesCallback) => {
+      if(!_.isEmpty(memo)) command.body = memo 
       stack.next = eachSeriesCallback //< makes it possible to invoke next listener outside of the listener
       stack.utils.forEach((util) => util('stack.listener_invoked', listenerInstance))
 
@@ -97,41 +98,7 @@ module.exports = (stack) => {
           stack.next = () => listenerInstance.func(eachSeriesCallback)
           return
         }
-        //return listenerInstance.func(eachSeriesCallback)
-        //^returning early here breaks/fails: "body-mutable-async" test
-        //(sync body modification is fine but it breaks the async body mutation ie- next({ some:'thing'})
-
-        //however,  allowing this to proceed; next.fire becomes undefined
-        //ie- next.fire.docsPool.add( stack.body()
-        //failing the "wrap-async-fire-from-func-2" test
-
-        if(command.body && !listenerInstance.func.wrapped) {
-          //can we modify the body here?
-         // console.log(command.body)
-          //well its not needed cause for wrap-aysn-cfire-from-func2 test its already up to date
-          //(ie- sync body update is already updated; maybe could check if previous listener is async or not (instead of this listener directly which is indeed async)
-          //there is 2 situations; one is we need to pass
-         // console.log(eachSeriesCallback)
-          //wrap it / apply this eachSeriesCallback
-          let wrappedEachSeriesCallback = _.wrap(eachSeriesCallback, (func, err, body) => {
-            if(body) command.body = body
-            return func()
-          })
-          let wrappedListenerInstance = _.wrap(listenerInstance.func , (func) => {
-            //somehow have the eachSeriesCallback do the body update as indicated below
-            return func( wrappedEachSeriesCallback )
-          })
-          return wrappedListenerInstance(eachSeriesCallback)
-          //   return wrappedListenerInstance(eachSeriesCallback => {
-          // //return listenerInstance.func(body => {
-          //   //never seems to run
-          //   if(body) command.body = body
-          //   eachSeriesCallback()
-          // })
-        } else {
-          //probably this... 
-          return listenerInstance.func(eachSeriesCallback)
-        }
+        return listenerInstance.func(eachSeriesCallback)
       }
       //it's a sync function ...
       if(stack.pausing) { //but if we are pausing a sync func,

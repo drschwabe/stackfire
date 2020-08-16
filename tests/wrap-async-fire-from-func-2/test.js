@@ -2,7 +2,7 @@
 module.exports = (test, stack) => {
 
   test('More wrap tests', t => {
-    t.plan(1)
+    t.plan(2)
 
     let greetings = {
       goodbye : () => console.log('goodbye!')

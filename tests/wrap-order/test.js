@@ -9,16 +9,23 @@ module.exports = (test, stack) => {
     let helloWorld = () => {
       console.log('helloWorld original function ran')
       listenerCount++
-      t.equals(listenerCount, 1)
+      t.equals(listenerCount, 0)
     }
 
     stack.wrap(helloWorld)
 
-    stack.on('helloWorld', () => {
+    stack.on('helloWorld', (next) => { //TODO: < add support for this style; just a string 'helloWorld'
       console.log('helloWorld listener ran')
       listenerCount++
       t.equals(listenerCount, 1)
+      next()
     })
+    //
+    // stack.on.helloWorld(() => { //TODO: < add support for this style too
+    //   console.log('helloWorld listener ran')
+    //   listenerCount++
+    //   t.equals(listenerCount, 1)
+    // })
 
     helloWorld()
 

@@ -8,6 +8,14 @@ module.exports = (stack) => {
 
     let callback = _.find( params, param => _.isFunction(param) )
     let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
+
+    if(stack.freezing && stack.command && !parentListenerObj) {
+      return console.warn('freezing enabled; not firing any new commands which do not have a parent')
+      //^ freezing prevents constant barrage of commands from piling up and thus easier debugging;
+      // ex- running stack.fire's at 60 FPS during a game
+      // freeziing useful in combination with pausing so that you can step through listeners without worrying about new commands queuing inadvertently
+    }
+
     let body = []
     params.forEach( param => {
       if(param === path || param === callback || _.isFunction(param) || param == parentListenerObj) return
@@ -94,12 +102,17 @@ module.exports = (stack) => {
           stack.utils.forEach((util) => util('stack.fire_completed', commandToRun))
           //the nested fire should accommodate re-suming the parent's listener chain
           //in which case, exit the loop:
-          if(command.parentListener) return callback(true)
+          if(command.parentListener) return callback(command.parentListener.command)
           callback()
         })
       },
-      (err) => {
-        //console.log('loop done')
+      (parentCommand) => {
+        stack.previousCommand = stack.command
+        if(parentCommand) {
+          stack.command = parentCommand 
+        } else {
+          stack.command = null 
+        }
       }
     )
   }

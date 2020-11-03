@@ -4,13 +4,18 @@ const async = require('async')
 const fnArgs = require('function-arguments')
 
 module.exports = (stack) => {
+
+  let warn = () => console.warn('freezing enabled; not firing any new commands which do not have a parent')
+  warn = _.throttle( warn, 10000 )
+
   stack.fire = (path, ...params) => {
 
     let callback = _.find( params, param => _.isFunction(param) )
     let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
 
     if(stack.freezing && stack.command && !parentListenerObj) {
-      return console.warn('freezing enabled; not firing any new commands which do not have a parent')
+      warn() 
+      return 
       //^ freezing prevents constant barrage of commands from piling up and thus easier debugging;
       // ex- running stack.fire's at 60 FPS during a game
       // freeziing useful in combination with pausing so that you can step through listeners without worrying about new commands queuing inadvertently

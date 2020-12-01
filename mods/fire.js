@@ -98,7 +98,7 @@ module.exports = (stack) => {
     //(this allows subsequent stack.fires to occur without interrupting
     //an in-progress fire already invoked)
     async.whilst(
-      () => stack.queue.length,
+      cb => cb(null, stack.queue.length), 
       (callback) => {
         let commandToRun = command.parentListener ? command : stack.queue[0]
         stack.loop(commandToRun, () => {

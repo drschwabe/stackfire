@@ -27,7 +27,7 @@
   "bugs": "https://github.com/drschwabe/stackfire/issues",
   "license": "MIT",
   "dependencies": {
-    "async": "2.6.1",
+    "async": "3.2.0",
     "function-arguments": "^1.0.8",
     "route-parser": "0.0.5",
     "underscore": "^1.9.2",

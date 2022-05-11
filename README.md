@@ -17,7 +17,7 @@ stack.on('moon-shot', () =>
   console.log('we about to shoot for the moon!')
 ) //^this listener is synchronous
 
-stack.on('moon-shot', (next) => {
+stack.on('moon-shot', next => {
   console.log('launch!!')
   launchCraft()
   setTimeout(next, 1000)
@@ -51,11 +51,11 @@ stack.on('green', () => console.log('its green'))
 ```
 
 ### stack.on(next)
-`stack.on((next) => callback)`   
+`stack.on(next => callback)`   
 Pass an optional `next` object to `stack.on` to make your listener asynchronous; the entire stack will hold while said listener executes until the `next` object itself is invoked.
 
 ```javascript
-stack.on('go', (next) => {
+stack.on('go', next => {
   setTimeout(() => {
     console.log('go!')//< executes first
     next()
@@ -72,17 +72,17 @@ stack.fire('go')
 The next object can be optionally used to invoke a nested command.
 
 ```javascript
-stack.on('detonate-apple', (next) => {
+stack.on('detonate-apple', next => {
   next.fire('detonate-bannana')
 })
 
 stack.on('detonate-apple', () => {
-  setTimeout(() => {
+  setTimeout(() => 
     detonate('apple') //< executes last
-  }, 100)
+  , 100)
 })
 
-stack.on('detonate-bannana', (next) => {
+stack.on('detonate-bannana', next => {
   setTimeout(() => {
     detonate('bannana')//< executes first
     next()

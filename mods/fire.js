@@ -123,4 +123,21 @@ module.exports = (stack) => {
   }
 
   stack.load = (path, callback) => stack.fire(path,callback,true)
+
+  const mapFn = (item, pathFunc, callback) => {
+    stack.fire(pathFunc(item), item, () => {
+      item = stack.body()
+      callback(null, item) 
+    })
+  }
+  
+  stack.map = (collection, pathFunc, mapCallback ) => {
+    async.map(collection, (item, callback) => {
+      mapFn(item, pathFunc, callback)
+    }, (err, results) => {
+      if(err) throw err
+      if(mapCallback) return mapCallback(null, results)
+      return results
+    })
+  }
 }

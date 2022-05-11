@@ -25,6 +25,7 @@ module.exports = (stack) => {
       stack.utils.forEach((util) => util('stack.listener_invoked', listenerInstance))
 
       reduceCallback.command = command
+      reduceCallback.body = command.body
       reduceCallback.end = () => {
         stack.utils.forEach((util) => util('next.end_invoked', listenerInstance))
         reduceCallback(true) //< exit the loop early

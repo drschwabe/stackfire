@@ -1,7 +1,6 @@
 // #### STACKFIRE4 ####
 
-const async = require('async')
-const _ = require('underscore')
+global.log = console.log
 
 function Stack() {
   var stack = this

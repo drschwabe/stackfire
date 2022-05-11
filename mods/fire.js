@@ -1,7 +1,6 @@
 const _ = require('underscore')
 const prefixPath = require('../mods/prefix-path.js')
 const async = require('async')
-const fnArgs = require('function-arguments')
 
 module.exports = (stack) => {
 

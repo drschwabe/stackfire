@@ -7,8 +7,8 @@ module.exports = (stack) => {
   let warn = () => console.warn('freezing enabled; not firing any new commands which do not have a parent')
   warn = _.throttle( warn, 10000 )
 
-  stack.fire = (path, ...params) => {
-
+  stack.fire = (...params) => {
+    let path = _.find(params, param => _.isString(param))
     let callback = _.find( params, param => _.isFunction(param) )
     let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
 
@@ -34,6 +34,7 @@ module.exports = (stack) => {
     }
     let secondaryCallback = _.find( params, param => _.isFunction(param) && param != callback)
 
+    if(!path) path = Date.now().toString() //< create a one off
     path = prefixPath(path)
 
     //create a command

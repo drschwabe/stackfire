@@ -12,6 +12,7 @@ module.exports = (stack) => {
     let path = _.find(params, param => _.isString(param))
     let callback = _.find( params, param => _.isFunction(param) )
     let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
+    let sync = _.find(params, param => _.isBoolean(param))
 
     if(stack.freezing && stack.command && !parentListenerObj) {
       warn() 
@@ -98,7 +99,46 @@ module.exports = (stack) => {
     //the loop for as long as necessary to crunch all the commands in queue
     //(this allows subsequent stack.fires to occur without interrupting
     //an in-progress fire already invoked)
-    asyncWhilst(command)
+    let result 
+    if(sync) {
+      log('run syncWhilst')
+      syncWhilst(command)
+    } else {
+      asyncWhilst(command)
+    }
+    return result 
+  }
+
+  const syncWhilst = command => {
+    let parentCommand 
+    let result 
+    while (stack.queue.length) {
+      let commandToRun = command.parentListener ? command : stack.queue[0]
+      stack.command = commandToRun
+      result = syncLoop(commandToRun)
+      stack.queue = _.without(stack.queue, commandToRun)
+      commandToRun.complete = true
+      stack.utils.forEach(util => util('stack.fireSync_completed', commandToRun))
+      if(command.parentListener) {
+        log('command has a parent listener in a sync loop (not sure wtf to do here; just winging it)')
+        parentCommand = command.parentListener.command
+      }
+    } 
+    stack.previousCommand = stack.command 
+    if(parentCommand) stack.command = parentCommand
+    //return the final result: 
+    return result
+  }
+
+  const syncLoop = command => {
+    let result 
+    _.each(command.listener_instances,
+      (listenerInstance) => {
+        result = listenerInstance.func()
+        command.body = result
+      }
+    )
+    return result 
   }
 
   const asyncWhilst = command => {
@@ -128,6 +168,7 @@ module.exports = (stack) => {
 
   }
 
+  stack.fireSync = (...params) => stack.fire(...params, true)
 
   stack.load = (path, callback) => stack.fire(path,callback,true)
 

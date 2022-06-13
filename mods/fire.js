@@ -12,7 +12,7 @@ module.exports = (stack) => {
     let path = _.find(params, param => _.isString(param))
     let callback = _.find( params, param => _.isFunction(param) )
     let parentListenerObj = _.find(params, param => _.isObject(param) && param.parent_listener )
-    let sync = _.find(params, param => _.isBoolean(param))
+    let sync = _.find(params, param => _.isBoolean(param)) ? true : false
 
     if(stack.freezing && stack.command && !parentListenerObj) {
       warn() 
@@ -85,12 +85,15 @@ module.exports = (stack) => {
     //sort them based on priority:
     command.listener_instances = _.sortBy(command.listener_instances, (listener) => listener.priority)
 
-    //queue command:
-    stack.queue.push(command)
+    if(!sync) stack.queue.push(command)
 
     //determine if we need to wait for current command to finish...
     //OR if we need to immediately invoke a new loop...
-    if(!command.parentListener && stack.queue.length > 1) return //< if there is already a command in queue, wait unles...
+    if(command.parentListener) log('command.parentListener is true')
+    if(stack.queue.length) log('async stack has a queue')
+    if(!sync && !command.parentListener && stack.queue.length > 1) return //< if there is already a command in queue, wait unles...
+    log('executing')
+    log(command.path)
 
     //otherwise proceed with a fresh loop from the top of the stack.queue...
 
@@ -108,29 +111,24 @@ module.exports = (stack) => {
   }
 
   const syncWhilst = command => {
-    let parentCommand 
-    let result 
-    let commandToRun 
-    while (stack.queue.length) {
-      commandToRun = command.parentListener ? command : stack.queue[0]
-      stack.command = commandToRun
-      syncLoop(commandToRun)
-      stack.queue = _.without(stack.queue, commandToRun)
-      commandToRun.complete = true
-      stack.utils.forEach(util => util('stack.fireSync_completed', commandToRun))
-      if(commandToRun.parentListener) {
-        log('command has a parent listener in a sync loop (not sure wtf to do here; just winging it)')
-        parentCommand = commandToRun.parentListener.command
-      }
-      stack.previousCommand = commandToRun 
-      if(parentCommand) stack.command = parentCommand
-    } 
+    const originalCommand = stack.command
+    let commandToRun = command
+    stack.command = commandToRun
+    //let originalBody = _l.cloneDeep(stack.body())
+    syncLoop(commandToRun)
+    commandToRun.complete = true
+    stack.utils.forEach(util => util('stack.fireSync_completed', commandToRun))
+    //stack.previousCommand = commandToRun 
+    //if(commandToRun.parentListener) stack.command = parentListener
     //return the final result: 
-    return stack.body()
+    const result = _l.cloneDeep(stack.body() )
+    //stack.body() = originalBody //< set this back so it doesnt interfere with any potential async listener chain in-progress (ie- if this executed within an async listener)
+    stack.command = originalCommand
+    //debugger
+    return result 
   }
 
   const syncLoop = command => {
-    debugger
     _.each(command.listener_instances,
       (listenerInstance) => {
         result = listenerInstance.func()
@@ -155,6 +153,7 @@ module.exports = (stack) => {
         })
       },
       (parentCommand) => {
+        debugger
         stack.previousCommand = stack.command
         if(parentCommand) {
           stack.command = parentCommand 

@@ -2,8 +2,8 @@ const _ = require('underscore')
 
 module.exports = (test, stack) => {
 
-  test("Body retained mid fire - fireSync", t => {
-    t.plan(3)
+  test("Body retained mid fire and returns updated result - fireSync", t => {
+    t.plan(4)
 
     stack.on('green', () => {
       t.equals(stack.body().hex, '#008000', 'body object has expected property')
@@ -19,7 +19,9 @@ module.exports = (test, stack) => {
       t.equals(stack.body(), '#ff0000', 'body object is expected value ')
     )
 
-    stack.fireSync('green', { hex : '#008000' })
+    const result = stack.fireSync('green', { hex : '#008000' })
+
+    t.equals(result, '#ff0000', 'updated result was returned')
 
   })
 }

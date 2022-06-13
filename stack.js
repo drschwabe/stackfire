@@ -6,6 +6,7 @@ function Stack() {
   var stack = this
   stack.listeners = []
   stack.queue = []
+  stack.syncQueue = []
   //for 'hooking' into stack's internal control flow:
   stack.utils = []
   stack.mods = [] //< for thirdparty mods; central place to access their functions and properties/config

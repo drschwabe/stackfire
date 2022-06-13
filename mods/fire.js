@@ -24,7 +24,7 @@ module.exports = (stack) => {
 
     let body = []
     params.forEach( param => {
-      if(param === path || param === callback || _.isFunction(param) || param == parentListenerObj) return
+      if(param === path || param === callback || _.isFunction(param) || param == parentListenerObj || param === sync) return
       body.push(param)
     })
     let stackBody
@@ -90,7 +90,6 @@ module.exports = (stack) => {
 
     //determine if we need to wait for current command to finish...
     //OR if we need to immediately invoke a new loop...
-
     if(!command.parentListener && stack.queue.length > 1) return //< if there is already a command in queue, wait unles...
 
     //otherwise proceed with a fresh loop from the top of the stack.queue...
@@ -101,8 +100,7 @@ module.exports = (stack) => {
     //an in-progress fire already invoked)
     let result 
     if(sync) {
-      log('run syncWhilst')
-      syncWhilst(command)
+      result = syncWhilst(command)
     } else {
       asyncWhilst(command)
     }
@@ -112,33 +110,33 @@ module.exports = (stack) => {
   const syncWhilst = command => {
     let parentCommand 
     let result 
+    let commandToRun 
     while (stack.queue.length) {
-      let commandToRun = command.parentListener ? command : stack.queue[0]
+      commandToRun = command.parentListener ? command : stack.queue[0]
       stack.command = commandToRun
-      result = syncLoop(commandToRun)
+      syncLoop(commandToRun)
       stack.queue = _.without(stack.queue, commandToRun)
       commandToRun.complete = true
       stack.utils.forEach(util => util('stack.fireSync_completed', commandToRun))
-      if(command.parentListener) {
+      if(commandToRun.parentListener) {
         log('command has a parent listener in a sync loop (not sure wtf to do here; just winging it)')
-        parentCommand = command.parentListener.command
+        parentCommand = commandToRun.parentListener.command
       }
+      stack.previousCommand = commandToRun 
+      if(parentCommand) stack.command = parentCommand
     } 
-    stack.previousCommand = stack.command 
-    if(parentCommand) stack.command = parentCommand
     //return the final result: 
-    return result
+    return stack.body()
   }
 
   const syncLoop = command => {
-    let result 
+    debugger
     _.each(command.listener_instances,
       (listenerInstance) => {
         result = listenerInstance.func()
-        command.body = result
+        if(result) command.body = result
       }
     )
-    return result 
   }
 
   const asyncWhilst = command => {

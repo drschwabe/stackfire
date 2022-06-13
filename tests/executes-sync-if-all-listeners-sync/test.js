@@ -4,6 +4,7 @@ module.exports = (test, stack) => {
 
     var going = false
     var stillGoing = false
+    var yetGoingStill= false 
 
     var executeSyncly = () => {
       console.log('executed syncly')
@@ -17,9 +18,14 @@ module.exports = (test, stack) => {
     stack.on('go', executeSyncly )
     stack.on('go', executeSynclyAgain )
 
-    stack.fire('go')
+    const result = stack.fire('go', () => {
+      yetGoingStill = true 
+      console.log('executed callback')
+      return yetGoingStill
+    })
 
-    t.ok(going && stillGoing)
+    console.log(result)
 
+    t.ok(going && stillGoing && yetGoingStill)
   })
 }

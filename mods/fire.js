@@ -98,7 +98,10 @@ module.exports = (stack) => {
     //the loop for as long as necessary to crunch all the commands in queue
     //(this allows subsequent stack.fires to occur without interrupting
     //an in-progress fire already invoked)
-    let result 
+    asyncWhilst(command)
+  }
+
+  const asyncWhilst = command => {
     async.whilst(
       cb => cb(null, stack.queue.length), 
       (callback) => {
@@ -123,9 +126,8 @@ module.exports = (stack) => {
       }
     )
 
-    return result 
-
   }
+
 
   stack.load = (path, callback) => stack.fire(path,callback,true)
 

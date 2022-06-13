@@ -1,6 +1,7 @@
 const _ = require('underscore')
 const prefixPath = require('../mods/prefix-path.js')
 const async = require('async')
+const _l = require('lodash')
 
 module.exports = (stack) => {
 
@@ -97,6 +98,7 @@ module.exports = (stack) => {
     //the loop for as long as necessary to crunch all the commands in queue
     //(this allows subsequent stack.fires to occur without interrupting
     //an in-progress fire already invoked)
+    let result 
     async.whilst(
       cb => cb(null, stack.queue.length), 
       (callback) => {
@@ -116,10 +118,13 @@ module.exports = (stack) => {
         if(parentCommand) {
           stack.command = parentCommand 
         } else {
-          stack.command = null 
+          result = _l.cloneDeep(stack.command.body)
         }
       }
     )
+
+    return result 
+
   }
 
   stack.load = (path, callback) => stack.fire(path,callback,true)

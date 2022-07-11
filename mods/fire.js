@@ -89,11 +89,9 @@ module.exports = (stack) => {
 
     //determine if we need to wait for current command to finish...
     //OR if we need to immediately invoke a new loop...
-    if(command.parentListener) log('command.parentListener is true')
-    if(stack.queue.length) log('async stack has a queue')
+    // if(command.parentListener) log('command.parentListener is true')
+    // if(stack.queue.length) log('async stack has a queue')
     if(!sync && !command.parentListener && stack.queue.length > 1) return //< if there is already a command in queue, wait unles...
-    log('executing')
-    log(command.path)
 
     //otherwise proceed with a fresh loop from the top of the stack.queue...
 
@@ -153,7 +151,6 @@ module.exports = (stack) => {
         })
       },
       (parentCommand) => {
-        debugger
         stack.previousCommand = stack.command
         if(parentCommand) {
           stack.command = parentCommand 

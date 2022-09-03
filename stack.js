@@ -5,6 +5,7 @@ const { find, isFunction, isString,
   isNull, filter, clone, map, chain, 
   value, isBoolean, merge } = require('lodash') 
 const fnArgs = require('function-arguments')
+const isAsyncFn = require('is-async-function') 
 
 const prefixPath = path => 
   path.substr(0, 1) != '/' ? '/' + path : path 
@@ -86,7 +87,11 @@ const loop = async (command, matchedListeners) =>
   await new Promise( async r => {
   log('loop')
   for(const listener of listeners) {
-    await listener.func()
+    if(isAsyncFn(listener.func)) {
+      await listener.func()
+    } else {
+      listener.func() 
+    }
   }
   r()
 })

@@ -32,5 +32,4 @@ test('basic sync example', t => {
   t.equals(listener, 'third', 'sequence ran in order') 
 
   t.end() 
-}) 
-
+})    

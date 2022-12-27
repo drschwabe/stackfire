@@ -1,4 +1,12 @@
-const { log, warn } = console
+//accommodate for environment without console: 
+//(ex: Quickjs without os module imported) 
+let log, warn 
+if(console) {
+  log = console.log
+  warn = console.warn
+} else {
+  log = warn = () => null 
+}
 
 const routeParser = require('route-parser')
 const { find, isFunction, isString, 
@@ -15,12 +23,12 @@ const stack = {}
 let listeners = []
 
 stack.on = (...params) => {
-  log('stack.on') 
   if(isArray(params[0])) {
     return params[0].forEach( path => 
       stack.on(path, ..._.rest( params ))
     )
   }   
+  //log('stack.on') 
   const path = prefixPath(params[0]) //< ensure prefixed with '/'
   const func = find(params, (param) => isFunction(param))
   const onceOnly = find(params, param => isBoolean(param))
@@ -46,12 +54,12 @@ stack.on = (...params) => {
 
 stack.fire = async (...params) => 
   await new Promise( async r => {
-  log('stack.fire') 
   let path = find(params, param => isString(param))
   const callback = find( params, param => isFunction(param) )
   
   if(!path) path = Date.now().toString() //< create a one off
   path = prefixPath(path)
+  //log(`stack.fire('${path}')`) 
 
   //create a command
   let command = { path : path, params : null }      
@@ -91,7 +99,7 @@ stack.fire = async (...params) =>
 
 const loop = async (command, matchedListeners) => 
   await new Promise( async r => {
-  log('loop')
+  //log('loop')
   for(const listener of matchedListeners) {
     if(isAsyncFn(listener.func)) {
       await listener.func()

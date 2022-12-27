@@ -3,7 +3,8 @@ const { log, warn } = console
 const routeParser = require('route-parser')
 const { find, isFunction, isString, 
   isNull, filter, clone, map, chain, 
-  value, isBoolean, merge } = require('lodash') 
+  value, isBoolean, isArray,  merge, isObject } = require('lodash') 
+const _ = require('underscore')
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
 
@@ -15,6 +16,11 @@ let listeners = []
 
 stack.on = (...params) => {
   log('stack.on') 
+  if(isArray(params[0])) {
+    return params[0].forEach( path => 
+      stack.on(path, ..._.rest( params ))
+    )
+  }   
   const path = prefixPath(params[0]) //< ensure prefixed with '/'
   const func = find(params, (param) => isFunction(param))
   const onceOnly = find(params, param => isBoolean(param))
@@ -86,7 +92,7 @@ stack.fire = async (...params) =>
 const loop = async (command, matchedListeners) => 
   await new Promise( async r => {
   log('loop')
-  for(const listener of listeners) {
+  for(const listener of matchedListeners) {
     if(isAsyncFn(listener.func)) {
       await listener.func()
     } else {

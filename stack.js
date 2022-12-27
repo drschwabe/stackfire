@@ -22,6 +22,8 @@ const prefixPath = path =>
 const stack = {}
 let listeners = []
 
+let command 
+
 stack.on = (...params) => {
   if(isArray(params[0])) {
     return params[0].forEach( path => 
@@ -48,21 +50,23 @@ stack.on = (...params) => {
   }
   
   if(onceOnly) listener.onceOnly = true
-
   listeners.push(listener) 
 }
 
 stack.fire = async (...params) => 
   await new Promise( async r => {
   let path = find(params, param => isString(param))
-  const callback = find( params, param => isFunction(param) )
+  const callback = find( params, param => isFunction(param))
+  let body = find(params, param => isObject(param))  
+  if(!body) body = find(params, param => param !== path 
+    && isString(param))  
   
   if(!path) path = Date.now().toString() //< create a one off
   path = prefixPath(path)
   //log(`stack.fire('${path}')`) 
 
   //create a command
-  let command = { path : path, params : null }      
+  command = { path : path, params : null, body }      
 
   //is there a callback?  add it now as a listener
   if(callback) {
@@ -109,5 +113,7 @@ const loop = async (command, matchedListeners) =>
   }
   r()
 })
+
+stack.body = () => command.body 
 
 module.exports = stack

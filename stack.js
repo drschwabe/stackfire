@@ -116,4 +116,7 @@ const loop = async (command, matchedListeners) =>
 
 stack.body = () => command.body 
 
+stack.flush = () => 
+  listeners = [] //< empty listener array 
+
 module.exports = stack

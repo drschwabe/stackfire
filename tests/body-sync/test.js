@@ -9,8 +9,8 @@ test("Stack body as string or object", t => {
 
   //with a body that is an object: 
   stack.on('green', () => {
-    t.ok( _l.isObject( stack.body() ))
-    t.equals(stack.body().hex, '#008000', 
+    t.ok( _l.isObject( stack.body ))
+    t.equals(stack.body.hex, '#008000', 
       'body (object) has expected property')
   })
 
@@ -18,11 +18,11 @@ test("Stack body as string or object", t => {
 
   //body a string:
   stack.on('red', () => {
-    t.ok( _l.isString( stack.body() ), 'body is a string')
-    t.equals(stack.body(), '#ff0000', 
+    t.ok( _l.isString( stack.body ), 'body is a string')
+    t.equals(stack.body, '#ff0000', 
       'body (string) has expected value ')
   })
 
   stack.fire('red', '#ff0000')
 
-})  
+})

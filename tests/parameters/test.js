@@ -6,9 +6,9 @@ test('Parameter test', t => {
   t.plan(3)
 
   stack.on('/inventory/:item/deliver', () => {
-    t.equals(stack.path(), '/inventory/widget/deliver', 
+    t.equals(stack.path, '/inventory/widget/deliver', 
       'expected listener invoked')
-    t.equals(stack.params().item, 'widget', 
+    t.equals(stack.params.item, 'widget', 
       'parameter is included on the command')
   })
 

@@ -112,13 +112,30 @@ const loop = async (command, matchedListeners) =>
     }
   }
   r()
-})
-
-stack.body = () => command.body 
-stack.params = () => command.params 
-stack.path = () => command.path
+})              
 
 stack.flush = () => 
   listeners = [] //< empty listener array 
 
-module.exports = stack
+//Proxy to ensure we get the live command result for 
+//body, params, and path (when calling stack.body, etc) 
+const proxiedStack = new Proxy(stack, {
+  get(target, property) {
+    if (property === 'body') {
+      let body = () => command.body 
+      return body()  
+    }
+    if (property === 'params') {
+      let params = () => command.params 
+      return params()  
+    }  
+    if (property === 'path') {
+      let path = () => command.path
+      return path()  
+    } 
+    return target[property]
+  }
+})   
+
+
+module.exports = proxiedStack 

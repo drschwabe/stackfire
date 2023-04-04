@@ -66,11 +66,11 @@ stack.fire = async (...params) =>
   //log(`stack.fire('${path}')`) 
 
   //create a command
-  command = { path : path, params : null, body }      
+  let newCommand = { path : path, params : null, body }      
 
   //is there a callback?  add it now as a listener
   if(callback) {
-    command.callback = callback
+    newCommand.callback = callback
     stack.on(path, callback, true)
   }    
 
@@ -81,8 +81,8 @@ stack.fire = async (...params) =>
     //resulting match is an object containing params,
     //so collect them now...
     if(match) { //make object if not already...
-      if(isNull(command.params)) command.params = {}
-      command.params = merge(command.params, match)
+      if(isNull(newCommand.params)) newCommand.params = {}
+      newCommand.params = merge(newCommand.params, match)
     }
     return match
   }).map(
@@ -96,14 +96,25 @@ stack.fire = async (...params) =>
     .compact().value()                                     
 
   //loop! 
+  if(looping) {
+    return fireQ.push({ command: newCommand, matchedListeners }) 
+  }
+  command = newCommand //< set the active command
   await loop(command, matchedListeners) 
+  while(fireQ.length) {
+    let nextCommandSet = fireQ.shift()
+    command = nextCommandSet.command 
+    await loop(nextCommandSet.command, nextCommandSet.matchedListeners) 
+  }
   r() 
 })
 
 
+const fireQ = [] 
+let looping = false 
 const loop = async (command, matchedListeners) => 
   await new Promise( async r => {
-  //log('loop')
+  looping = true 
   for(const listener of matchedListeners) {
     if(isAsyncFn(listener.func)) {
       await listener.func()
@@ -111,6 +122,7 @@ const loop = async (command, matchedListeners) =>
       listener.func() 
     }
   }
+  looping = false 
   r()
 })              
 

@@ -115,6 +115,8 @@ const loop = async (command, matchedListeners) =>
 })
 
 stack.body = () => command.body 
+stack.params = () => command.params 
+stack.path = () => command.path
 
 stack.flush = () => 
   listeners = [] //< empty listener array 

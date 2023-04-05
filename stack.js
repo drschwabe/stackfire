@@ -154,34 +154,15 @@ const proxiedStack = new Proxy(stack, {
 })   
 
 
+// Utility events; linear array of
+// fns that can be added by internal/external mods
 stack.utils = []
-
 const stackUtil = (eventName, detail) => {
   stack.utils.forEach(util => 
     util(eventName, detail)      
   )
 } 
 
-const logUtil = (event, details) => {
-  if(!details.path) details.path = '' 
-  if(details.path === 'frame' || details.path === '/frame') return 
-  if(event === 'fire_started') { 
-    log(`
-##############################
-#stack.fire('${details.path}')
------------------------------`)  
-  } 
-
-  if(event === 'listener_invoked') {
-    log(`-->stack.on('${details.path}')---------`) 
-  } else if(event === 'fire_complete') {
-    log(`
--->stack.f('${details.path}') completed. 
------------------------------`) 
-  }      
-}
-
-stack.logUtil = () => 
-  stack.utils.push(logUtil)  
+stack.logUtil = require('./mods/log-util.js') 
 
 module.exports = proxiedStack 

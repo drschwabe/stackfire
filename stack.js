@@ -105,6 +105,7 @@ stack.fire = async (...params) =>
     let nextCommandSet = fireQ.shift()
     command = nextCommandSet.command 
     await loop(nextCommandSet.command, nextCommandSet.matchedListeners) 
+    command = null 
   }
   r() 
 })

@@ -62,8 +62,7 @@ stack.fire = async (...params) =>
     && isString(param))  
   
   if(!path) path = Date.now().toString() //< create a one off
-  path = prefixPath(path)
-  //log(`stack.fire('${path}')`) 
+  path = prefixPath(path) 
 
   //create a command
   let newCommand = { path : path, params : null, body }      
@@ -101,6 +100,7 @@ stack.fire = async (...params) =>
   }
   command = newCommand //< set the active command
   await loop(command, matchedListeners) 
+
   while(fireQ.length) {
     let nextCommandSet = fireQ.shift()
     command = nextCommandSet.command 

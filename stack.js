@@ -115,14 +115,17 @@ const fireQ = []
 let looping = false 
 const loop = async (command, matchedListeners) => 
   await new Promise( async r => {
+  stackUtil('fire_started', command )    
   looping = true 
   for(const listener of matchedListeners) {
+    stackUtil('listener_invoked', command)     
     if(isAsyncFn(listener.func)) {
       await listener.func()
     } else {
       listener.func() 
     }
   }
+  stackUtil('fire_complete', command)     
   looping = false 
   r()
 })              
@@ -150,5 +153,35 @@ const proxiedStack = new Proxy(stack, {
   }
 })   
 
+
+stack.utils = []
+
+const stackUtil = (eventName, detail) => {
+  stack.utils.forEach(util => 
+    util(eventName, detail)      
+  )
+} 
+
+const logUtil = (event, details) => {
+  if(!details.path) details.path = '' 
+  if(details.path === 'frame' || details.path === '/frame') return 
+  if(event === 'fire_started') { 
+    log(`
+##############################
+#stack.fire('${details.path}')
+-----------------------------`)  
+  } 
+
+  if(event === 'listener_invoked') {
+    log(`-->stack.on('${details.path}')---------`) 
+  } else if(event === 'fire_complete') {
+    log(`
+-->stack.f('${details.path}') completed. 
+-----------------------------`) 
+  }      
+}
+
+stack.logUtil = () => 
+  stack.utils.push(logUtil)  
 
 module.exports = proxiedStack 

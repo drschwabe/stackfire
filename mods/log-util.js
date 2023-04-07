@@ -1,3 +1,4 @@
+const { log } = console 
 const logUtil = (event, details) => {
   if(!details.path) details.path = '' 
   if(details.path === 'frame' || details.path === '/frame') return 
@@ -17,5 +18,5 @@ const logUtil = (event, details) => {
   }      
 }
 
-module.exports = () => 
-  stack.utils.push(logUtil) 
+module.exports = logUtil 
+

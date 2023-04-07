@@ -133,6 +133,19 @@ const loop = async (command, matchedListeners) =>
 stack.flush = () => 
   listeners = [] //< empty listener array 
 
+
+// Utility events; linear array of
+// fns that can be added by internal/external mods
+stack.utils = []
+const stackUtil = (eventName, detail) => {
+  stack.utils.forEach(util => 
+    util(eventName, detail)      
+  )
+} 
+
+stack.logUtil = require('./mods/log-util.js')(stack)  
+
+
 //Proxy to ensure we get the live command result for 
 //body, params, and path (when calling stack.body, etc) 
 const proxiedStack = new Proxy(stack, {
@@ -151,18 +164,6 @@ const proxiedStack = new Proxy(stack, {
     } 
     return target[property]
   }
-})   
-
-
-// Utility events; linear array of
-// fns that can be added by internal/external mods
-stack.utils = []
-const stackUtil = (eventName, detail) => {
-  stack.utils.forEach(util => 
-    util(eventName, detail)      
-  )
-} 
-
-stack.logUtil = require('./mods/log-util.js') 
+})         
 
 module.exports = proxiedStack 

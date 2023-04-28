@@ -115,17 +115,17 @@ const fireQ = []
 let looping = false 
 const loop = async (command, matchedListeners) => 
   await new Promise( async r => {
-  stackUtil('fire_started', command )    
+  await stackUtil('fire_started', command )    
   looping = true 
   for(const listener of matchedListeners) {
-    stackUtil('listener_invoked', command)     
+    await stackUtil('listener_invoked', command)     
     if(isAsyncFn(listener.func)) {
       await listener.func()
     } else {
       listener.func() 
     }
   }
-  stackUtil('fire_complete', command)     
+  await stackUtil('fire_complete', command)     
   looping = false 
   r()
 })              
@@ -137,14 +137,21 @@ stack.flush = () =>
 // Utility events; linear array of
 // fns that can be added by internal/external mods
 stack.utils = []
-const stackUtil = (eventName, detail) => {
-  stack.utils.forEach(util => 
-    util(eventName, detail)      
-  )
-} 
+const stackUtil = (eventName, detail) => 
+  new Promise( async (r) => {
+    for await (const util of stack.utils) {
+      await util(eventName, detail)      
+    }
+    r() 
+  }) 
 
-stack.logUtil = require('./mods/log-util.js')(stack)  
-
+//Stock utility event 'logUtil': 
+const logUtil = require('./mods/log-util.js') 
+//to be called in the context of your app after
+//instantiating a new stack: 
+stack.logUtil = () => {
+  stack.utils.push(logUtil) 
+}
 
 //Proxy to ensure we get the live command result for 
 //body, params, and path (when calling stack.body, etc) 

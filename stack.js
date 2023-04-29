@@ -60,6 +60,7 @@ stack.fire = async (...params) =>
   let body = find(params, param => isObject(param))  
   if(!body) body = find(params, param => param !== path 
     && isString(param))  
+  let branch = find(params, param => isBoolean(param))
   
   if(!path) path = Date.now().toString() //< create a one off
   path = prefixPath(path) 
@@ -94,12 +95,19 @@ stack.fire = async (...params) =>
     .map(listener => listener.onceOnly ? false : listener)
     .compact().value()                                     
 
+
+  let result 
+  if(branch) {
+    command = newCommand
+    result = await loop(newCommand, matchedListeners) 
+    return r( result )  
+  }
+
   //loop! 
   if(looping) {
     return fireQ.push({ command: newCommand, matchedListeners }) 
   }
   command = newCommand //< set the active command
-  let result 
   result = await loop(command, matchedListeners) 
 
   while(fireQ.length) {
@@ -111,6 +119,12 @@ stack.fire = async (...params) =>
   }
   r(result) 
 })
+
+stack.branch = async (...params) =>
+  await new Promise( async r => {
+  let result = await stack.fire(...params, true) 
+  r( result ) 
+}) 
 
 
 const fireQ = [] 

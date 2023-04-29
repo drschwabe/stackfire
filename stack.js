@@ -99,15 +99,17 @@ stack.fire = async (...params) =>
     return fireQ.push({ command: newCommand, matchedListeners }) 
   }
   command = newCommand //< set the active command
-  await loop(command, matchedListeners) 
+  let result 
+  result = await loop(command, matchedListeners) 
 
   while(fireQ.length) {
     let nextCommandSet = fireQ.shift()
     command = nextCommandSet.command 
-    await loop(nextCommandSet.command, nextCommandSet.matchedListeners) 
+    result = await loop(nextCommandSet.command, 
+      nextCommandSet.matchedListeners) 
     command = null 
   }
-  r() 
+  r(result) 
 })
 
 
@@ -118,16 +120,24 @@ const loop = async (command, matchedListeners) =>
   await stackUtil('fire_started', command )    
   looping = true 
   for(const listener of matchedListeners) {
+    let newBody 
     await stackUtil('listener_invoked', command)     
     if(isAsyncFn(listener.func)) {
-      await listener.func()
+      newBody = await listener.func()
     } else {
-      listener.func() 
+      newBody = listener.func() 
     }
+    if(newBody === false || newBody === null ) {
+      command.body = null 
+    } else if(newBody) {
+      command.body = newBody 
+    } 
+    //(undefined newBody will not overwrite the command's
+    // previous .body value) 
   }
   await stackUtil('fire_complete', command)     
   looping = false 
-  r()
+  r(command.body)
 })              
 
 stack.flush = () => 

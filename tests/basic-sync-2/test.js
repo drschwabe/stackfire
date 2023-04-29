@@ -2,7 +2,7 @@ const { log, warn } = console
 const stack = require('../../stack.js')
 const test = require('tape')
 
-test('basic sync example #2 - only fired listener invoked', t => { 
+test('basic sync example #2 - only fired listener invoked', async t => { 
 
   stack.on('/KEY_UP', () => {
     t.pass('correct listener invoked') 
@@ -12,7 +12,8 @@ test('basic sync example #2 - only fired listener invoked', t => {
     t.fail('incorrect listener invoked!') 
   })  
 
-  stack.fire('KEY_UP') 
+  await stack.fire('KEY_UP') 
+  
   t.end()
 
 }) 

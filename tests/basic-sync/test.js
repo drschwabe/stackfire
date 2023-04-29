@@ -2,7 +2,7 @@ const { log, warn } = console
 const stack = require('../../stack.js')
 const test = require('tape')
 
-test('basic sync example', t => { 
+test('basic sync example', async t => { 
   let listener
 
   let firstSip = () => { 
@@ -27,7 +27,7 @@ test('basic sync example', t => {
   stack.on('sip latte', secondSip) 
   stack.on('sip latte', thirdSip) 
 
-  stack.fire('sip latte') 
+  await stack.fire('sip latte') 
 
   t.equals(listener, 'third', 'sequence ran in order') 
 

@@ -4,7 +4,7 @@ const test = require('tape')
 const _l = require('lodash') 
 
 
-test("Stack body as string or object", t => {
+test("Stack body as string or object", async t => {
   t.plan(4)
 
   //with a body that is an object: 
@@ -14,7 +14,7 @@ test("Stack body as string or object", t => {
       'body (object) has expected property')
   })
 
-  stack.fire('green', { hex : '#008000' })
+  await stack.fire('green', { hex : '#008000' })
 
   //body a string:
   stack.on('red', () => {
@@ -23,6 +23,6 @@ test("Stack body as string or object", t => {
       'body (string) has expected value ')
   })
 
-  stack.fire('red', '#ff0000')
+  await stack.fire('red', '#ff0000')
 
 })

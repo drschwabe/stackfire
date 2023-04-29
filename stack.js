@@ -98,6 +98,7 @@ stack.fire = async (...params) =>
 
   let result 
   if(branch) {
+    newCommand.branch = true 
     command = newCommand
     result = await loop(newCommand, matchedListeners) 
     return r( result )  

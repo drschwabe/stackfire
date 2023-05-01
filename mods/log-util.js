@@ -1,19 +1,20 @@
 const { log } = console 
-const logUtil = (event, details) => {
-  if(!details.path) details.path = '' 
-  if(details.path === 'frame' || details.path === '/frame') return 
+const logUtil = (event, command, listener) => {
+  if(!command.path) command.path = '' 
+  //if(command.path === 'frame' || command.path === '/frame') return 
+  //todo^ blacklist feature 
   if(event === 'fire_started') { 
     log(`
 ##############################
-#stack.fire('${details.path}')
+#stack.fire('${command.path}')
 -----------------------------`)  
   } 
 
   if(event === 'listener_invoked') {
-    log(`-->stack.on('${details.path}')---------`) 
+    log(`-->stack.on('${command.path}')---------`) 
   } else if(event === 'fire_complete') {
     log(`
--->stack.f('${details.path}') completed. 
+-->stack.f('${command.path}') completed. 
 -----------------------------`) 
   }      
 }

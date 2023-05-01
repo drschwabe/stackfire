@@ -140,7 +140,8 @@ const loop = async (command, matchedListeners) =>
   looping = true 
   for(const listener of matchedListeners) {
     let newBody 
-    await stackUtil('listener_invoked', command)     
+    await stackUtil('listener_invoked',
+      { command, listener })     
     if(isAsyncFn(listener.func)) {
       newBody = await listener.func()
     } else {

@@ -95,12 +95,16 @@ stack.fire = async (...params) =>
     .map(listener => listener.onceOnly ? false : listener)
     .compact().value()                                     
 
-
   let result 
+  let parentCommand 
   if(branch) {
+    //keep track of parent: 
     newCommand.branch = true 
+    newCommand.parentPath = command.path  
+    parentCommand = clone(command)  
     command = newCommand
     result = await loop(newCommand, matchedListeners) 
+    command = parentCommand 
     return r( result )  
   }
 

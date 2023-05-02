@@ -1,5 +1,10 @@
 const { log } = console 
 const logUtil = (event, command, listener) => {
+  if(command.command || command.listener) {
+    command = command.command
+    listener = command.listener 
+    //todo: rename these params to make more sense
+  }
   if(!command.path) command.path = '' 
   //if(command.path === 'frame' || command.path === '/frame') return 
   //todo^ blacklist feature 
@@ -15,7 +20,8 @@ const logUtil = (event, command, listener) => {
   } else if(event === 'fire_complete') {
     log(`
 -->stack.f('${command.path}') completed. 
------------------------------`) 
+-----------------------------############
+`) 
   }      
 }
 

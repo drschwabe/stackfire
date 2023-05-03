@@ -11,18 +11,21 @@ if(console) {
 const routeParser = require('route-parser')
 const { find, isFunction, isString, 
   isNull, filter, clone, map, chain, 
-  value, isBoolean, isArray,  merge, isObject } = require('lodash') 
+  value, isBoolean, isArray,  merge, 
+  isObject, last } = require('lodash') 
 const _ = require('underscore')
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
+const crypto = require('crypto')
 
 const prefixPath = path => 
   path.substr(0, 1) != '/' ? '/' + path : path 
 
 const stack = {}
 let listeners = []
+let runningListeners = [] 
 
-let command 
+let command, currentListener  
 
 stack.on = (...params) => {
   if(isArray(params[0])) {
@@ -50,6 +53,8 @@ stack.on = (...params) => {
   }
   
   if(onceOnly) listener.onceOnly = true
+
+  listener.id = crypto.randomUUID()  
   listeners.push(listener) 
 }
 
@@ -61,12 +66,21 @@ stack.fire = async (...params) =>
   if(!body) body = find(params, param => param !== path 
     && isString(param))  
   let branch = find(params, param => isBoolean(param))
-  
+  //parent of the branch: 
+  let parentListener = find(params, param=> isObject(param) &&
+    param.func) 
+
   if(!path) path = Date.now().toString() //< create a one off
   path = prefixPath(path) 
 
   //create a command
-  let newCommand = { path : path, params : null, body }      
+  let newCommand = { 
+    id : crypto.randomUUID(), 
+    path : path, params : null, body }      
+
+  if(parentListener) {
+    newCommand.parentListenerId = parentListener.id 
+  }
 
   //is there a callback?  add it now as a listener
   if(callback) {
@@ -105,6 +119,7 @@ stack.fire = async (...params) =>
     command = newCommand
     result = await loop(newCommand, matchedListeners) 
     command = parentCommand 
+    newCommand.parentListener = parentListener 
     return r( result )  
   }
 
@@ -127,7 +142,13 @@ stack.fire = async (...params) =>
 
 stack.branch = async (...params) =>
   await new Promise( async r => {
-  let result = await stack.fire(...params, true) 
+  //determine the current listener in progress...
+  const runningListener = chain(listeners)
+      .filter(listener => listener.running) 
+      .sortBy('runningStart') 
+      .last()
+      .value() 
+  let result = await stack.fire(...params, true, runningListener) 
   r( result ) 
 }) 
 
@@ -140,6 +161,14 @@ const loop = async (command, matchedListeners) =>
   looping = true 
   for(const listener of matchedListeners) {
     let newBody 
+    currentListener = listener 
+    let matchingListener = find(listeners, thatListener => 
+      thatListener.id === listener.id) 
+
+    matchingListener.running = true 
+    matchingListener.runningStart = Date.now() 
+    matchingListener.parentCommandId = command.id 
+
     await stackUtil('listener_invoked',
       { command, listener })     
     if(isAsyncFn(listener.func)) {

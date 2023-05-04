@@ -16,7 +16,15 @@ const { find, isFunction, isString,
 const _ = require('underscore')
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
-const crypto = require('crypto')
+
+
+let crypto
+//NodeJS or client:  
+if (typeof window === 'undefined') {           
+  crypto = require('crypto')
+} else {
+  crypto = global.crypto
+}
 
 const prefixPath = path => 
   path.substr(0, 1) != '/' ? '/' + path : path 

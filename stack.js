@@ -13,10 +13,9 @@ const { find, isFunction, isString,
   isNull, filter, clone, map, chain, 
   value, isBoolean, isArray,  merge, 
   isObject, last } = require('lodash') 
-const _ = require('underscore')
+const { rest } = require('underscore') 
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
-
 
 let crypto
 //NodeJS or client:  
@@ -38,7 +37,7 @@ let command, currentListener
 stack.on = (...params) => {
   if(isArray(params[0])) {
     return params[0].forEach( path => 
-      stack.on(path, ..._.rest( params ))
+      stack.on(path, ...rest( params ))
     )
   }   
   //log('stack.on') 

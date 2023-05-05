@@ -166,7 +166,7 @@ const loop = async (command, matchedListeners) =>
   await new Promise( async r => {
   await stackUtil('fire_started', command )    
   looping = true 
-  for(const listener of matchedListeners) {
+  for await (const listener of matchedListeners) {
     let newBody 
     currentListener = listener 
     let matchingListener = find(listeners, thatListener => 

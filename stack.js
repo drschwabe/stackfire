@@ -184,6 +184,8 @@ const loop = async (command, matchedListeners) =>
     } 
     //(undefined newBody will not overwrite the command's
     // previous .body value) 
+    matchingListener.running = false 
+    matchingListener.runningStop = Date.now() 
 
     if(listener.onceOnly) {
       delete matchingListener

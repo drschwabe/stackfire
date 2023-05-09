@@ -108,13 +108,7 @@ stack.fire = async (...params) =>
     return match
   }).map(
     listener => clone(listener))
-  //^ clone them so we do not mutate the original       
-  
-  //mutate the root listener list to remove any
-  //onceOnly listeners we matched just now:
-  listeners = chain(listeners)
-    .map(listener => listener.onceOnly ? false : listener)
-    .compact().value()                                     
+  //^ clone them so we do not mutate the original                                  
 
   let result 
   let parentCommand 
@@ -190,6 +184,10 @@ const loop = async (command, matchedListeners) =>
     } 
     //(undefined newBody will not overwrite the command's
     // previous .body value) 
+
+    if(listener.onceOnly) {
+      delete matchingListener
+    }
   }
   await stackUtil('fire_complete', command)     
   looping = false 

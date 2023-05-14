@@ -149,6 +149,8 @@ stack.branch = async (...params) =>
       .sortBy('runningStart') 
       .last()
       .value() 
+
+  await stackUtil('fire_branch', { path : params[0] }) 
   let result = await stack.fire(...params, true, runningListener) 
   r( result ) 
 }) 

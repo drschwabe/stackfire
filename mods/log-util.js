@@ -15,6 +15,21 @@ const logUtil = (event, command, listener) => {
 -----------------------------`)  
   } 
 
+ if(event === 'fire_branch') {
+    log(`
+#######-------------------------
+#stack.branch('${command.path}')
+-----------------------------`)  
+  }
+
+  if(event === 'fireQ') {
+    log(`
+------------------------------
+#command has been pushed to the fireQ: '${command.path}'
+#(existing loop in progress) 
+-----------------------------`)  
+  }        
+
   if(event === 'listener_invoked') {
     log(`-->stack.on('${command.path}')---------`) 
   } else if(event === 'fire_complete') {

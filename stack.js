@@ -126,6 +126,7 @@ stack.fire = async (...params) =>
 
   //loop! 
   if(looping) {
+    await stackUtil('fireQ_pushed', newCommand )    
     return fireQ.push({ command: newCommand, matchedListeners }) 
   }
   command = newCommand //< set the active command

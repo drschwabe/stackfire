@@ -176,9 +176,9 @@ const loop = async (command, matchedListeners) =>
     await stackUtil('listener_invoked',
       { command, listener })     
     if(isAsyncFn(listener.func)) {
-      newBody = await listener.func()
+      newBody = await listener.func(command.body)
     } else {
-      newBody = listener.func() 
+      newBody = listener.func(command.body) 
     }
     if(newBody === false || newBody === null ) {
       command.body = null 

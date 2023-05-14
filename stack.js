@@ -229,6 +229,14 @@ stack.logUtil = () => {
 //body, params, and path (when calling stack.body, etc) 
 const proxiedStack = new Proxy(stack, {
   get(target, property) {
+    if (property === 'listeners') {
+      let theListeners = () => listeners  
+      return theListeners()  
+    }  
+    if (property === 'command') {
+      let theCommand = () => command 
+      return theCommand()  
+    }   
     if (property === 'body') {
       let body = () => command.body 
       return body()  

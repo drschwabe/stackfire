@@ -191,6 +191,9 @@ const loop = async (command, matchedListeners) =>
     matchingListener.runningStop = Date.now() 
 
     if(listener.onceOnly) {
+      listeners = filter( listeners, listener => 
+        listener.id !== matchingListener.id
+      ) 
       delete matchingListener
     }
   }

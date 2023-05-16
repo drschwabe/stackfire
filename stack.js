@@ -253,6 +253,10 @@ stack.logUtil = () => {
 //body, params, and path (when calling stack.body, etc) 
 const proxiedStack = new Proxy(stack, {
   get(target, property) {
+    if (property === 'fireQ') {
+      let theFireQ = () => fireQ
+      return theFireQ()  
+    }   
     if (property === 'listeners') {
       let theListeners = () => listeners  
       return theListeners()  

@@ -22,7 +22,7 @@ const logUtil = (event, command, listener) => {
 -----------------------------`)  
   }
 
-  if(event === 'fireQ') {
+  if(event === 'fireQ_appended') {
     log(`
 ------------------------------
 #command has been pushed to the fireQ: '${command.path}'

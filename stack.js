@@ -125,21 +125,27 @@ stack.fire = async (...params) =>
   }
 
   //loop! 
+  let fireQed 
   if(looping) {
-    await stackUtil('fireQ_pushed', newCommand )    
-    return fireQ.push({ command: newCommand, matchedListeners }) 
+    fireQ.push({ command: newCommand, matchedListeners, promise: r }) 
+    await stackUtil('fireQ_appended', newCommand )    
+    //log('## fireQ: ##') 
+    //log(fireQ) 
+    fireQed = true 
+  } else {
+    command = newCommand //< set the active command
+    result = await loop(command, matchedListeners)                  
   }
-  command = newCommand //< set the active command
-  result = await loop(command, matchedListeners) 
-
-  while(fireQ.length) {
+ 
+  while(!looping && fireQ.length) {
     let nextCommandSet = fireQ.shift()
     command = nextCommandSet.command 
     result = await loop(nextCommandSet.command, 
-      nextCommandSet.matchedListeners) 
-    command = null 
+    nextCommandSet.matchedListeners) 
+    nextCommandSet.promise(result) 
   }
-  r(result) 
+
+  if(!fireQed) r(result) 
 })
 
 stack.branch = async (...params) =>
@@ -159,12 +165,14 @@ stack.branch = async (...params) =>
 
 const fireQ = [] 
 let looping = false 
-const loop = async (command, matchedListeners) => 
+const loop = async (activeCommand, matchedListeners) => 
   await new Promise( async r => {
-  await stackUtil('fire_started', command )    
+  await stackUtil('fire_started', activeCommand )    
   looping = true 
+  command = activeCommand
+  let doBreak 
   for await (const listener of matchedListeners) {
-    let newBody 
+    let newBody  
     currentListener = listener 
     let matchingListener = find(listeners, thatListener => 
       thatListener.id === listener.id) 
@@ -176,14 +184,18 @@ const loop = async (command, matchedListeners) =>
     await stackUtil('listener_invoked',
       { command, listener })     
     if(isAsyncFn(listener.func)) {
-      newBody = await listener.func(command.body)
+      newBody = await listener.func(activeCommand.body)
     } else {
-      newBody = listener.func(command.body) 
+      newBody = listener.func(activeCommand.body) 
     }
-    if(newBody === false || newBody === null ) {
-      command.body = null 
+    if(newBody === null ) {
+      activeCommand.body = null 
+    } else if(newBody === false) {
+      //the listener has cancelled the command 
+      doBreak = true
+      activeCommand.body = false 
     } else if(newBody) {
-      command.body = newBody 
+      activeCommand.body = newBody 
     } 
     //(undefined newBody will not overwrite the command's
     // previous .body value) 
@@ -196,10 +208,22 @@ const loop = async (command, matchedListeners) =>
       ) 
       delete matchingListener
     }
+    if(doBreak) {
+      log('do break!') 
+      break 
+      return 
+    }
   }
+
+  //we have to remove the onceOnly's if a break happened: 
+  if(doBreak) {
+    listeners = filter( listeners, 
+      listener => !listener.onceOnly) 
+  }
+
   await stackUtil('fire_complete', command)     
   looping = false 
-  r(command.body)
+  r(activeCommand.body)
 })              
 
 stack.flush = () => 

@@ -177,6 +177,11 @@ const loop = async (activeCommand, matchedListeners) =>
     let matchingListener = find(listeners, thatListener => 
       thatListener.id === listener.id) 
 
+    if(!matchingListener) {
+      warn('could not find a matching listener (skipping)') 
+      continue
+    } 
+
     matchingListener.running = true 
     matchingListener.runningStart = Date.now() 
     matchingListener.parentCommandId = command.id 

@@ -200,7 +200,15 @@ const loop = async (activeCommand, matchedListeners) =>
       doBreak = true
       activeCommand.body = false 
     } else if(newBody) {
-      activeCommand.body = newBody 
+      //if the new body is object (and not an array) 
+      //we merge it into the original (if it was also an obj)  
+      if(isObject(newBody) && isObject(activeCommand.body) 
+      && !isArray(newBody) && !isArray(activeCommand.body)) {
+        //todo: do not merge if obj has key/value:  { _sfMerge : false } 
+        activeCommand.body = merge(activeCommand.body, newBody) 
+      } else {
+        activeCommand.body = newBody 
+      }
     } 
     //(undefined newBody will not overwrite the command's
     // previous .body value) 

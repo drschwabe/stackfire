@@ -184,10 +184,10 @@ const loop = async (activeCommand, matchedListeners) =>
 
     matchingListener.running = true 
     matchingListener.runningStart = Date.now() 
-    matchingListener.parentCommandId = command.id 
+    matchingListener.parentCommandId = activeCommand.id 
 
     await stackUtil('listener_invoked',
-      { command, listener })     
+      { command: activeCommand, listener : matchingListener })     
     if(isAsyncFn(listener.func)) {
       newBody = await listener.func(activeCommand.body)
     } else {
@@ -234,7 +234,7 @@ const loop = async (activeCommand, matchedListeners) =>
       listener => !listener.onceOnly) 
   }
 
-  await stackUtil('fire_complete', command)     
+  await stackUtil('fire_complete', activeCommand)     
   looping = false 
   r(activeCommand.body)
 })              

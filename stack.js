@@ -116,6 +116,7 @@ stack.fire = async (...params) =>
     //keep track of parent: 
     newCommand.branch = true 
     newCommand.parentPath = command.path  
+    newCommand.parentCommandId = command.id 
     parentCommand = clone(command)  
     command = newCommand
     result = await loop(newCommand, matchedListeners) 

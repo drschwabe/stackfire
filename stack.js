@@ -220,7 +220,7 @@ const loop = async (activeCommand, matchedListeners) =>
       listeners = filter( listeners, listener => 
         listener.id !== matchingListener.id
       ) 
-      delete matchingListener
+      //delete matchingListener
     }
     if(doBreak) {
       log('do break!') 

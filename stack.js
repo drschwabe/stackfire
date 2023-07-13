@@ -204,8 +204,9 @@ const loop = async (activeCommand, matchedListeners) =>
       //if the new body is object (and not an array) 
       //we merge it into the original (if it was also an obj)  
       if(isObject(newBody) && isObject(activeCommand.body) 
-      && !isArray(newBody) && !isArray(activeCommand.body)) {
-        //todo: do not merge if obj has key/value:  { _sfMerge : false } 
+      && !isArray(newBody) && !isArray(activeCommand.body)
+      && newBody._stackfireMerge) {
+        delete newBody._stackfireMerge 
         activeCommand.body = merge(activeCommand.body, newBody) 
       } else {
         activeCommand.body = newBody 
@@ -239,6 +240,12 @@ const loop = async (activeCommand, matchedListeners) =>
   looping = false 
   r(activeCommand.body)
 })              
+
+
+stack.merge = newBody => {
+  newBody._stackfireMerge = true 
+  return newBody 
+} 
 
 stack.flush = () => 
   listeners = [] //< empty listener array 

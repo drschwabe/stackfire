@@ -11,8 +11,8 @@ if(console) {
 const routeParser = require('route-parser')
 const { find, isFunction, isString, 
   isNull, filter, clone, map, chain, 
-  value, isBoolean, isArray,  merge, 
-  isObject, last } = require('lodash') 
+  value, isBoolean, isArray, isNumber, merge, 
+  isObject, last, sortBy, indexOf } = require('lodash') 
 const { rest } = require('underscore') 
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
@@ -44,6 +44,7 @@ stack.on = (...params) => {
   const path = prefixPath(params[0]) //< ensure prefixed with '/'
   const func = find(params, (param) => isFunction(param))
   const onceOnly = find(params, param => isBoolean(param))
+  const priority = find(params, (param) => isNumber(param))
 
   //Establish a listener obj...
   let listener = {
@@ -59,11 +60,14 @@ stack.on = (...params) => {
     //cud accommodate the next argument as first param too... 
   }
   
+  if(priority) listener.priority = priority
   if(onceOnly) listener.onceOnly = true
 
   listener.id = crypto.randomUUID()  
   listeners.push(listener) 
 }
+
+stack.last = (...params) => stack.on(...params, 500)
 
 stack.fire = async (...params) => 
   await new Promise( async r => {
@@ -96,7 +100,7 @@ stack.fire = async (...params) =>
   }    
 
   //find matching listeners:
-  const matchedListeners = filter(listeners, 
+  let matchedListeners = filter(listeners, 
     listener => {
     let match = listener.route.match(path)
     //resulting match is an object containing params,
@@ -108,7 +112,14 @@ stack.fire = async (...params) =>
     return match
   }).map(
     listener => clone(listener))
-  //^ clone them so we do not mutate the original                                  
+      //^ clone them so we do not mutate the original   
+
+  matchedListeners.map( listener => {
+    if(!listener.priority) listener.priority =
+    indexOf(matchedListeners, listener) + 10
+    return listener 
+  })
+  matchedListeners = sortBy(matchedListeners, 'priority')
 
   let result 
   let parentCommand 

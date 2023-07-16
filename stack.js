@@ -89,6 +89,11 @@ stack.fire = async (...params) =>
     id : crypto.randomUUID(), 
     path : path, params : null, body }      
 
+  if(body && body._stackfireStore) {
+    delete body._stackfireStore
+    newCommand.store = clone(body)  
+  }
+
   if(parentListener) {
     newCommand.parentListenerId = parentListener.id 
   }
@@ -300,6 +305,10 @@ const proxiedStack = new Proxy(stack, {
     if (property === 'body') {
       let body = () => command.body 
       return body()  
+    }
+    if (property === 'store' ) {
+      let store = ()=> command.store 
+      return store() 
     }
     if (property === 'params') {
       let params = () => command.params 

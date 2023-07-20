@@ -67,6 +67,13 @@ stack.on = (...params) => {
   listeners.push(listener) 
 }
 
+stack.first = (...params) => stack.on(...params, 1)
+stack.second = (...params) => stack.on(...params, 2)
+stack.third = (...params) => stack.on(...params, 3)
+stack.fourth = (...params) => stack.on(...params, 4)
+stack.fifth = (...params) => stack.on(...params, 5)
+stack.sixth = (...params) => stack.on(...params, 6)
+
 stack.last = (...params) => stack.on(...params, 500)
 
 stack.fire = async (...params) => 

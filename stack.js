@@ -10,12 +10,14 @@ if(console) {
 
 const routeParser = require('route-parser')
 const { find, isFunction, isString, 
-  isNull, filter, clone, map, chain, 
-  value, isBoolean, isArray, isNumber, merge, 
+  isNull, filter, map, chain, 
+  value, isBoolean, isArray, clone, isNumber, merge, 
   isObject, last, sortBy, indexOf } = require('lodash') 
 const { rest } = require('underscore') 
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
+const {removeSync} = require("circular-reference-remover") 
+
 
 let crypto
 //NodeJS or client:  
@@ -98,6 +100,7 @@ stack.fire = async (...params) =>
 
   if(body && body._stackfireStore) {
     delete body._stackfireStore
+    body = removeSync(body)
     newCommand.store = clone(body)  
   }
 

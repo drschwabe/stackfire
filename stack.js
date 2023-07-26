@@ -17,6 +17,7 @@ const { rest } = require('underscore')
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
 const {removeSync} = require("circular-reference-remover") 
+const _s = require('underscore.string') 
 
 
 let crypto
@@ -106,6 +107,8 @@ stack.fire = async (...params) =>
 
   if(parentListener) {
     newCommand.parentListenerId = parentListener.id 
+    newCommand.parentListener = parentListener 
+    //^ todo: only include the obj if debugging 
   }
 
   //is there a callback?  add it now as a listener
@@ -149,6 +152,19 @@ stack.fire = async (...params) =>
     command = parentCommand 
     newCommand.parentListener = parentListener 
     return r( result )  
+  } else {
+    //get the original stack.fire function ... 
+    //(so debugger can report location on fs) 
+    let e = new Error()
+    let frame = e.stack.split("\n")[4] // change to 3 for grandparent func
+    let line = frame.split(":").reverse()[1]
+
+    let file = _s(frame).strRightBack('/')
+      .strLeftBack(':').strLeftBack(':').value() 
+
+    newCommand.fireLocation = { 
+      file, line 
+    }
   }
 
   //loop! 
@@ -184,7 +200,10 @@ stack.branch = async (...params) =>
       .last()
       .value() 
 
-  await stackUtil('fire_branch', { path : params[0] }) 
+  await stackUtil('fire_branch', { 
+    path : params[0], 
+    parentListener : runningListener
+  }) 
   let result = await stack.fire(...params, true, runningListener) 
   r( result ) 
 }) 

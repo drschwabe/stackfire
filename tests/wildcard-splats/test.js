@@ -1,9 +1,11 @@
 const { log, warn } = console
-const stack = require('../../stack.js')
 const test = require('tape')
+const importFresh = require('import-fresh') 
 
 test("Can catch wildcards (aka splats) with * character", t => {
   t.plan(3)
+
+  const stack = importFresh('../../stack.js')
 
   stack.on('some/*path', () => {
     t.pass('some/*path invoked!')
@@ -21,6 +23,8 @@ test(`Can catch wildcards (aka splats)
   with * character (using array of paths)`, t => {
   t.plan(4)
 
+  const stack = importFresh('../../stack.js')
+
   stack.on(['some', 'some/*path'], () => 
     //this runs three times: 
     t.pass('some/*path invoked!')
@@ -35,9 +39,11 @@ test(`Can catch wildcards (aka splats)
 })   
 
 
-test.only(`Can catch wildcards (aka splats) 
-  with * character (using array of paths)`, t => {
+test(`Can catch wildcards (aka splats) 
+  with * character (using array of paths) #2`, t => {
   t.plan(3)
+
+  const stack = importFresh('../../stack.js')
 
   stack.on(['some', 'some/*path'], () => 
     //this runs three times: 

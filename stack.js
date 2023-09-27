@@ -16,7 +16,6 @@ const { find, isFunction, isString,
 const { rest } = require('underscore') 
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
-const {removeSync} = require("circular-reference-remover") 
 const _s = require('underscore.string') 
 
 
@@ -101,7 +100,6 @@ stack.fire = async (...params) =>
 
   if(body && body._stackfireStore) {
     delete body._stackfireStore
-    body = removeSync(body)
     newCommand.store = clone(body)  
   }
 

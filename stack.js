@@ -256,6 +256,8 @@ const loop = async (activeCommand, matchedListeners) =>
         activeCommand.body = merge(activeCommand.body, newBody) 
       } else {
         activeCommand.body = newBody 
+        command.body = newBody 
+        //^ seems these objects can diverge hence needing to apply newBody twice
       }
     } 
     //(undefined newBody will not overwrite the command's

@@ -82,13 +82,16 @@ stack.fire = async (...params) =>
   await new Promise( async r => {
   let path = find(params, param => isString(param))
   const callback = find( params, param => isFunction(param))
-  let body = find(params, param => isObject(param))  
-  if(!body) body = find(params, param => param !== path 
-    && isString(param))  
+
   let branch = find(params, param => isBoolean(param))
   //parent of the branch: 
   let parentListener = find(params, param=> isObject(param) &&
-    param.func) 
+    param.func)    
+
+  let body = find(params, param => isObject(param) && param !== parentListener)  
+  if(!body) body = find(params, param => param !== path 
+    && isString(param))  
+
 
   if(!path) path = Date.now().toString() //< create a one off
   path = prefixPath(path) 

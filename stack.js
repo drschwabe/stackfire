@@ -298,6 +298,11 @@ stack.merge = newBody => {
 stack.flush = () => 
   listeners = [] //< empty listener array 
 
+stack.skip = (...params) => {
+  const path = prefixPath(params[0]) //< ensure prefixed with '/'
+  //just create a new .on call which will be a simple pass thru 
+  stack.on(path, () => { warn('skipping this listener') })  
+}
 
 // Utility events; linear array of
 // fns that can be added by internal/external mods

@@ -47,6 +47,8 @@ stack.on = (...params) => {
   const func = find(params, (param) => isFunction(param))
   const onceOnly = find(params, param => isBoolean(param))
   const priority = find(params, (param) => isNumber(param))
+  const extraOptions = find(params, (param) => 
+    isObject(param) && param !== func ) 
 
   //Establish a listener obj...
   let listener = {
@@ -66,6 +68,8 @@ stack.on = (...params) => {
   if(onceOnly) listener.onceOnly = true
 
   listener.id = crypto.randomUUID()  
+
+  if(extraOptions) listener = merge( listener, extraOptions ) 
   listeners.push(listener) 
 }
 
@@ -301,7 +305,7 @@ stack.flush = () =>
 stack.skip = (...params) => {
   const path = prefixPath(params[0]) //< ensure prefixed with '/'
   //just create a new .on call which will be a simple pass thru 
-  stack.on(path, () => { warn('skipping this listener') })  
+  stack.on(path, () => { warn('skipping this listener') }, { skip : true })  
 }
 
 // Utility events; linear array of

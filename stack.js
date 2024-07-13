@@ -19,12 +19,10 @@ const isAsyncFn = require('is-async-function')
 const _s = require('underscore.string') 
 
 
-let crypto
-//NodeJS or client:  
-if (typeof window === 'undefined') {           
-  crypto = require('crypto')
-} else {
-  crypto = global.crypto
+function generateUUID() {
+  const timestamp = Date.now().toString(36)
+  const randomPart = Math.random().toString(36).substring(2, 15)
+  return `${timestamp}-${randomPart}`
 }
 
 const prefixPath = path => 
@@ -67,7 +65,7 @@ stack.on = (...params) => {
   if(priority) listener.priority = priority
   if(onceOnly) listener.onceOnly = true
 
-  listener.id = crypto.randomUUID()  
+  listener.id = generateUUID() 
 
   if(extraOptions) listener = merge( listener, extraOptions ) 
   listeners.push(listener) 
@@ -102,7 +100,7 @@ stack.fire = async (...params) =>
 
   //create a command
   let newCommand = { 
-    id : crypto.randomUUID(), 
+    id : generateUUID(),   
     path : path, params : null, body }      
 
   if(body && body._stackfireStore) {

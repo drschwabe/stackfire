@@ -306,6 +306,19 @@ stack.skip = (...params) => {
   stack.on(path, () => { warn('skipping this listener') }, { skip : true })  
 }
 
+stack.pausing = false 
+
+stack.pause = async () => {
+  log('--- stack.pause invoked (pausing stack) ---') 
+  stack.pausing = true  
+  while (stack.pausing) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+} 
+stack.play = () => {
+  log('--- stack.play (stack resumed) ---') 
+  stack.pausing = false
+}
 // Utility events; linear array of
 // fns that can be added by internal/external mods
 stack.utils = []

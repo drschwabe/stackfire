@@ -10,9 +10,9 @@ if(console) {
 
 const routeParser = require('route-parser')
 const { find, isFunction, isString, 
-  isNull, filter, map, chain, 
-  value, isBoolean, isArray, clone, isNumber, merge, 
-  isObject, last, sortBy, indexOf } = require('lodash') 
+  isNull, filter, chain, 
+  isBoolean, isArray, clone, isNumber, merge, 
+  isObject, sortBy, indexOf } = require('lodash') 
 const { rest } = require('underscore') 
 const fnArgs = require('function-arguments')
 const isAsyncFn = require('is-async-function') 
@@ -30,9 +30,8 @@ const prefixPath = path =>
 
 const stack = {}
 let listeners = []
-let runningListeners = [] 
 
-let command, currentListener  
+let command  
 
 stack.on = (...params) => {
   if(isArray(params[0])) {

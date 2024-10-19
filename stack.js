@@ -223,7 +223,6 @@ const loop = async (activeCommand, matchedListeners) =>
   let doBreak 
   for await (const listener of matchedListeners) {
     let newBody  
-    currentListener = listener 
     let matchingListener = find(listeners, thatListener => 
       thatListener.id === listener.id) 
 

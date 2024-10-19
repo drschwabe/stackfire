@@ -78,6 +78,8 @@ stack.fifth = (...params) => stack.on(...params, 5)
 stack.sixth = (...params) => stack.on(...params, 6)
 
 stack.last = (...params) => stack.on(...params, 500)
+stack.veryLast = (...params) => stack.on(...params, 9999)
+
 
 stack.fire = async (...params) => 
   await new Promise( async r => {

@@ -1,14 +1,14 @@
 {
   "name": "stackfire-5",
-  "version": "5.0.0-alpha-7",
+  "version": "5.0.0-alpha-8",
   "main": "stack.js",
   "scripts": {
     "test": "./tests.sh"
   },
   "devDependencies": {
-    "tap-arc": "0.3.5", 
-    "require-uncached": "2.0.0", 
-    "import-fresh": "^3.3.0"
+    "import-fresh": "^3.3.0",
+    "require-uncached": "2.0.0",
+    "tap-arc": "0.3.5"
   },
   "dependencies": {
     "circular-reference-remover": "^2.1.0",

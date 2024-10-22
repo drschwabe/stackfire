@@ -145,7 +145,7 @@ stack.fire = async (...params) =>
 
   let result 
   let parentCommand 
-  if(branch) {
+  if(branch && command) {
     //keep track of parent: 
     newCommand.branch = true 
     newCommand.parentPath = command.path  

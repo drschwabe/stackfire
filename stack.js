@@ -70,6 +70,7 @@ stack.on = (...params) => {
   listeners.push(listener) 
 }
 
+stack.veryFirst = (...params) => stack.on(...params, -1)
 stack.first = (...params) => stack.on(...params, 1)
 stack.second = (...params) => stack.on(...params, 2)
 stack.third = (...params) => stack.on(...params, 3)

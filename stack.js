@@ -161,11 +161,13 @@ stack.fire = async (...params) =>
     //get the original stack.fire function ... 
     //(so debugger can report location on fs) 
     let e = new Error()
-    let frame = e.stack.split("\n")[4] // change to 3 for grandparent func
-    let line = frame.split(":").reverse()[1]
-
-    let file = _s(frame).strRightBack('/')
-      .strLeftBack(':').strLeftBack(':').value() 
+    let line, file  
+    try {
+      let frame = e.stack.split("\n")[4] // change to 3 for grandparent func
+      line = frame.split(":").reverse()[1]
+      file = _s(frame).strRightBack('/')
+      .strLeftBack(':').strLeftBack(':').value()  
+    } catch(err) { warn(err) } 
 
     newCommand.fireLocation = { 
       file, line 

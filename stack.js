@@ -252,11 +252,17 @@ const loop = async (activeCommand, matchedListeners) =>
       doBreak = true
       activeCommand.body = false 
     } else if(newBody) {
+
+      if(isObject(newBody) && newBody._stackfireCancel ) {    
+        doBreak = true 
+        delete newBody._stackfireCancel 
+        activeCommand.body = newBody
+
       //if the new body is object (and not an array) 
-      //we merge it into the original (if it was also an obj)  
-      if(isObject(newBody) && isObject(activeCommand.body) 
-      && !isArray(newBody) && !isArray(activeCommand.body)
-      && newBody._stackfireMerge) {
+      //we merge it into the original (if it was also an obj)   
+      } else if(isObject(newBody) && isObject(activeCommand.body) 
+        && !isArray(newBody) && !isArray(activeCommand.body)
+        && newBody._stackfireMerge) {
         delete newBody._stackfireMerge 
         activeCommand.body = merge(activeCommand.body, newBody) 
       } else {

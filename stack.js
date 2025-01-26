@@ -306,6 +306,12 @@ stack.merge = newBody => {
   return newBody 
 } 
 
+stack.auto = async (...params) => {
+  const branchOrFire = command ? 'branch' : 'fire'
+  const result = await stack[branchOrFire](...params)
+  return result 
+}
+
 stack.flush = () => 
   listeners = [] //< empty listener array 
 

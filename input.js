@@ -38,20 +38,20 @@ module.exports = (stack, ...params)  => {
   }
 
   if(_l.includes(params, 'dblclick')) {
-    document.body.addEventListener('dblclick', e => 
-      stack.fire('dblclick', e) 
+    document.body.addEventListener('dblclick', async e => 
+      await stack.fire('dblclick', e) 
     ) 
   }
 
   if(_l.includes(params, 'keydown')) {
-    document.addEventListener('keydown', e => {
-      stack.fire('keydown/' + e.key, e) 
+    document.addEventListener('keydown', async e => {
+      await stack.fire('keydown/' + e.key, e) 
     }) 
   }
 
   if(_l.includes(params, 'keyup')) {
-    document.addEventListener('keyup', e =>
-      stack.fire('keyup/' + e.key, e) 
+    document.addEventListener('keyup', async e =>
+      await stack.fire('keyup/' + e.key, e) 
     )  
   }
 }

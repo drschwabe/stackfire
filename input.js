@@ -15,7 +15,11 @@ module.exports = (stack, ...params)  => {
   if(_l.includes(params, 'click') || _l.includes(params, 'link')) {
 
     document.body.addEventListener('click', async e => {
-      stack.fire('click', e) 
+
+      if(params.includes('click')) {
+        await stack.fire('click', e) 
+      }
+      
 
       if(!_l.includes(params, 'link')) return 
 
@@ -30,7 +34,7 @@ module.exports = (stack, ...params)  => {
           e.preventDefault()
           e.stopImmediatePropagation()
 
-          stack.fire(strippedLink, e)        
+          await stack.fire(strippedLink, e)        
         }
       }
     }) 

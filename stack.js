@@ -178,7 +178,7 @@ stack.fire = async (...params) =>
 
   //loop! 
   let fireQed 
-  if(looping) {
+  if(loopDepth > 0) {
     fireQ.push({ command: newCommand, matchedListeners, promise: r }) 
     await stackUtil('fireQ_appended', newCommand )    
     //log('## fireQ: ##') 
@@ -189,7 +189,7 @@ stack.fire = async (...params) =>
     result = await loop(command, matchedListeners)                  
   }
  
-  while(!looping && fireQ.length) {
+  while(loopDepth === 0 && fireQ.length) {
     let nextCommandSet = fireQ.shift()
     command = nextCommandSet.command 
     result = await loop(nextCommandSet.command, 
@@ -219,11 +219,11 @@ stack.branch = async (...params) =>
 
 
 const fireQ = [] 
-let looping = false 
+let loopDepth = 0 
 const loop = async (activeCommand, matchedListeners) => 
   await new Promise( async r => {
   await stackUtil('fire_started', activeCommand )    
-  looping = true 
+  loopDepth++ 
   command = activeCommand
   let doBreak 
   for await (const listener of matchedListeners) {
@@ -297,7 +297,7 @@ const loop = async (activeCommand, matchedListeners) =>
   }
 
   await stackUtil('fire_complete', activeCommand)     
-  looping = false 
+  loopDepth-- 
   r(activeCommand.body)
 })              
 

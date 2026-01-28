@@ -31,7 +31,8 @@ const prefixPath = path =>
 const stack = {}
 let listeners = []
 
-let command  
+let command
+let currentListenerParams = null  
 
 stack.on = (...params) => {
   if(isArray(params[0])) {
@@ -131,6 +132,8 @@ stack.fire = async (...params) =>
     if(match) { //make object if not already...
       if(isNull(newCommand.params)) newCommand.params = {}
       newCommand.params = merge(newCommand.params, match)
+      //also store listener-specific params for use during execution
+      listener.matchedParams = match
     }
     return match
   }).map(
@@ -237,6 +240,7 @@ const loop = async (activeCommand, matchedListeners) =>
     matchingListener.running = true 
     matchingListener.runningStart = Date.now() 
     matchingListener.parentCommandId = activeCommand.id 
+    currentListenerParams = listener.matchedParams || null
 
     await stackUtil('listener_invoked',
       { command: activeCommand, listener : matchingListener })     
@@ -275,6 +279,7 @@ const loop = async (activeCommand, matchedListeners) =>
     // previous .body value) 
     matchingListener.running = false 
     matchingListener.runningStop = Date.now() 
+    currentListenerParams = null 
 
     if(listener.onceOnly) {
       listeners = filter( listeners, listener => 
@@ -378,7 +383,7 @@ const proxiedStack = new Proxy(stack, {
       return store() 
     }
     if (property === 'params') {
-      let params = () => command.params 
+      let params = () => currentListenerParams || command.params 
       return params()  
     }  
     if (property === 'path') {
@@ -389,4 +394,4 @@ const proxiedStack = new Proxy(stack, {
   }
 })         
 
-module.exports = proxiedStack 
+module.exports = proxiedStack

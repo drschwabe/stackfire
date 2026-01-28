@@ -15,7 +15,6 @@ const { find, isFunction, isString,
   isObject, sortBy, indexOf } = require('lodash') 
 const { rest } = require('underscore') 
 const fnArgs = require('function-arguments')
-const isAsyncFn = require('is-async-function') 
 const _s = require('underscore.string') 
 
 
@@ -244,11 +243,8 @@ const loop = async (activeCommand, matchedListeners) =>
 
     await stackUtil('listener_invoked',
       { command: activeCommand, listener : matchingListener })     
-    if(isAsyncFn(listener.func)) {
-      newBody = await listener.func(activeCommand.body)
-    } else {
-      newBody = listener.func(activeCommand.body) 
-    }
+    //always await - handles async fns, transpiled async fns, and fns returning promises
+    newBody = await listener.func(activeCommand.body)
     if(newBody === null ) {
       activeCommand.body = null 
     } else if(newBody === false) {

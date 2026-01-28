@@ -1,6 +1,6 @@
 {
   "name": "stackfire-5",
-  "version": "5.0.0-alpha-10",
+  "version": "5.0.0-alpha-11",
   "main": "stack.js",
   "scripts": {
     "test": "./tests.sh"

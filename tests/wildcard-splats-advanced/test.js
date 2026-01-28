@@ -160,3 +160,48 @@ test(`Can catch wildcards (aka splats) in advanced setup and they still work OK 
 
   t.ok(berryCount, 2)
 })   
+
+
+test('Can handle wildcard with child branch and child executes in proper order', 
+  async t => {
+
+  log('run test?')
+
+  t.plan(1)
+
+  const stack = importFresh('../../stack.js')
+  
+  const state = { dataChanges : true }
+
+  stack.first('/*anyPath', async e => {
+    if(!state.dataChanges) return 
+    state.dataChanges = false 
+    log('await child branch?')
+    await stack.branch('menu/parts/file/save')
+    log('proceed... ')
+  })
+
+  stack.on('folder/*urlPath/products/changes', async e => {
+    log('some other random listener')
+  }) 
+
+
+  stack.on('menu/parts/file/save', e => {
+    log('save the changes to parts')
+    return 
+  })
+
+  stack.on('/*anyPath', e => {
+    log('random anyPath catcher')
+  })
+
+  stack.on(['profile', 'menu/profile/edit'], e => {
+    log('render profile screen')
+  }) 
+
+  log('fire?')
+  await stack.fire('/profile') 
+
+  t.pass() 
+
+})

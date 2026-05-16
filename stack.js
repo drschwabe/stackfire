@@ -29,9 +29,10 @@ const prefixPath = path =>
 
 const stack = {}
 let listeners = []
+const cache = new Map()
 
 let command
-let currentListenerParams = null  
+let currentListenerParams = null
 
 stack.on = (...params) => {
   if(isArray(params[0])) {
@@ -146,8 +147,13 @@ stack.fire = async (...params) =>
   })
   matchedListeners = sortBy(matchedListeners, 'priority')
 
-  let result 
-  let parentCommand 
+  const isCacheable = matchedListeners.some(l => l.cacheable)
+  if (isCacheable && cache.has(path)) {
+    return r(cache.get(path))
+  }
+
+  let result
+  let parentCommand
   if(branch && command) {
     //keep track of parent: 
     newCommand.branch = true 
@@ -155,10 +161,11 @@ stack.fire = async (...params) =>
     newCommand.parentCommandId = command.id 
     parentCommand = clone(command)  
     command = newCommand
-    result = await loop(newCommand, matchedListeners) 
-    command = parentCommand 
-    newCommand.parentListener = parentListener 
-    return r( result )  
+    result = await loop(newCommand, matchedListeners)
+    command = parentCommand
+    newCommand.parentListener = parentListener
+    if (isCacheable) cache.set(path, result)
+    return r( result )
   } else {
     //get the original stack.fire function ... 
     //(so debugger can report location on fs) 
@@ -197,7 +204,10 @@ stack.fire = async (...params) =>
     nextCommandSet.promise(result) 
   }
 
-  if(!fireQed) r(result) 
+  if(!fireQed) {
+    if (isCacheable) cache.set(path, result)
+    r(result)
+  }
 })
 
 stack.branch = async (...params) =>
@@ -310,11 +320,29 @@ stack.merge = newBody => {
 stack.auto = async (...params) => {
   const branchOrFire = command ? 'branch' : 'fire'
   const result = await stack[branchOrFire](...params)
-  return result 
+  return result
 }
 
-stack.flush = () => 
-  listeners = [] //< empty listener array 
+stack.refresh = (...paths) => {
+  for (let path of paths) {
+    path = prefixPath(path)
+    cache.delete(path)
+  }
+}
+
+stack.refreshNow = async (...params) => {
+  let path = find(params, param => isString(param))
+  if (path) {
+    path = prefixPath(path)
+    cache.delete(path)
+  }
+  return await stack.auto(...params)
+}
+
+stack.flush = () => {
+  listeners = []
+  cache.clear()
+}
 
 stack.skip = (...params) => {
   const path = prefixPath(params[0]) //< ensure prefixed with '/'
@@ -358,10 +386,13 @@ stack.logUtil = () => {
 //body, params, and path (when calling stack.body, etc) 
 const proxiedStack = new Proxy(stack, {
   get(target, property) {
+    if (property === 'cache') {
+      return cache
+    }
     if (property === 'fireQ') {
       let theFireQ = () => fireQ
-      return theFireQ()  
-    }   
+      return theFireQ()
+    }
     if (property === 'listeners') {
       let theListeners = () => listeners  
       return theListeners()  

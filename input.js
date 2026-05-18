@@ -28,7 +28,7 @@ module.exports = (stack, ...params)  => {
         const pathname = decodeURIComponent(link.pathname) 
         //^ convert any URL enncoded spaces to normal spaces
         const { basename='' } = options 
-        if(pathname.search(basename) > -1) {
+        if(pathname.search(basename + '/') > -1 || pathname.endsWith(basename)) {
           const strippedLink = strRight(pathname, basename + '/')
           e.stopPropagation()
           e.preventDefault()

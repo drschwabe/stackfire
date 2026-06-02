@@ -34,6 +34,10 @@ const cache = new Map()
 let command
 let currentListenerParams = null
 
+let frozen = false
+let frozenExact = null
+let frozenWild = null
+
 stack.on = (...params) => {
   if(isArray(params[0])) {
     return params[0].forEach( path => 
@@ -83,8 +87,9 @@ stack.last = (...params) => stack.on(...params, 500)
 stack.veryLast = (...params) => stack.on(...params, 9999)
 
 
-stack.fire = async (...params) => 
-  await new Promise( async r => {
+stack.fire = async (...params) => {
+  if (frozen) return frozenFire(params)
+  return await new Promise( async r => {
   let path = find(params, param => isString(param))
   const callback = find( params, param => isFunction(param))
 
@@ -209,23 +214,26 @@ stack.fire = async (...params) =>
     r(result)
   }
 })
+}
 
-stack.branch = async (...params) =>
-  await new Promise( async r => {
+stack.branch = async (...params) => {
+  if (frozen) return frozenBranch(params)
+  return await new Promise( async r => {
   //determine the current listener in progress...
   const runningListener = chain(listeners)
-      .filter(listener => listener.running) 
-      .sortBy('runningStart') 
+      .filter(listener => listener.running)
+      .sortBy('runningStart')
       .last()
-      .value() 
+      .value()
 
-  await stackUtil('fire_branch', { 
-    path : params[0], 
+  await stackUtil('fire_branch', {
+    path : params[0],
     parentListener : runningListener
-  }) 
-  let result = await stack.fire(...params, true, runningListener) 
-  r( result ) 
-}) 
+  })
+  let result = await stack.fire(...params, true, runningListener)
+  r( result )
+})
+}
 
 
 const fireQ = [] 
@@ -382,8 +390,134 @@ stack.logUtil = () => {
   stack.utils.push(logUtil) 
 }
 
-//Proxy to ensure we get the live command result for 
-//body, params, and path (when calling stack.body, etc) 
+// -- Frozen dispatch: pre-computed handler chains for static listener tables --
+
+stack.freeze = () => {
+  frozenExact = new Map()
+  frozenWild = []
+
+  const byPattern = new Map()
+  for (let i = 0; i < listeners.length; i++) {
+    const l = listeners[i]
+    let group = byPattern.get(l.path)
+    if (!group) { group = []; byPattern.set(l.path, group) }
+    group.push({ func: l.func, priority: l.priority || (i + 10) })
+  }
+
+  for (const [pattern, entries] of byPattern) {
+    entries.sort((a, b) => a.priority - b.priority)
+    const funcs = entries.map(e => e.func)
+    if (pattern.indexOf('*') !== -1 || pattern.indexOf(':') !== -1) {
+      frozenWild.push({ route: new routeParser(pattern), funcs: funcs })
+    } else {
+      frozenExact.set(pattern, funcs)
+    }
+  }
+
+  frozen = true
+  log('stackfire: frozen (' + frozenExact.size + ' exact, ' + frozenWild.length + ' wildcard)')
+}
+
+stack.unfreeze = () => {
+  frozen = false
+  frozenExact = null
+  frozenWild = null
+}
+
+async function frozenDispatch(path, body) {
+  path = prefixPath(path)
+
+  let funcs = frozenExact.get(path)
+  let params = null
+
+  if (!funcs) {
+    for (let i = 0; i < frozenWild.length; i++) {
+      const match = frozenWild[i].route.match(path)
+      if (match) {
+        funcs = frozenWild[i].funcs
+        params = match
+        break
+      }
+    }
+  }
+
+  if (!funcs) return body
+
+  command = { path: path, body: body, params: params }
+  currentListenerParams = params
+
+  for (let i = 0; i < funcs.length; i++) {
+    const newBody = await funcs[i](body)
+
+    if (newBody === null) {
+      body = null
+    } else if (newBody === false) {
+      body = false
+      break
+    } else if (newBody !== undefined) {
+      if (isObject(newBody) && newBody._stackfireCancel) {
+        delete newBody._stackfireCancel
+        body = newBody
+        break
+      } else if (isObject(newBody) && isObject(body)
+        && !isArray(newBody) && !isArray(body)
+        && newBody._stackfireMerge) {
+        delete newBody._stackfireMerge
+        body = merge(body, newBody)
+      } else {
+        body = newBody
+      }
+    }
+    command.body = body
+  }
+
+  currentListenerParams = null
+  return body
+}
+
+async function frozenFire(params) {
+  let path, body
+  for (let i = 0; i < params.length; i++) {
+    const p = params[i]
+    if (typeof p === 'string' && !path) path = p
+    else if (typeof p === 'object' && p !== null && !body) body = p
+  }
+
+  if (loopDepth > 0) {
+    return new Promise(r => {
+      fireQ.push({ frozenPath: path, frozenBody: body, promise: r })
+    })
+  }
+
+  loopDepth++
+  const result = await frozenDispatch(path || '', body)
+  loopDepth--
+
+  while (loopDepth === 0 && fireQ.length) {
+    const next = fireQ.shift()
+    loopDepth++
+    const qResult = next.frozenPath !== undefined
+      ? await frozenDispatch(next.frozenPath, next.frozenBody)
+      : await loop(next.command, next.matchedListeners)
+    loopDepth--
+    next.promise(qResult)
+  }
+
+  return result
+}
+
+async function frozenBranch(params) {
+  let path, body
+  for (let i = 0; i < params.length; i++) {
+    const p = params[i]
+    if (typeof p === 'string' && !path) path = p
+    else if (typeof p === 'object' && p !== null && !body) body = p
+  }
+  return frozenDispatch(path || '', body)
+}
+
+//Proxy to ensure we get the live command result for
+//body, params, and path (when calling stack.body, etc)
 const proxiedStack = new Proxy(stack, {
   get(target, property) {
     if (property === 'cache') {

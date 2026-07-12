@@ -406,11 +406,10 @@ stack.freeze = () => {
 
   for (const [pattern, entries] of byPattern) {
     entries.sort((a, b) => a.priority - b.priority)
-    const funcs = entries.map(e => e.func)
     if (pattern.indexOf('*') !== -1 || pattern.indexOf(':') !== -1) {
-      frozenWild.push({ route: new routeParser(pattern), funcs: funcs })
+      frozenWild.push({ route: new routeParser(pattern), entries: entries })
     } else {
-      frozenExact.set(pattern, funcs)
+      frozenExact.set(pattern, entries)
     }
   }
 
@@ -427,27 +426,35 @@ stack.unfreeze = () => {
 async function frozenDispatch(path, body) {
   path = prefixPath(path)
 
-  let funcs = frozenExact.get(path)
+  const handlers = []
   let params = null
 
-  if (!funcs) {
-    for (let i = 0; i < frozenWild.length; i++) {
-      const match = frozenWild[i].route.match(path)
-      if (match) {
-        funcs = frozenWild[i].funcs
-        params = match
-        break
-      }
+  const exactEntries = frozenExact.get(path)
+  if (exactEntries) {
+    for (let i = 0; i < exactEntries.length; i++)
+      handlers.push({ func: exactEntries[i].func, priority: exactEntries[i].priority, params: null })
+  }
+
+  for (let i = 0; i < frozenWild.length; i++) {
+    const match = frozenWild[i].route.match(path)
+    if (match) {
+      params = match
+      const entries = frozenWild[i].entries
+      for (let j = 0; j < entries.length; j++)
+        handlers.push({ func: entries[j].func, priority: entries[j].priority, params: match })
     }
   }
 
-  if (!funcs) return body
+  if (!handlers.length) return body
+
+  handlers.sort((a, b) => a.priority - b.priority)
 
   command = { path: path, body: body, params: params }
   currentListenerParams = params
 
-  for (let i = 0; i < funcs.length; i++) {
-    const newBody = await funcs[i](body)
+  for (let i = 0; i < handlers.length; i++) {
+    currentListenerParams = handlers[i].params
+    const newBody = await handlers[i].func(body)
 
     if (newBody === null) {
       body = null

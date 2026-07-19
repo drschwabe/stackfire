@@ -49,8 +49,15 @@ module.exports = (stack, ...params)  => {
 
   if(_l.includes(params, 'keydown')) {
     document.addEventListener('keydown', async e => {
-      await stack.fire('keydown/' + e.key, e) 
-    }) 
+      if(options.perfDebug) {
+        const _t0 = performance.now()
+        await stack.fire('keydown/' + e.key, e)
+        const _t1 = performance.now()
+        if (_t1 - _t0 > 10) log(`[perf] fire(keydown/${e.key}): ${(_t1-_t0).toFixed(1)}ms`)
+      } else {
+        await stack.fire('keydown/' + e.key, e)
+      }
+    })
   }
 
   if(_l.includes(params, 'keyup')) {

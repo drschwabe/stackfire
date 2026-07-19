@@ -449,11 +449,33 @@ async function frozenDispatch(path, body) {
 
   handlers.sort((a, b) => a.priority - b.priority)
 
+  const hasUtils = stack.utils.length > 0
+
   command = { path: path, body: body, params: params }
+  if (hasUtils) {
+    command.id = generateUUID()
+    let fireFile, fireLine
+    try {
+      const e = new Error()
+      const frame = e.stack.split('\n')[4]
+      fireLine = frame.split(':').reverse()[1]
+      fireFile = _s(frame).strRightBack('/')
+        .strLeftBack(':').strLeftBack(':').value()
+    } catch(err) {}
+    command.fireLocation = { file: fireFile, line: fireLine }
+  }
   currentListenerParams = params
+
+  if (hasUtils) await stackUtil('fire_started', command)
 
   for (let i = 0; i < handlers.length; i++) {
     currentListenerParams = handlers[i].params
+    if (hasUtils) {
+      await stackUtil('listener_invoked', {
+        command: command,
+        listener: { func: handlers[i].func, path: path, priority: handlers[i].priority }
+      })
+    }
     const newBody = await handlers[i].func(body)
 
     if (newBody === null) {
@@ -477,6 +499,8 @@ async function frozenDispatch(path, body) {
     }
     command.body = body
   }
+
+  if (hasUtils) await stackUtil('fire_complete', command)
 
   currentListenerParams = null
   return body

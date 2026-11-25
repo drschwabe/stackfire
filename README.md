@@ -1,8 +1,8 @@
-# Stackfire 5
+# Stackfire
 
 An async control flow library for your next game or app. Works in the browser, Node.js, or QuickJS. Establishes an event-based pattern that scales from basic event handling to complex frontend interactivity and server-side workflows—with explicit control over execution order, listener priority, and when to run synchronously or await asynchronous work.
 
-Commands queue in the order they're fired, each running a chain of listeners that can control their place in the execution order. Branching support allows the chain to execute commands in-flight, branch as a child command, await the matching listener chain, and then resume the parent where it left off — all while queued commands await their turn.
+Commands queue in the order they're fired, each running a chain of listeners that can control their place in the execution. Branching support allows the chain to execute commands in-flight, branch as a child command, await the matching listener chain, and then resume the parent where it left off — all while queued commands await their turn.
 
 ## Install
 

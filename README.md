@@ -5,13 +5,13 @@ Route-driven async control flow for your next game or app. Register listeners ag
 ## Install
 
 ```sh
-npm install stackfire-5
+npm install stackfire
 ```
 
 ## Usage
 
 ```js
-const stack = require('stackfire-5')
+const stack = require('stackfire')
 
 stack.on('moon-shot', body => {
   console.log(`Preparing ${body.craft}`)
@@ -63,7 +63,7 @@ stack.on('prepare/:craft', async () => {
 After the document body exists:
 
 ```js
-require('stackfire-5/input')(stack, 'click', 'link', 'keydown', { basename: '/app' })
+require('stackfire/input')(stack, 'click', 'link', 'keydown', { basename: '/app' })
 ```
 
 Explicitly select `click`, `dblclick`, `keydown`, `keyup`, and/or `link`. Keys fire paths such as `keydown/Enter`; matching links fire their decoded path with the basename stripped. The DOM event becomes the body.

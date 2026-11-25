@@ -12,8 +12,7 @@ const routeParser = require('route-parser')
 const { find, isFunction, isString, 
   isNull, filter, chain, 
   isBoolean, isArray, clone, isNumber, merge, 
-  isObject, sortBy, indexOf } = require('lodash') 
-const { rest } = require('underscore') 
+  isObject, sortBy, indexOf, tail } = require('lodash')
 const fnArgs = require('function-arguments')
 const _s = require('underscore.string') 
 
@@ -41,7 +40,7 @@ let frozenWild = null
 stack.on = (...params) => {
   if(isArray(params[0])) {
     return params[0].forEach( path => 
-      stack.on(path, ...rest( params ))
+      stack.on(path, ...tail( params ))
     )
   }   
   //log('stack.on') 

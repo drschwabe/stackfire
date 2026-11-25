@@ -1,6 +1,6 @@
 # Stackfire 5
 
-Route-driven async control flow for your next game or app. Register listeners against command paths, then fire them in sequence, passing a body down the chain.
+An async control flow library and pattern for your next game or app. Commands queue in the order they're fired, each running a chain of listeners that can control their place in the execution order. Branch into a child command, await its listener chain, then resume the parent where it left off—all while queued commands wait their turn.
 
 ## Install
 

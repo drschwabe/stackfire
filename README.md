@@ -1,7 +1,3 @@
-Copyright (c) 2024 Derrick Schwabe  
-All Rights Reserved
+Copyright (c) 2019-2026 Derrick Schwabe
 
-This code is proprietary and confidential.   
-No license has been granted at this time.
-
-For use by authorized codejammer/codefunders only. 
+This project is licensed under the [MIT License](LICENSE).

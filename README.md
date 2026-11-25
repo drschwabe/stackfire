@@ -37,7 +37,7 @@ Listeners can be synchronous or return promises; each finishes before the next s
 
 - **`stack.on(path, handler)`** — register a listener. Paths accept `:named` parameters, `*splats`, or an array of paths. A leading `/` is optional. Pass `true` as an extra argument for a once-only listener.
 - **`await stack.fire(path, body)`** — run matching listeners and return the resulting body. An optional callback is registered as a once-only listener. Fires issued while a command runs are queued; use `branch` for nested work you need to await inside a listener.
-- **`await stack.branch(path, body)`** — run a child command, then resume the parent. `stack.auto(path, body)` chooses `branch` when a command context exists, otherwise `fire`.
+- **`await stack.branch(path, body)`** — run a child command, then resume the parent. When no command is running, behaves like `fire`. `stack.auto(path, body)` is an alias for this behavior.
 - **`stack.body`, `stack.params`, `stack.path`** — inspect the current body, matched route parameters, and command path. The body is also the handler's argument.
 
 ```js

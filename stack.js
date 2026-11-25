@@ -158,15 +158,17 @@ stack.fire = async (...params) => {
 
   let result
   let parentCommand
-  if(branch && command) {
+  if(branch && loopDepth > 0) {
     //keep track of parent: 
     newCommand.branch = true 
     newCommand.parentPath = command.path  
     newCommand.parentCommandId = command.id 
-    parentCommand = clone(command)  
+    parentCommand = command
+    const parentParams = currentListenerParams
     command = newCommand
     result = await loop(newCommand, matchedListeners)
     command = parentCommand
+    currentListenerParams = parentParams
     newCommand.parentListener = parentListener
     if (isCacheable) cache.set(path, result)
     return r( result )
@@ -203,9 +205,9 @@ stack.fire = async (...params) => {
   while(loopDepth === 0 && fireQ.length) {
     let nextCommandSet = fireQ.shift()
     command = nextCommandSet.command 
-    result = await loop(nextCommandSet.command, 
+    const queuedResult = await loop(nextCommandSet.command,
     nextCommandSet.matchedListeners) 
-    nextCommandSet.promise(result) 
+    nextCommandSet.promise(queuedResult)
   }
 
   if(!fireQed) {
@@ -216,6 +218,8 @@ stack.fire = async (...params) => {
 }
 
 stack.branch = async (...params) => {
+  // The last command remains inspectable after dispatch; depth tracks active work.
+  if (loopDepth === 0) return stack.fire(...params)
   if (frozen) return frozenBranch(params)
   return await new Promise( async r => {
   //determine the current listener in progress...
@@ -239,9 +243,10 @@ const fireQ = []
 let loopDepth = 0 
 const loop = async (activeCommand, matchedListeners) => 
   await new Promise( async r => {
-  await stackUtil('fire_started', activeCommand )    
-  loopDepth++ 
+  // Mark dispatch active before hooks can enqueue or branch into more work.
+  loopDepth++
   command = activeCommand
+  await stackUtil('fire_started', activeCommand )
   let doBreak 
   for await (const listener of matchedListeners) {
     let newBody  
@@ -324,11 +329,7 @@ stack.merge = newBody => {
   return newBody 
 } 
 
-stack.auto = async (...params) => {
-  const branchOrFire = command ? 'branch' : 'fire'
-  const result = await stack[branchOrFire](...params)
-  return result
-}
+stack.auto = (...params) => stack.branch(...params)
 
 stack.refresh = (...paths) => {
   for (let path of paths) {
@@ -543,7 +544,14 @@ async function frozenBranch(params) {
     if (typeof p === 'string' && !path) path = p
     else if (typeof p === 'object' && p !== null && !body) body = p
   }
-  return frozenDispatch(path || '', body)
+  const parentCommand = command
+  const parentParams = currentListenerParams
+  try {
+    return await frozenDispatch(path || '', body)
+  } finally {
+    command = parentCommand
+    currentListenerParams = parentParams
+  }
 }
 
 //Proxy to ensure we get the live command result for

@@ -55,7 +55,7 @@ stack.on('prepare/:craft', async () => {
 
 ```js
 stack.on('checkout', body => {
-  if (!body.items.length) return { error: 'Empty cart', _stackfireCancel: true }
+  if (!body.items.length) return false // cancel; later listeners won't run
   return stack.merge({ status: 'ready' })
 })
 stack.on('checkout', body => console.log(body.status)) // skipped for an empty cart
